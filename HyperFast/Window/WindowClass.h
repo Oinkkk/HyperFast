@@ -12,12 +12,20 @@ namespace Win
 		WindowClass(const std::string_view &name);
 		virtual ~WindowClass() noexcept;
 
+		[[nodiscard]]
+		constexpr const std::string &getName() const noexcept;
+
 	private:
 		const std::string __name;
 		const ATOM __atom;
 
 		static ATOM __register(const std::string_view &name);
 		static LRESULT CALLBACK __winProc(
-			const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) noexcept;
+			const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam) noexcept;
 	};
+
+	constexpr const std::string &WindowClass::getName() const noexcept
+	{
+		return __name;
+	}
 }

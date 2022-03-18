@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppInstance.cpp" />
+    <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowClass.cpp" />
   </ItemGroup>
   <ItemGroup>

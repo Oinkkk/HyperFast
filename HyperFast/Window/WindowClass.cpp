@@ -43,10 +43,8 @@ namespace Win
 	}
 
 	LRESULT WindowClass::__winProc(
-		const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) noexcept
+		const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam) noexcept
 	{
-		const HINSTANCE hInstance{ AppInstance::getHandle() };
-
-		return {};
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 }
