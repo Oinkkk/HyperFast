@@ -35,6 +35,11 @@ namespace Win
 			ShowWindow(__handle, SW_HIDE);
 	}
 
+	LRESULT Window::sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
+	{
+		return TRUE;
+	}
+
 	HWND Window::__create(
 		const WindowClass &windowClass, const std::string_view &title,
 		const int x, const int y, const int width, const int height, Window *const pThis)
@@ -70,7 +75,7 @@ namespace Win
 				hInstance,
 				
 				// lpParam (Additional application data)
-				nullptr
+				pThis
 			)
 		};
 

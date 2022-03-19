@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Windows.h>
-#include "../Infrastructure/Unique.h"
 #include <string>
+#include "../Infrastructure/Event.h"
 
 namespace Win
 {
@@ -15,11 +15,14 @@ namespace Win
 		[[nodiscard]]
 		constexpr const std::string &getName() const noexcept;
 
+		void loop() noexcept;
+
 	private:
 		const std::string __name;
 		const ATOM __atom;
 
 		static ATOM __register(const std::string_view &name);
+
 		static LRESULT CALLBACK __winProc(
 			const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam) noexcept;
 	};

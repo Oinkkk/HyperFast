@@ -22,6 +22,7 @@ namespace Win
 		virtual ~Window() noexcept;
 
 		void setShow(const bool show) noexcept;
+		LRESULT sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam);
 
 	private:
 		const HWND __handle;

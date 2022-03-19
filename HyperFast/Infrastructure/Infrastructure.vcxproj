@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Event.h" />
     <ClInclude Include="StringFormatter.h" />
     <ClInclude Include="Unique.h" />
   </ItemGroup>

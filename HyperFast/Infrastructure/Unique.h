@@ -11,7 +11,7 @@ namespace Infra
 
 		virtual ~Unique() noexcept = default;
 
-		Unique &operator =(const Unique &) = delete;
-		Unique &operator =(Unique &&) = delete;
+		Unique &operator=(const Unique &) = delete;
+		Unique &operator=(Unique &&) = delete;
 	};
 }

@@ -1,4 +1,4 @@
-#include "WindowClass.h"
+#include "Window.h"
 #include "AppInstance.h"
 #include "../Infrastructure/StringFormatter.h"
 #include <cassert>
@@ -16,13 +16,28 @@ namespace Win
 		assert(result);
 	}
 
+	void WindowClass::loop() noexcept
+	{
+		MSG msg{};
+		while (msg.message != WM_QUIT)
+		{
+			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		}
+	}
+
 	ATOM WindowClass::__register(const std::string_view &name)
 	{
 		const HINSTANCE hInstance{ AppInstance::getHandle() };
 
-		WNDCLASS wndClass
+		const WNDCLASS wndClass
 		{
+			.style = (CS_HREDRAW | CS_VREDRAW),
 			.lpfnWndProc = __winProc,
+			.cbWndExtra = sizeof(Window *),
 			.hInstance = hInstance,
 			.lpszClassName = name.data()
 		};
@@ -45,6 +60,19 @@ namespace Win
 	LRESULT WindowClass::__winProc(
 		const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam) noexcept
 	{
+		if (uMsg == WM_CREATE)
+		{
+			CREATESTRUCT *const pCreateStruct{ reinterpret_cast<CREATESTRUCT *>(lParam) };
+			const LONG_PTR windowPtrValue{ reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams) };
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, windowPtrValue);
+		}
+		else
+		{
+			Window *const pWindow{ reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA)) };
+			if (pWindow)
+				pWindow->sendRawMessage(uMsg, wParam, lParam);
+		}
+
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 }

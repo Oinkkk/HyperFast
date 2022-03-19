@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClInclude Include="Unique.h" />
     <ClInclude Include="StringFormatter.h" />
+    <ClInclude Include="Event.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dummy.cpp" />
