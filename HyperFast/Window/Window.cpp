@@ -2,6 +2,7 @@
 #include "AppInstance.h"
 #include "../Infrastructure/StringFormatter.h"
 #include <cassert>
+#include "MessageLooper.h"
 
 namespace Win
 {
@@ -23,8 +24,12 @@ namespace Win
 
 	Window::~Window() noexcept
 	{
-		const BOOL result{ DestroyWindow(__handle) };
-		assert(result);
+		try
+		{
+			destroy();
+		}
+		catch (...)
+		{ }
 	}
 
 	void Window::setShow(const bool show) noexcept
@@ -37,7 +42,41 @@ namespace Win
 
 	LRESULT Window::sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 	{
-		return TRUE;
+		switch (uMsg)
+		{
+		case WM_CLOSE:
+			__closeEvent.invoke(this);
+			break;
+
+		case WM_PAINT:
+			ValidateRect(__handle, nullptr);
+			break;
+
+		default:
+			return DefWindowProc(__handle, uMsg, wParam, lParam);
+		}
+
+		return 0;
+	}
+
+	void Window::destroy()
+	{
+		if (__destroyed)
+			return;
+
+		const BOOL result{ DestroyWindow(__handle) };
+		__destroyed = true;
+
+		if (!result)
+		{
+			const std::string errMsg
+			{
+				Infra::StringFormatter::format(
+					"Error occurred while destroying the window. Error: %d", GetLastError())
+			};
+
+			throw std::exception{ errMsg.c_str() };
+		}
 	}
 
 	HWND Window::__create(

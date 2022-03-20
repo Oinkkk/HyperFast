@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <string>
-#include "../Infrastructure/Event.h"
+#include "../Infrastructure/Unique.h"
 
 namespace Win
 {
@@ -14,8 +14,6 @@ namespace Win
 
 		[[nodiscard]]
 		constexpr const std::string &getName() const noexcept;
-
-		void loop() noexcept;
 
 	private:
 		const std::string __name;

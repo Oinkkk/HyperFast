@@ -12,11 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppInstance.h" />
+    <ClInclude Include="MessageLooper.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowClass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppInstance.cpp" />
+    <ClCompile Include="MessageLooper.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowClass.cpp" />
   </ItemGroup>

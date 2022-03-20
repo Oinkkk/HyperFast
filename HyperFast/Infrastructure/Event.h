@@ -12,12 +12,15 @@ namespace Infra
 	{
 	public:
 		[[nodiscard]]
-		const std::function<$Args...> &getCallback() const noexcept;
+		const std::function<void(const $Args &...)> &getCallback() const noexcept;
+		void setCallback(const std::function<void(const $Args &...)> &callback) noexcept;
 
 		void send(const $Args &...args);
 
+		EventListener &operator=(const std::function<void(const $Args &...)> &callback) noexcept;
+
 	private:
-		std::function<$Args...> __callbackFunc;
+		std::function<void(const $Args &...)> __callbackFunc;
 	};
 
 	template <typename ...$Args>
@@ -56,9 +59,15 @@ namespace Infra
 	};
 
 	template <typename ...$Args>
-	const std::function<$Args...> &EventListener<$Args...>::getCallback() const noexcept
+	const std::function<void(const $Args &...)> &EventListener<$Args...>::getCallback() const noexcept
 	{
 		return __callbackFunc;
+	}
+
+	template <typename ...$Args>
+	void EventListener<$Args...>::setCallback(const std::function<void(const $Args &...)> &callback) noexcept
+	{
+		__callbackFunc = callback;
 	}
 
 	template <typename ...$Args>
@@ -68,10 +77,18 @@ namespace Infra
 	}
 
 	template <typename ...$Args>
+	EventListener<$Args...> &EventListener<$Args...>::operator=(
+		const std::function<void(const $Args &...)> &callback) noexcept
+	{
+		setCallback(callback);
+	}
+
+	template <typename ...$Args>
 	EventView<$Args...> &EventView<$Args...>::operator+=(
 		const std::shared_ptr<EventListener<$Args...>> &pListener) noexcept
 	{
 		addListener(pListener);
+		return *this;
 	}
 
 	template <typename ...$Args>
@@ -79,6 +96,7 @@ namespace Infra
 		const std::shared_ptr<EventListener<$Args...>> &pListener) noexcept
 	{
 		removeListener(pListener);
+		return *this;
 	}
 
 	template <typename ...$Args>
@@ -106,7 +124,7 @@ namespace Infra
 				iter = __listenerMap.erase(iter);
 			else
 			{
-				pListener->receive(args...);
+				pListener->send(args...);
 				iter++;
 			}
 		}

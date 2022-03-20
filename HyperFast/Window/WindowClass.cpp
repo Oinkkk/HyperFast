@@ -16,19 +16,6 @@ namespace Win
 		assert(result);
 	}
 
-	void WindowClass::loop() noexcept
-	{
-		MSG msg{};
-		while (msg.message != WM_QUIT)
-		{
-			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-		}
-	}
-
 	ATOM WindowClass::__register(const std::string_view &name)
 	{
 		const HINSTANCE hInstance{ AppInstance::getHandle() };
@@ -66,12 +53,10 @@ namespace Win
 			const LONG_PTR windowPtrValue{ reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams) };
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, windowPtrValue);
 		}
-		else
-		{
-			Window *const pWindow{ reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA)) };
-			if (pWindow)
-				pWindow->sendRawMessage(uMsg, wParam, lParam);
-		}
+
+		Window *const pWindow{ reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA)) };
+		if (pWindow)
+			return pWindow->sendRawMessage(uMsg, wParam, lParam);
 
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}

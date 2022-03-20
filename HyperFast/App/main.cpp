@@ -1,15 +1,30 @@
 #include <iostream>
 #include "../Window/Window.h"
+#include "../Window/MessageLooper.h"
 
 int main()
 {
 	Win::WindowClass winClass{ "DefaultWinClass" };
-	Win::Window window{ winClass, "test" };
+	
+	std::unique_ptr<Win::Window> pWindow
+	{ 
+		std::make_unique<Win::Window>(winClass, "test")
+	};
 
-	std::cout << "hi" << std::endl;
+	const std::shared_ptr<Infra::EventListener<Win::Window *>> pCloseEventListener
+	{
+		std::make_shared<Infra::EventListener<Win::Window *>>()
+	};
 
-	window.setShow(true);
-	winClass.loop();
+	pCloseEventListener->setCallback([] (Win::Window *const pWindow)
+	{
+		pWindow->destroy();
+		Win::MessageLooper::stopLoop();
+	});
 
+	pWindow->setShow(true);
+	pWindow->getCloseEvent() += pCloseEventListener;
+
+	Win::MessageLooper::startLoop();
 	return 0;
 }

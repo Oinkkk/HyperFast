@@ -10,6 +10,9 @@
     <ClInclude Include="Window.h">
       <Filter>Window</Filter>
     </ClInclude>
+    <ClInclude Include="MessageLooper.h">
+      <Filter>MessageLooper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WindowClass.cpp">
@@ -21,6 +24,9 @@
     <ClCompile Include="Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
+    <ClCompile Include="MessageLooper.cpp">
+      <Filter>MessageLooper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="WindowClass">
@@ -31,6 +37,9 @@
     </Filter>
     <Filter Include="Window">
       <UniqueIdentifier>{281af4dc-6f81-4927-a845-1fa53f75484d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MessageLooper">
+      <UniqueIdentifier>{34ec69c9-9b3b-4bb8-9299-2342d1724489}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
