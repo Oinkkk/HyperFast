@@ -1,6 +1,7 @@
 #include <iostream>
+#include "../Infrastructure/Looper.h"
 #include "../Window/Window.h"
-#include "../Window/MessageLooper.h"
+#include "../Window/MainLooper.h"
 
 int main()
 {
@@ -19,12 +20,49 @@ int main()
 	pCloseEventListener->setCallback([] (Win::Window *const pWindow)
 	{
 		pWindow->destroy();
-		Win::MessageLooper::stopLoop();
+		Win::MainLooper::postQuitMessage();
 	});
 
 	pWindow->setShow(true);
 	pWindow->getCloseEvent() += pCloseEventListener;
 
-	Win::MessageLooper::startLoop();
+	const Infra::Looper::InitFunc initFunc
+	{
+		[]
+		{
+			int a = 0;
+		}
+	};
+
+	const Infra::Looper::MessageFunc messageFunc
+	{
+		[] (const uint64_t id, const std::vector<std::any> &arguments)
+		{
+			int a = 0;
+		}
+	};
+
+	const Infra::Looper::UpdateFunc updateFunc
+	{
+		[] (const float deltaTime)
+		{
+			int a = 0;
+		}
+	};
+
+	const Infra::Looper::EndFunc endFunc
+	{
+		[]
+		{
+			int a = 0;
+		}
+	};
+
+	Infra::Looper updateLooper;
+	updateLooper.start(initFunc, messageFunc, updateFunc, endFunc);
+
+	Win::MainLooper::start();
+	updateLooper.stop();
+
 	return 0;
 }

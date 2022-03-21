@@ -10,7 +10,7 @@
     <ClInclude Include="Window.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="MessageLooper.h">
+    <ClInclude Include="MainLooper.h">
       <Filter>MessageLooper</Filter>
     </ClInclude>
   </ItemGroup>
@@ -24,7 +24,7 @@
     <ClCompile Include="Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="MessageLooper.cpp">
+    <ClCompile Include="MainLooper.cpp">
       <Filter>MessageLooper</Filter>
     </ClCompile>
   </ItemGroup>

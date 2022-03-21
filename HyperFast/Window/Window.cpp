@@ -2,7 +2,6 @@
 #include "AppInstance.h"
 #include "../Infrastructure/StringFormatter.h"
 #include <cassert>
-#include "MessageLooper.h"
 
 namespace Win
 {

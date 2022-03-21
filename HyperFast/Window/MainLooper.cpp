@@ -1,9 +1,9 @@
-#include "MessageLooper.h"
+#include "MainLooper.h"
 #include <Windows.h>
 
 namespace Win
 {
-	void MessageLooper::startLoop() noexcept
+	void MainLooper::start() noexcept
 	{
 		MSG msg{};
 		while (GetMessage(&msg, nullptr, 0, 0))
@@ -13,7 +13,7 @@ namespace Win
 		}
 	}
 
-	void MessageLooper::stopLoop() noexcept
+	void MainLooper::postQuitMessage() noexcept
 	{
 		PostQuitMessage(0);
 	}
