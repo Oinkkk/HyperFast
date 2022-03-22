@@ -5,26 +5,53 @@
 
 int main()
 {
-	Win::WindowClass winClass{ "DefaultWinClass" };
-	
-	std::unique_ptr<Win::Window> pWindow
-	{ 
-		std::make_unique<Win::Window>(winClass, "test")
-	};
-
-	const std::shared_ptr<Infra::EventListener<Win::Window *>> pCloseEventListener
+	const std::shared_ptr<Infra::EventListener<Win::Window *, Win::EventConsumption *, Win::Window::ResizingType>> pResizeEventListener
 	{
-		std::make_shared<Infra::EventListener<Win::Window *>>()
+		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumption *, Win::Window::ResizingType>>()
 	};
 
-	pCloseEventListener->setCallback([] (Win::Window *const pWindow)
+	const std::shared_ptr<Infra::EventListener<Win::Window *, Win::EventConsumption *>> pDrawEventListener
+	{
+		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumption *>>()
+	};
+
+	const std::shared_ptr<Infra::EventListener<Win::Window *, Win::EventConsumption *>> pCloseEventListener
+	{
+		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumption *>>()
+	};
+
+	pResizeEventListener->setCallback(
+		[] (Win::Window *const pWindow, Win::EventConsumption *const pEventConsumption, const Win::Window::ResizingType resizingType)
+	{
+		pWindow->validate();
+		pEventConsumption->consume();
+		std::cout << "onResize" << std::endl;
+	});
+
+	pDrawEventListener->setCallback([](Win::Window *const pWindow, Win::EventConsumption *const pEventConsumption)
+	{
+		pWindow->validate();
+		pEventConsumption->consume();
+		std::cout << "onDraw" << std::endl;
+	});
+
+	pCloseEventListener->setCallback([] (Win::Window *const pWindow, Win::EventConsumption *const pEventConsumption)
 	{
 		pWindow->destroy();
+		pEventConsumption->consume();
 		Win::MainLooper::postQuitMessage();
 	});
 
-	pWindow->setShow(true);
-	pWindow->getCloseEvent() += pCloseEventListener;
+	Win::WindowClass winClass{ "DefaultWinClass" };
+	Win::Window win1{ winClass, "win1", true };
+	Win::Window win2{ winClass, "win2", true };
+
+	win1.setSize(400, 300);
+	win2.setSize(400, 300);
+
+	win1.getResizeEvent() += pResizeEventListener;
+	win1.getDrawEvent() += pDrawEventListener;
+	win1.getCloseEvent() += pCloseEventListener;
 
 	const Infra::Looper::InitFunc initFunc
 	{

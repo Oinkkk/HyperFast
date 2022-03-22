@@ -13,6 +13,9 @@
     <ClInclude Include="MainLooper.h">
       <Filter>MessageLooper</Filter>
     </ClInclude>
+    <ClInclude Include="EventConsumption.h">
+      <Filter>EventConsumption</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WindowClass.cpp">
@@ -27,6 +30,9 @@
     <ClCompile Include="MainLooper.cpp">
       <Filter>MessageLooper</Filter>
     </ClCompile>
+    <ClCompile Include="EventConsumption.cpp">
+      <Filter>EventConsumption</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="WindowClass">
@@ -40,6 +46,9 @@
     </Filter>
     <Filter Include="MessageLooper">
       <UniqueIdentifier>{34ec69c9-9b3b-4bb8-9299-2342d1724489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EventConsumption">
+      <UniqueIdentifier>{a4e47029-06a7-4ea3-b5c9-33887115028a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
