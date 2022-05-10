@@ -144,7 +144,7 @@ namespace Win
 		const WindowClass &windowClass, const std::string_view &title,
 		const int x, const int y, const int width, const int height, Window *const pThis)
 	{
-		const HINSTANCE hInstance{ AppInstance::getHandle() };
+		const HINSTANCE hInstance{ AppInstance::getInstance().getHandle() };
 
 		const HWND retVal
 		{

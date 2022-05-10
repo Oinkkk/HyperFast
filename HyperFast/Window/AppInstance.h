@@ -8,12 +8,19 @@ namespace Win
 	class AppInstance : public Infra::Unique
 	{
 	public:
-		static HINSTANCE getHandle() noexcept;
+		[[nodiscard]]
+		constexpr HINSTANCE getHandle() noexcept;
+
+		static AppInstance &getInstance() noexcept;
 
 	private:
 		const HINSTANCE __handle;
 
 		AppInstance() noexcept;
-		static AppInstance &__getInstance() noexcept;
 	};
+
+	constexpr HINSTANCE AppInstance::getHandle() noexcept
+	{
+		return __handle;
+	}
 }

@@ -2,6 +2,7 @@
 #include "../Infrastructure/Looper.h"
 #include "../Window/Window.h"
 #include "../Window/MainLooper.h"
+#include "../ObjectVK/GlobalProcedure.h"
 
 int main()
 {
@@ -52,6 +53,9 @@ int main()
 	win1.getResizeEvent() += pResizeEventListener;
 	win1.getDrawEvent() += pDrawEventListener;
 	win1.getCloseEvent() += pCloseEventListener;
+
+	ObjectVK::GlobalProcedure &instance{ ObjectVK::GlobalProcedure::getInstance() };
+	instance.load();
 
 	const Infra::Looper::InitFunc initFunc
 	{

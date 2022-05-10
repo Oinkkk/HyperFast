@@ -6,12 +6,7 @@ namespace Win
 		__handle{ GetModuleHandle(nullptr) }
 	{}
 
-	HINSTANCE AppInstance::getHandle() noexcept
-	{
-		return __getInstance().__handle;
-	}
-
-	AppInstance &AppInstance::__getInstance() noexcept
+	AppInstance &AppInstance::getInstance() noexcept
 	{
 		static AppInstance instance;
 		return instance;

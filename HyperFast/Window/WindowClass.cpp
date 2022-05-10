@@ -11,14 +11,14 @@ namespace Win
 
 	WindowClass::~WindowClass() noexcept
 	{
-		const HINSTANCE hInstance{ AppInstance::getHandle() };
+		const HINSTANCE hInstance{ AppInstance::getInstance().getHandle() };
 		const BOOL result{ UnregisterClass(__name.c_str(), hInstance) };
 		assert(result);
 	}
 
 	ATOM WindowClass::__register(const std::string_view &name)
 	{
-		const HINSTANCE hInstance{ AppInstance::getHandle() };
+		const HINSTANCE hInstance{ AppInstance::getInstance().getHandle() };
 
 		const WNDCLASS wndClass
 		{
