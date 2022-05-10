@@ -1,18 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="GlobalProcedure">
+    <Filter Include="Procedure">
       <UniqueIdentifier>{fd202d17-769f-417b-9ffe-f577d851762f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GlobalProcedure.h">
-      <Filter>GlobalProcedure</Filter>
+    <ClInclude Include="GlobalProcedureLoader.h">
+      <Filter>Procedure</Filter>
+    </ClInclude>
+    <ClInclude Include="Procedure.h">
+      <Filter>Procedure</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GlobalProcedure.cpp">
-      <Filter>GlobalProcedure</Filter>
+    <ClCompile Include="GlobalProcedureLoader.cpp">
+      <Filter>Procedure</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 #include "../Infrastructure/Looper.h"
 #include "../Window/Window.h"
 #include "../Window/MainLooper.h"
-#include "../ObjectVK/GlobalProcedure.h"
+#include "../ObjectVK/GlobalProcedureLoader.h"
 
 int main()
 {
@@ -54,8 +54,8 @@ int main()
 	win1.getDrawEvent() += pDrawEventListener;
 	win1.getCloseEvent() += pCloseEventListener;
 
-	ObjectVK::GlobalProcedure &instance{ ObjectVK::GlobalProcedure::getInstance() };
-	instance.load();
+	ObjectVK::GlobalProcedureLoader &vulkanGlobalProcLoader{ ObjectVK::GlobalProcedureLoader::getInstance() };
+	vulkanGlobalProcLoader.load();
 
 	const Infra::Looper::InitFunc initFunc
 	{
