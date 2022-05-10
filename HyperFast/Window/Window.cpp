@@ -39,10 +39,7 @@ namespace Win
 
 	void Window::setShow(const bool show) noexcept
 	{
-		if (show)
-			ShowWindow(__handle, SW_SHOW);
-		else
-			ShowWindow(__handle, SW_HIDE);
+		ShowWindow(__handle, show ? SW_SHOW : SW_HIDE);
 	}
 
 	LRESULT Window::sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)

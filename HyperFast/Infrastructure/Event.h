@@ -17,8 +17,6 @@ namespace Infra
 
 		void send(const $Args &...args);
 
-		EventListener &operator=(const std::function<void(const $Args &...)> &callback) noexcept;
-
 	private:
 		std::function<void(const $Args &...)> __callbackFunc;
 	};
@@ -74,13 +72,6 @@ namespace Infra
 	void EventListener<$Args...>::send(const $Args &...args)
 	{
 		__callbackFunc(args...);
-	}
-
-	template <typename ...$Args>
-	EventListener<$Args...> &EventListener<$Args...>::operator=(
-		const std::function<void(const $Args &...)> &callback) noexcept
-	{
-		setCallback(callback);
 	}
 
 	template <typename ...$Args>

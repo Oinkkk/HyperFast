@@ -5,37 +5,37 @@
 
 int main()
 {
-	const std::shared_ptr<Infra::EventListener<Win::Window *, Win::EventConsumption *, Win::Window::ResizingType>> pResizeEventListener
+	const auto pResizeEventListener
 	{
-		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumption *, Win::Window::ResizingType>>()
+		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumptionView *, Win::Window::ResizingType>>()
 	};
 
-	const std::shared_ptr<Infra::EventListener<Win::Window *, Win::EventConsumption *>> pDrawEventListener
+	const auto pDrawEventListener
 	{
-		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumption *>>()
+		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumptionView *>>()
 	};
 
-	const std::shared_ptr<Infra::EventListener<Win::Window *, Win::EventConsumption *>> pCloseEventListener
+	const auto pCloseEventListener
 	{
-		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumption *>>()
+		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumptionView *>>()
 	};
 
 	pResizeEventListener->setCallback(
-		[] (Win::Window *const pWindow, Win::EventConsumption *const pEventConsumption, const Win::Window::ResizingType resizingType)
+		[] (Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption, const Win::Window::ResizingType resizingType)
 	{
 		pWindow->validate();
 		pEventConsumption->consume();
 		std::cout << "onResize" << std::endl;
 	});
 
-	pDrawEventListener->setCallback([](Win::Window *const pWindow, Win::EventConsumption *const pEventConsumption)
+	pDrawEventListener->setCallback([](Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption)
 	{
 		pWindow->validate();
 		pEventConsumption->consume();
 		std::cout << "onDraw" << std::endl;
 	});
 
-	pCloseEventListener->setCallback([] (Win::Window *const pWindow, Win::EventConsumption *const pEventConsumption)
+	pCloseEventListener->setCallback([] (Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption)
 	{
 		pWindow->destroy();
 		pEventConsumption->consume();

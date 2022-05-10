@@ -2,12 +2,12 @@
 
 namespace Win
 {
-	void EventConsumptionImpl::consume() noexcept
+	void EventConsumption::consume() noexcept
 	{
 		__consumed |= true;
 	}
 
-	bool EventConsumptionImpl::isConsumed() const noexcept
+	bool EventConsumption::isConsumed() const noexcept
 	{
 		return __consumed;
 	}

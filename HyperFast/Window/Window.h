@@ -62,23 +62,23 @@ namespace Win
 		LRESULT sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam);
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Window *, EventConsumption *, ResizingType> &getResizeEvent() noexcept;
+		constexpr Infra::EventView<Window *, EventConsumptionView *, ResizingType> &getResizeEvent() noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Window *, EventConsumption *> &getDrawEvent() noexcept;
+		constexpr Infra::EventView<Window *, EventConsumptionView *> &getDrawEvent() noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Window *, EventConsumption *> &getCloseEvent() noexcept;
+		constexpr Infra::EventView<Window *, EventConsumptionView *> &getCloseEvent() noexcept;
 
 	private:
 		HWND __handle{};
 		RECT __windowRect{};
 		RECT __clientRect{};
 
-		EventConsumptionImpl __eventConsumption;
-		Infra::Event<Window *, EventConsumption *, ResizingType> __resizeEvent;
-		Infra::Event<Window *, EventConsumption *> __drawEvent;
-		Infra::Event<Window *, EventConsumption *> __closeEvent;
+		EventConsumption __eventConsumption;
+		Infra::Event<Window *, EventConsumptionView *, ResizingType> __resizeEvent;
+		Infra::Event<Window *, EventConsumptionView *> __drawEvent;
+		Infra::Event<Window *, EventConsumptionView *> __closeEvent;
 
 		[[nodiscard]]
 		constexpr int __getWindowWidth() const noexcept;
@@ -113,17 +113,17 @@ namespace Win
 		return { __clientRect.bottom - __clientRect.top };
 	}
 
-	constexpr Infra::EventView<Window *, EventConsumption *, Window::ResizingType> &Window::getResizeEvent() noexcept
+	constexpr Infra::EventView<Window *, EventConsumptionView *, Window::ResizingType> &Window::getResizeEvent() noexcept
 	{
 		return __resizeEvent;
 	}
 
-	constexpr Infra::EventView<Window *, EventConsumption *> &Window::getDrawEvent() noexcept
+	constexpr Infra::EventView<Window *, EventConsumptionView *> &Window::getDrawEvent() noexcept
 	{
 		return __drawEvent;
 	}
 
-	constexpr Infra::EventView<Window *, Win::EventConsumption *> &Window::getCloseEvent() noexcept
+	constexpr Infra::EventView<Window *, Win::EventConsumptionView *> &Window::getCloseEvent() noexcept
 	{
 		return __closeEvent;
 	}

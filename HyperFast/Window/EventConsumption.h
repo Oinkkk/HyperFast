@@ -4,7 +4,7 @@
 
 namespace Win
 {
-	class EventConsumption : public Infra::Unique
+	class EventConsumptionView : public Infra::Unique
 	{
 	public:
 		virtual void consume() noexcept = 0;
@@ -13,7 +13,7 @@ namespace Win
 		virtual bool isConsumed() const noexcept = 0;
 	};
 
-	class EventConsumptionImpl : public EventConsumption
+	class EventConsumption : public EventConsumptionView
 	{
 	public:
 		virtual void consume() noexcept override;
@@ -27,7 +27,7 @@ namespace Win
 		bool __consumed{};
 	};
 
-	constexpr void EventConsumptionImpl::reset() noexcept
+	constexpr void EventConsumption::reset() noexcept
 	{
 		__consumed = false;
 	}
