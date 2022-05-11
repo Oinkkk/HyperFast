@@ -2,7 +2,8 @@
 #include "../Infrastructure/Looper.h"
 #include "../Window/Window.h"
 #include "../Window/MainLooper.h"
-#include "../ObjectVK/GlobalProcedureLoader.h"
+#include "../VulkanLoader/VulkanLoader.h"
+#include "../RenderingEngine/RenderingEngine.h"
 
 int main()
 {
@@ -54,16 +55,10 @@ int main()
 	win1.getDrawEvent() += pDrawEventListener;
 	win1.getCloseEvent() += pCloseEventListener;
 
-	ObjectVK::GlobalProcedureLoader &vulkanGlobalProcLoader{ ObjectVK::GlobalProcedureLoader::getInstance() };
-	vulkanGlobalProcLoader.load();
+	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
+	vulkanLoader.load();
 
-	const Infra::Looper::InitFunc initFunc
-	{
-		[]
-		{
-			int a = 0;
-		}
-	};
+	HyperFast::RenderingEngine renderingEngine{ "HyperFastDemo", "HyperFast" };
 
 	const Infra::Looper::MessageFunc messageFunc
 	{
@@ -81,16 +76,8 @@ int main()
 		}
 	};
 
-	const Infra::Looper::EndFunc endFunc
-	{
-		[]
-		{
-			int a = 0;
-		}
-	};
-
 	Infra::Looper updateLooper;
-	updateLooper.start(initFunc, messageFunc, updateFunc, endFunc);
+	updateLooper.start(messageFunc, updateFunc);
 
 	Win::MainLooper::start();
 	updateLooper.stop();

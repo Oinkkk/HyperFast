@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. Framework", "5. Framewor
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6. App", "6. App", "{8D9E5303-1F19-41A5-881B-8A12CB7995CB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ObjectVK", "ObjectVK\ObjectVK.vcxproj", "{022E6446-DAF0-45D3-A57F-C041A461D5E0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanLoader", "VulkanLoader\VulkanLoader.vcxproj", "{022E6446-DAF0-45D3-A57F-C041A461D5E0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderingEngine", "RenderingEngine\RenderingEngine.vcxproj", "{9DD430D9-D58C-4E9B-A29E-0C5881B5F2F0}"
 EndProject

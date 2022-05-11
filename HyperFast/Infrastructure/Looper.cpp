@@ -7,24 +7,20 @@ namespace Infra
 		stop();
 	}
 
-	void Looper::start(
-		const InitFunc &initFunc, const MessageFunc &messageFunc,
-		const UpdateFunc &updateFunc, const EndFunc &endFunc)
+	void Looper::start(const MessageFunc &messageFunc, const UpdateFunc &updateFunc)
 	{
 		stop();
 
 		__loopFlag = true;
 		__loopThread = std::thread
 		{
-			[this, initFunc, messageFunc, updateFunc, endFunc]
+			[this, messageFunc, updateFunc]
 			{
-				initFunc();
-
 				while (__loopFlag)
 				{
 					if (!(__messageQueue.isEmpty()))
 					{
-						const std::vector<ConcurrentMessageQueue::Message> messages{ __messageQueue.dequeueMessages() };
+						const std::vector<ConcurrentMessageQueue::Message> &messages{ __messageQueue.dequeueMessages() };
 						for (const ConcurrentMessageQueue::Message &message : messages)
 							messageFunc(message.id, message.arguments);
 					}
@@ -35,8 +31,6 @@ namespace Infra
 
 					updateFunc(elaped);
 				}
-
-				endFunc();
 			}
 		};
 	}

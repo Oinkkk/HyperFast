@@ -20,10 +20,7 @@ namespace Infra
 		template <typename ...$Args>
 		void enqueueMessage(const uint64_t id, $Args &&...args);
 
-		void start(
-			const InitFunc &initFunc, const MessageFunc &messageFunc,
-			const UpdateFunc &updateFunc, const EndFunc &endFunc);
-
+		void start(const MessageFunc &messageFunc, const UpdateFunc &updateFunc);
 		void stop();
 
 	private:

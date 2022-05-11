@@ -1,0 +1,22 @@
+#pragma once
+
+#include <vulkan/vulkan.h>
+
+namespace VKL
+{
+	class GlobalProcedure
+	{
+	public:
+		PFN_vkEnumerateInstanceVersion vkEnumerateInstanceVersion{};
+		PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties{};
+		PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties{};
+		PFN_vkCreateInstance vkCreateInstance{};
+	};
+
+	class InstanceProcedure
+	{
+	public:
+		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr{};
+		PFN_vkDestroyInstance vkDestroyInstance{};
+	};
+}
