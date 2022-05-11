@@ -1,25 +1,22 @@
 #include "RenderingEngine.h"
-#include "../VulkanLoader/VulkanLoader.h"
 #include <sstream>
+#include <vector>
 
 namespace HyperFast
 {
-	RenderingEngine::RenderingEngine(const std::string_view &appName, const std::string_view &engineName)
+	RenderingEngine::RenderingEngine(const std::string_view &appName, const std::string_view &engineName) :
+		__appName{ appName }, __engineName{ engineName }
 	{
-		
-
-		/*const VkApplicationInfo appInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO,
-			.pApplicationName = appName.data(),
-			.applicationVersion;
-			.pEngineName;
-			.engineVersion;
-			.apiVersion;
-		};*/
-
 		__getInstanceVersion();
 		__checkInstanceVersionSupport();
+		__createInstance();
+		__queryInstanceProc();
+	}
+
+	RenderingEngine::~RenderingEngine() noexcept
+	{
+		__destroyInstance();
+		__resetInstanceProc();
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -48,14 +45,60 @@ namespace HyperFast
 			return;
 
 		std::ostringstream oss;
-		oss << "Failed to initialize the engine. ";
 		oss << "The instance version is too low. ";
 		oss << "Expected: >= 1.3, Actual: ";
-		oss << VK_API_VERSION_MAJOR(__instanceVersion) << '.';
-		oss << VK_API_VERSION_MINOR(__instanceVersion) << '.';
-		oss << VK_API_VERSION_PATCH(__instanceVersion) << '.';
-		oss << VK_API_VERSION_VARIANT(__instanceVersion);
+		oss << major << '.' << minor << '.' << patch << '.' << variant;
 
 		throw std::exception{ oss.str().c_str() };
+	}
+
+	void RenderingEngine::__createInstance()
+	{
+		const VkApplicationInfo appInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO,
+			.pApplicationName = __appName.c_str(),
+			.applicationVersion = VK_API_VERSION_1_0,
+			.pEngineName = __engineName.c_str(),
+			.engineVersion = VK_API_VERSION_1_0,
+			.apiVersion = __instanceVersion
+		};
+
+		std::vector<const char *> layerNames;
+		std::vector<const char *> extensionNames;
+
+		const VkInstanceCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+			.pApplicationInfo = &appInfo,
+			.enabledLayerCount = uint32_t(layerNames.size()),
+			.ppEnabledLayerNames = layerNames.data(),
+			.enabledExtensionCount = uint32_t(extensionNames.size()),
+			.ppEnabledExtensionNames = extensionNames.data()
+		};
+
+		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
+		globalGlobalProcedure.vkCreateInstance(&createInfo, nullptr, &__instance);
+
+		if (__instance)
+			return;
+
+		throw std::exception{ "Cannot create a VkInstance." };
+	}
+
+	void RenderingEngine::__queryInstanceProc() noexcept
+	{
+		__instanceProc = VKL::VulkanLoader::getInstance().queryInstanceProcedure(__instance);
+	}
+
+	void RenderingEngine::__destroyInstance() noexcept
+	{
+		__instanceProc.vkDestroyInstance(__instance, nullptr);
+		__instance = nullptr;
+	}
+
+	void RenderingEngine::__resetInstanceProc() noexcept
+	{
+		__instanceProc = {};
 	}
 }

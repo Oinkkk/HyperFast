@@ -7,6 +7,7 @@ namespace VKL
 	class GlobalProcedure
 	{
 	public:
+		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr{};
 		PFN_vkEnumerateInstanceVersion vkEnumerateInstanceVersion{};
 		PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties{};
 		PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties{};
@@ -16,7 +17,6 @@ namespace VKL
 	class InstanceProcedure
 	{
 	public:
-		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr{};
 		PFN_vkDestroyInstance vkDestroyInstance{};
 	};
 }

@@ -58,7 +58,10 @@ int main()
 	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
 	vulkanLoader.load();
 
-	HyperFast::RenderingEngine renderingEngine{ "HyperFastDemo", "HyperFast" };
+	std::unique_ptr<HyperFast::RenderingEngine> pRenderingEngine
+	{
+		std::make_unique<HyperFast::RenderingEngine>("HyperFastDemo", "HyperFast")
+	};
 
 	const Infra::Looper::MessageFunc messageFunc
 	{
@@ -82,5 +85,7 @@ int main()
 	Win::MainLooper::start();
 	updateLooper.stop();
 
+	pRenderingEngine = nullptr;
+	vulkanLoader.free();
 	return 0;
 }

@@ -23,11 +23,13 @@ namespace VKL
 		if (!__handle)
 			throw std::exception{ "Cannot find a vulkan loader." };
 
-		__global_vkGetInstanceProcAddr =
+		const PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr
+		{
 			reinterpret_cast<PFN_vkGetInstanceProcAddr>(
-				GetProcAddress(__handle, "vkGetInstanceProcAddr"));
+				GetProcAddress(__handle, "vkGetInstanceProcAddr"))
+		};
 
-		__loadGlobalProc();
+		__loadGlobalProc(vkGetInstanceProcAddr);
 	}
 
 	void VulkanLoader::free()
@@ -47,14 +49,9 @@ namespace VKL
 
 		InstanceProcedure retVal;
 
-		PFN_vkGetInstanceProcAddr instance_vkGetInstanceProcAddr =
-			reinterpret_cast<PFN_vkGetInstanceProcAddr>(
-				__global_vkGetInstanceProcAddr(instance, "vkGetInstanceProcAddr"));
-
-		retVal.vkGetInstanceProcAddr = instance_vkGetInstanceProcAddr;
-
-		retVal.vkDestroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(
-			instance_vkGetInstanceProcAddr(instance, "vkDestroyInstance"));
+		retVal.vkDestroyInstance =
+			reinterpret_cast<PFN_vkDestroyInstance>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkDestroyInstance"));
 
 		return retVal;
 	}
@@ -65,22 +62,24 @@ namespace VKL
 		return instance;
 	}
 
-	void VulkanLoader::__loadGlobalProc() noexcept
+	void VulkanLoader::__loadGlobalProc(const PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr) noexcept
 	{
+		__globalProc.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+
 		__globalProc.vkEnumerateInstanceVersion =
 			reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
-				__global_vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+				vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
 
 		__globalProc.vkEnumerateInstanceExtensionProperties =
 			reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
-				__global_vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceExtensionProperties"));
+				vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceExtensionProperties"));
 
 		__globalProc.vkEnumerateInstanceLayerProperties =
 			reinterpret_cast<PFN_vkEnumerateInstanceLayerProperties>(
-				__global_vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceLayerProperties"));
+				vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceLayerProperties"));
 
 		__globalProc.vkCreateInstance =
 			reinterpret_cast<PFN_vkCreateInstance>(
-				__global_vkGetInstanceProcAddr(nullptr, "vkCreateInstance"));
+				vkGetInstanceProcAddr(nullptr, "vkCreateInstance"));
 	}
 }

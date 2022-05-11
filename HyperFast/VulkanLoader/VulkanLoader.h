@@ -22,12 +22,11 @@ namespace VKL
 	private:
 		HMODULE __handle{};
 		GlobalProcedure __globalProc;
-		PFN_vkGetInstanceProcAddr __global_vkGetInstanceProcAddr{};
 
 		VulkanLoader() = default;
 		~VulkanLoader();
 
-		void __loadGlobalProc() noexcept;
+		void __loadGlobalProc(const PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr) noexcept;
 	};
 
 	constexpr const GlobalProcedure &VulkanLoader::getGlobalProcedure() const noexcept
