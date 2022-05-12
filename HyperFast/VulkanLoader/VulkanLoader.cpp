@@ -1,4 +1,4 @@
-#include "VulkanLoader.h"
+﻿#include "VulkanLoader.h"
 #include <exception>
 #include <cassert>
 
@@ -64,6 +64,8 @@ namespace VKL
 
 	void VulkanLoader::__loadGlobalProc(const PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr) noexcept
 	{
+		// vkGetInstanceProcAddr은 dispatable object가 VkInstance지만 유일하게 global function으로 취급됨
+		// vkGetInstanceProcAddr(instance, "vkGetInstanceProcAddr") 반환 값이 nullptr 나옴
 		__globalProc.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
 
 		__globalProc.vkEnumerateInstanceVersion =
