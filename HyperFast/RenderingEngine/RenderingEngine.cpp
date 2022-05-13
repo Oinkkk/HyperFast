@@ -1,4 +1,4 @@
-#include "RenderingEngine.h"
+﻿#include "RenderingEngine.h"
 #include <sstream>
 #include <vector>
 
@@ -54,6 +54,8 @@ namespace HyperFast
 
 	void RenderingEngine::__createInstance()
 	{
+		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
+
 		const VkApplicationInfo appInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -64,20 +66,46 @@ namespace HyperFast
 			.apiVersion = __instanceVersion
 		};
 
-		std::vector<const char *> layerNames;
-		std::vector<const char *> extensionNames;
+		std::vector<const char *> enabledLayers;
+		std::vector<const char *> enabledExtensions;
+
+		/*
+			환경 변수 VK_LAYER_PATH를 통해 레이어 경로를 알려주어야 함
+			예) VK_LAYER_PATH=$(SolutionDir)ThirdParty\vulkan_layers
+		*/
+		uint32_t numFoundLayers{};
+		globalGlobalProcedure.vkEnumerateInstanceLayerProperties(&numFoundLayers, nullptr);
+
+		std::vector<VkLayerProperties> foundLayers;
+		foundLayers.resize(numFoundLayers);
+		globalGlobalProcedure.vkEnumerateInstanceLayerProperties(&numFoundLayers, foundLayers.data());
+
+#ifndef NDEBUG
+		// Debug mode
+		const auto foundIt = std::find_if(
+			foundLayers.begin(), foundLayers.end(), [](const VkLayerProperties &layer)
+		{
+			return (VK_KHRONOS_VALIDATION_LAYER_NAME == layer.layerName);
+		});
+
+		if (foundIt != foundLayers.end())
+			enabledLayers.emplace_back(VK_KHRONOS_VALIDATION_LAYER_NAME.data());
+		else
+			throw std::exception{ "Cannot find the validation layer." };
+#else
+		// Release mode
+#endif
 
 		const VkInstanceCreateInfo createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 			.pApplicationInfo = &appInfo,
-			.enabledLayerCount = uint32_t(layerNames.size()),
-			.ppEnabledLayerNames = layerNames.data(),
-			.enabledExtensionCount = uint32_t(extensionNames.size()),
-			.ppEnabledExtensionNames = extensionNames.data()
+			.enabledLayerCount = uint32_t(enabledLayers.size()),
+			.ppEnabledLayerNames = enabledLayers.data(),
+			.enabledExtensionCount = uint32_t(enabledExtensions.size()),
+			.ppEnabledExtensionNames = enabledExtensions.data()
 		};
 
-		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
 		globalGlobalProcedure.vkCreateInstance(&createInfo, nullptr, &__instance);
 
 		if (__instance)

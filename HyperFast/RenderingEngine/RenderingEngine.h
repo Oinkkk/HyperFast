@@ -20,6 +20,8 @@ namespace HyperFast
 		VkInstance __instance{};
 		VKL::InstanceProcedure __instanceProc;
 
+		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
+
 		void __getInstanceVersion() noexcept;
 		void __checkInstanceVersionSupport() const;
 		void __createInstance();
