@@ -53,6 +53,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyInstance>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkDestroyInstance"));
 
+		retVal.vkCreateDebugUtilsMessengerEXT =
+			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+
 		return retVal;
 	}
 

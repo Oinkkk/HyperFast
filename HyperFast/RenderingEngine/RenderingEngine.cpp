@@ -4,11 +4,17 @@
 
 namespace HyperFast
 {
-	RenderingEngine::RenderingEngine(const std::string_view &appName, const std::string_view &engineName) :
-		__appName{ appName }, __engineName{ engineName }
+	RenderingEngine::RenderingEngine(
+		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
+		__logger{ logger }, __appName { appName }, __engineName{engineName}
 	{
 		__getInstanceVersion();
 		__checkInstanceVersionSupport();
+
+#ifndef NDEBUG
+		__populateDebugMessengerCreateInfo();
+#endif
+
 		__createInstance();
 		__queryInstanceProc();
 	}
@@ -52,6 +58,28 @@ namespace HyperFast
 		throw std::exception{ oss.str().c_str() };
 	}
 
+	void RenderingEngine::__populateDebugMessengerCreateInfo() noexcept
+	{
+		__debugMessengerCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		__debugMessengerCreateInfo.messageSeverity =
+		(
+			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT		|
+			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT		|
+			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT		|
+			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
+		);
+
+		__debugMessengerCreateInfo.messageType =
+		(
+			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT		|
+			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT	|
+			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
+		);
+
+		__debugMessengerCreateInfo.pfnUserCallback = vkDebugUtilsMessengerCallbackEXT;
+		__debugMessengerCreateInfo.pUserData = &__logger;
+	}
+
 	void RenderingEngine::__createInstance()
 	{
 		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
@@ -80,6 +108,8 @@ namespace HyperFast
 		foundLayers.resize(numFoundLayers);
 		globalGlobalProcedure.vkEnumerateInstanceLayerProperties(&numFoundLayers, foundLayers.data());
 
+		const void *pNext{};
+
 #ifndef NDEBUG
 		// Debug mode
 		const auto foundIt = std::find_if(
@@ -88,10 +118,13 @@ namespace HyperFast
 			return (VK_KHRONOS_VALIDATION_LAYER_NAME == layer.layerName);
 		});
 
-		if (foundIt != foundLayers.end())
-			enabledLayers.emplace_back(VK_KHRONOS_VALIDATION_LAYER_NAME.data());
-		else
+		if (foundIt == foundLayers.end())
 			throw std::exception{ "Cannot find the validation layer." };
+
+		enabledLayers.emplace_back(VK_KHRONOS_VALIDATION_LAYER_NAME.data());
+		enabledExtensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+		pNext = &__debugMessengerCreateInfo;
 #else
 		// Release mode
 #endif
@@ -99,6 +132,7 @@ namespace HyperFast
 		const VkInstanceCreateInfo createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+			.pNext = pNext,
 			.pApplicationInfo = &appInfo,
 			.enabledLayerCount = uint32_t(enabledLayers.size()),
 			.ppEnabledLayerNames = enabledLayers.data(),
@@ -128,5 +162,36 @@ namespace HyperFast
 	void RenderingEngine::__resetInstanceProc() noexcept
 	{
 		__instanceProc = {};
+	}
+
+	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(
+		const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+		const VkDebugUtilsMessengerCallbackDataEXT *const pCallbackData, void *const pUserData)
+	{
+		Infra::Logger *const pLogger{ reinterpret_cast<Infra::Logger *>(pUserData) };
+
+		Infra::LogSeverityType severityType{};
+		switch (messageSeverity)
+		{
+		case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+			severityType = Infra::LogSeverityType::VERBOSE;
+			break;
+
+		case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+			severityType = Infra::LogSeverityType::INFO;
+			break;
+
+		case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+			severityType = Infra::LogSeverityType::WARNING;
+			break;
+
+		case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+			severityType = Infra::LogSeverityType::FATAL;
+			break;
+		}
+
+		pLogger->log(severityType, pCallbackData->pMessage);
+		return VK_FALSE;
 	}
 }

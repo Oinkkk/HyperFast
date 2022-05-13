@@ -7,6 +7,9 @@
 
 int main()
 {
+	Infra::Logger logger;
+	logger.log(Infra::LogSeverityType::INFO, "The program starts.");
+
 	const auto pResizeEventListener
 	{
 		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumptionView *, Win::Window::ResizingType>>()
@@ -23,18 +26,17 @@ int main()
 	};
 
 	pResizeEventListener->setCallback(
-		[] (Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption, const Win::Window::ResizingType resizingType)
+		[] (Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption,
+			const Win::Window::ResizingType resizingType)
 	{
 		pWindow->validate();
 		pEventConsumption->consume();
-		std::cout << "onResize" << std::endl;
 	});
 
 	pDrawEventListener->setCallback([](Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption)
 	{
 		pWindow->validate();
 		pEventConsumption->consume();
-		std::cout << "onDraw" << std::endl;
 	});
 
 	pCloseEventListener->setCallback([] (Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption)
@@ -58,10 +60,14 @@ int main()
 	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
 	vulkanLoader.load();
 
+	logger.log(Infra::LogSeverityType::INFO, "Start to create the rendering engine.");
+
 	std::unique_ptr<HyperFast::RenderingEngine> pRenderingEngine
 	{
-		std::make_unique<HyperFast::RenderingEngine>("HyperFastDemo", "HyperFast")
+		std::make_unique<HyperFast::RenderingEngine>(logger, "HyperFastDemo", "HyperFast")
 	};
+
+	logger.log(Infra::LogSeverityType::INFO, "The rendering engine is created.");
 
 	const Infra::Looper::MessageFunc messageFunc
 	{
@@ -79,13 +85,23 @@ int main()
 		}
 	};
 
+	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper starts.");
 	Infra::Looper updateLooper;
 	updateLooper.start(messageFunc, updateFunc);
 
+	logger.log(Infra::LogSeverityType::INFO, "MainLooper starts.");
 	Win::MainLooper::start();
+	logger.log(Infra::LogSeverityType::INFO, "MainLooper ends.");
+
 	updateLooper.stop();
+	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper ends.");
 
 	pRenderingEngine = nullptr;
+	logger.log(Infra::LogSeverityType::INFO, "The rendering engine destroyed.");
+
 	vulkanLoader.free();
+	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper ends.");
+
+	logger.log(Infra::LogSeverityType::INFO, "End of the program");
 	return 0;
 }
