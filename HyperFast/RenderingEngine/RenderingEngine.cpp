@@ -23,12 +23,14 @@ namespace HyperFast
 #endif
 
 		__retrievePhysicalDevice();
-		__queryPhysicalDeviceProperties();
+		__queryPhysicalDeviceProp();
+		__retrieveQueueFamilies();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
-		__resetPhysicalDeviceProperties();
+		__resetQueueFamilies();
+		__resetPhysicalDeviceProp();
 		__resetPhysicalDevice();
 
 #ifndef NDEBUG
@@ -236,6 +238,26 @@ namespace HyperFast
 		return ((major == 1U) && (minor >= 3U));
 	}
 
+	bool RenderingEngine::__checkQueueSupport(const VkPhysicalDevice device) const noexcept
+	{
+		uint32_t numProps{};
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, nullptr);
+
+		std::vector<VkQueueFamilyProperties> queueFamilyProps;
+		queueFamilyProps.resize(numProps);
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, queueFamilyProps.data());
+
+		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
+		{
+			const VkQueueFamilyProperties &queueFamilyProp{ queueFamilyProps[propIter] };
+
+			if (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT)
+				return true;
+		}
+
+		return false;
+	}
+
 	void RenderingEngine::__retrievePhysicalDevice()
 	{
 		uint32_t numDevices{};
@@ -253,39 +275,7 @@ namespace HyperFast
 			if (!__checkDeviceVersionSupport(device))
 				continue;
 
-			uint32_t numProps{};
-			__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, nullptr);
-
-			std::vector<VkQueueFamilyProperties> queueFamilyProps;
-			queueFamilyProps.resize(numProps);
-			__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, queueFamilyProps.data());
-
-			bool graphicsFound{};
-			bool dmaTransferFound{};
-			for (uint32_t propIter = 0U; propIter < numProps; propIter++)
-			{
-				const VkQueueFamilyProperties &queueFamilyProp{ queueFamilyProps[propIter] };
-				if (!graphicsFound && (queueFamilyProp.queueFlags == VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT))
-				{
-					dmaTransferFound = true;
-					__transferQueueFamilyIndex = propIter;
-				}
-
-				if (!graphicsFound && (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT))
-				{
-					graphicsFound = true;
-					__graphicsQueueFamilyIndex = propIter;
-				}
-			}
-
-			if (graphicsFound)
-			{
-				__queueFamilyProps.swap(queueFamilyProps);
-				if (!dmaTransferFound)
-					__transferQueueFamilyIndex = __graphicsQueueFamilyIndex;
-			}
-
-			if (__queueFamilyProps.empty())
+			if (!__checkQueueSupport(device))
 				continue;
 
 			__physicalDevice = device;
@@ -298,22 +288,66 @@ namespace HyperFast
 
 	void RenderingEngine::__resetPhysicalDevice() noexcept
 	{
-		__queueFamilyProps.clear();
-		__graphicsQueueFamilyIndex = 0U;
-		__transferQueueFamilyIndex = 0U;
-
 		__physicalDevice = nullptr;
 	}
 
-	void RenderingEngine::__queryPhysicalDeviceProperties() noexcept
+	void RenderingEngine::__queryPhysicalDeviceProp() noexcept
 	{
-		__physicalDeviceProperties2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-		__instanceProc.vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProperties2);
+		__physicalDeviceProp2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		__instanceProc.vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProp2);
 	}
 
-	void RenderingEngine::__resetPhysicalDeviceProperties() noexcept
+	void RenderingEngine::__resetPhysicalDeviceProp() noexcept
 	{
-		__physicalDeviceProperties2 = {};
+		__physicalDeviceProp2 = {};
+	}
+
+	void RenderingEngine::__retrieveQueueFamilies() noexcept
+	{
+		uint32_t numProps{};
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, nullptr);
+
+		__queueFamilyProps.resize(numProps);
+		__queueFamilyPriorityProps.resize(numProps);
+		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
+		{
+			VkQueueFamilyProperties2 &prop{ __queueFamilyProps[propIter] };
+			VkQueueFamilyGlobalPriorityPropertiesKHR &priorityProp{ __queueFamilyPriorityProps[propIter] };
+
+			prop.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+			prop.pNext = &priorityProp;
+
+			priorityProp.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR;
+		}
+
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__physicalDevice, &numProps, __queueFamilyProps.data());
+
+		bool graphicsFound{};
+		bool dmaTransferFound{};
+		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
+		{
+			const VkQueueFamilyProperties &queueFamilyProp{ __queueFamilyProps[propIter].queueFamilyProperties };
+			if (!dmaTransferFound && (queueFamilyProp.queueFlags == VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT))
+			{
+				dmaTransferFound = true;
+				__transferQueueFamilyIndex = propIter;
+			}
+
+			if (!graphicsFound && (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT))
+			{
+				graphicsFound = true;
+				__graphicsQueueFamilyIndex = propIter;
+			}
+		}
+
+		if (graphicsFound && !dmaTransferFound)
+			__transferQueueFamilyIndex = __graphicsQueueFamilyIndex;
+	}
+
+	void RenderingEngine::__resetQueueFamilies() noexcept
+	{
+		__queueFamilyPriorityProps.clear();
+		__queueFamilyProps.clear();
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

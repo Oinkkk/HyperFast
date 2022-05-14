@@ -26,11 +26,12 @@ namespace HyperFast
 		VkDebugUtilsMessengerEXT __debugMessenger{};
 
 		VkPhysicalDevice __physicalDevice{};
-		std::vector<VkQueueFamilyProperties> __queueFamilyProps;
+		VkPhysicalDeviceProperties2 __physicalDeviceProp2{};
+
+		std::vector<VkQueueFamilyProperties2> __queueFamilyProps;
+		std::vector<VkQueueFamilyGlobalPriorityPropertiesKHR> __queueFamilyPriorityProps;
 		uint32_t __graphicsQueueFamilyIndex{};
 		uint32_t __transferQueueFamilyIndex{};
-
-		VkPhysicalDeviceProperties2 __physicalDeviceProperties2{};
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
@@ -48,11 +49,16 @@ namespace HyperFast
 		void __destroyDebugMessenger() noexcept;
 
 		bool __checkDeviceVersionSupport(const VkPhysicalDevice device) const noexcept;
+		bool __checkQueueSupport(const VkPhysicalDevice device) const noexcept;
+
 		void __retrievePhysicalDevice();
 		void __resetPhysicalDevice() noexcept;
 
-		void __queryPhysicalDeviceProperties() noexcept;
-		void __resetPhysicalDeviceProperties() noexcept;
+		void __queryPhysicalDeviceProp() noexcept;
+		void __resetPhysicalDeviceProp() noexcept;
+
+		void __retrieveQueueFamilies() noexcept;
+		void __resetQueueFamilies() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
