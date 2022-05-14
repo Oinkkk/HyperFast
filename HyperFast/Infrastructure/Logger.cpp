@@ -18,7 +18,7 @@ namespace Infra
 		tm curTimeAsTM;
 		localtime_s(&curTimeAsTM, &curTimeAsTimeT);
 
-		oss << std::put_time(&curTimeAsTM, "%T") << "]";
+		oss << std::put_time(&curTimeAsTM, "%T") << "] ";
 		oss << message;
 
 		std::lock_guard lck{ __mutex };

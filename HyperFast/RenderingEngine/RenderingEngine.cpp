@@ -23,10 +23,12 @@ namespace HyperFast
 #endif
 
 		__retrievePhysicalDevice();
+		__queryPhysicalDeviceProperties();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__resetPhysicalDeviceProperties();
 		__resetPhysicalDevice();
 
 #ifndef NDEBUG
@@ -216,24 +218,102 @@ namespace HyperFast
 		__debugMessenger = nullptr;
 	}
 
+	bool RenderingEngine::__checkDeviceVersionSupport(const VkPhysicalDevice device) const noexcept
+	{
+		VkPhysicalDeviceProperties physicalDeviceProperties{};
+		__instanceProc.vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
+
+		const uint32_t deviceVersion{ physicalDeviceProperties.apiVersion };
+
+		const uint32_t major{ VK_API_VERSION_MAJOR(deviceVersion) };
+		const uint32_t minor{ VK_API_VERSION_MINOR(deviceVersion) };
+		const uint32_t patch{ VK_API_VERSION_PATCH(deviceVersion) };
+		const uint32_t variant{ VK_API_VERSION_VARIANT(deviceVersion) };
+
+		if (major > 1U)
+			return true;
+
+		return ((major == 1U) && (minor >= 3U));
+	}
+
 	void RenderingEngine::__retrievePhysicalDevice()
 	{
 		uint32_t numDevices{};
 		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, nullptr);
 
 		if (!numDevices)
-			throw std::exception{ "There are no supported physical devices." };
+			throw std::exception{ "There are no physical devices." };
 
 		std::vector<VkPhysicalDevice> devices;
 		devices.resize(numDevices);
 		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, devices.data());
 
-		__physicalDevice = devices[0];
+		for (const VkPhysicalDevice device : devices)
+		{
+			if (!__checkDeviceVersionSupport(device))
+				continue;
+
+			uint32_t numProps{};
+			__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, nullptr);
+
+			std::vector<VkQueueFamilyProperties> queueFamilyProps;
+			queueFamilyProps.resize(numProps);
+			__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, queueFamilyProps.data());
+
+			bool graphicsFound{};
+			bool dmaTransferFound{};
+			for (uint32_t propIter = 0U; propIter < numProps; propIter++)
+			{
+				const VkQueueFamilyProperties &queueFamilyProp{ queueFamilyProps[propIter] };
+				if (!graphicsFound && (queueFamilyProp.queueFlags == VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT))
+				{
+					dmaTransferFound = true;
+					__transferQueueFamilyIndex = propIter;
+				}
+
+				if (!graphicsFound && (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT))
+				{
+					graphicsFound = true;
+					__graphicsQueueFamilyIndex = propIter;
+				}
+			}
+
+			if (graphicsFound)
+			{
+				__queueFamilyProps.swap(queueFamilyProps);
+				if (!dmaTransferFound)
+					__transferQueueFamilyIndex = __graphicsQueueFamilyIndex;
+			}
+
+			if (__queueFamilyProps.empty())
+				continue;
+
+			__physicalDevice = device;
+			break;
+		}
+
+		if (!__physicalDevice)
+			throw std::exception{ "There are no suitable physical devices." };
 	}
 
 	void RenderingEngine::__resetPhysicalDevice() noexcept
 	{
+		__queueFamilyProps.clear();
+		__graphicsQueueFamilyIndex = 0U;
+		__transferQueueFamilyIndex = 0U;
+
 		__physicalDevice = nullptr;
+	}
+
+	void RenderingEngine::__queryPhysicalDeviceProperties() noexcept
+	{
+		__physicalDeviceProperties2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		__instanceProc.vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProperties2);
+	}
+
+	void RenderingEngine::__resetPhysicalDeviceProperties() noexcept
+	{
+		__physicalDeviceProperties2 = {};
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

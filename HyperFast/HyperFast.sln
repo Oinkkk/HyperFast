@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Infrastructure", "1. Inf
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Infrastructure", "Infrastructure\Infrastructure.vcxproj", "{77D278F9-1A13-48F4-BA01-5BCCCEC3F143}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Graphics", "3. Graphics", "{775ED427-0721-4DDF-A791-912618BE52AA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Vulkan", "3. Vulkan", "{775ED427-0721-4DDF-A791-912618BE52AA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Engine", "4. Engine", "{8B17F726-557B-46EF-87F5-054A4D5AE0C4}"
 EndProject
