@@ -119,7 +119,6 @@ namespace HyperFast
 		const void *pNext{};
 
 #ifndef NDEBUG
-		// Debug mode
 		const auto foundIt = std::find_if(
 			foundLayers.begin(), foundLayers.end(), [](const VkLayerProperties &layer)
 		{
@@ -133,8 +132,32 @@ namespace HyperFast
 		enabledExtensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
 		pNext = &__debugMessengerCreateInfo;
-#else
-		// Release mode
+
+		static constexpr VkValidationFeatureEnableEXT enabledValidationFeatures[]
+		{
+			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
+			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT,
+			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
+			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT,
+			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
+		};
+
+		static constexpr VkValidationFeatureDisableEXT disabledValidationFeatures[]
+		{
+			VkValidationFeatureDisableEXT::VK_VALIDATION_FEATURE_DISABLE_SHADER_VALIDATION_CACHE_EXT
+		};
+
+		const VkValidationFeaturesEXT validationFeatures
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
+			.pNext = pNext,
+			.enabledValidationFeatureCount = uint32_t(std::size(enabledValidationFeatures)),
+			.pEnabledValidationFeatures = enabledValidationFeatures,
+			.disabledValidationFeatureCount = uint32_t(std::size(disabledValidationFeatures)),
+			.pDisabledValidationFeatures = disabledValidationFeatures
+		};
+
+		pNext = &validationFeatures;
 #endif
 
 		const VkInstanceCreateInfo createInfo
