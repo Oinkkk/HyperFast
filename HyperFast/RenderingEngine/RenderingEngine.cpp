@@ -17,10 +17,18 @@ namespace HyperFast
 
 		__createInstance();
 		__queryInstanceProc();
+
+#ifndef NDEBUG
+		__createDebugMessenger();
+#endif
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+#ifndef NDEBUG
+		__destroyDebugMessenger();
+#endif
+
 		__destroyInstance();
 		__resetInstanceProc();
 	}
@@ -148,20 +156,37 @@ namespace HyperFast
 		throw std::exception{ "Cannot create a VkInstance." };
 	}
 
-	void RenderingEngine::__queryInstanceProc() noexcept
-	{
-		__instanceProc = VKL::VulkanLoader::getInstance().queryInstanceProcedure(__instance);
-	}
-
 	void RenderingEngine::__destroyInstance() noexcept
 	{
 		__instanceProc.vkDestroyInstance(__instance, nullptr);
 		__instance = nullptr;
 	}
 
+	void RenderingEngine::__queryInstanceProc() noexcept
+	{
+		__instanceProc = VKL::VulkanLoader::getInstance().queryInstanceProcedure(__instance);
+	}
+
 	void RenderingEngine::__resetInstanceProc() noexcept
 	{
 		__instanceProc = {};
+	}
+
+	void RenderingEngine::__createDebugMessenger()
+	{
+		__instanceProc.vkCreateDebugUtilsMessengerEXT(
+			__instance, &__debugMessengerCreateInfo, nullptr, &__debugMessenger);
+
+		if (__debugMessenger)
+			return;
+
+		throw std::exception{ "Cannot create a VkDebugUtilsMessengerEXT." };
+	}
+
+	void RenderingEngine::__destroyDebugMessenger() noexcept
+	{
+		__instanceProc.vkDestroyDebugUtilsMessengerEXT(__instance, __debugMessenger, nullptr);
+		__debugMessenger = nullptr;
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

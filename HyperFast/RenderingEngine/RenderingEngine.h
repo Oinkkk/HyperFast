@@ -24,16 +24,22 @@ namespace HyperFast
 		VkInstance __instance{};
 		VKL::InstanceProcedure __instanceProc;
 
+		VkDebugUtilsMessengerEXT __debugMessenger{};
+
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
 		void __getInstanceVersion() noexcept;
 		void __checkInstanceVersionSupport() const;
 		void __populateDebugMessengerCreateInfo() noexcept;
-		void __createInstance();
-		void __queryInstanceProc() noexcept;
 
+		void __createInstance();
 		void __destroyInstance() noexcept;
+
+		void __queryInstanceProc() noexcept;
 		void __resetInstanceProc() noexcept;
+
+		void __createDebugMessenger();
+		void __destroyDebugMessenger() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

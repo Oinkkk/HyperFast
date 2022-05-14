@@ -110,6 +110,9 @@
       <Project>{71c4f5f4-c3e9-4fd1-99a0-a0a2d1ff12eb}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="vk_layer_settings.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

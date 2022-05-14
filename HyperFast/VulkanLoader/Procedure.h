@@ -19,5 +19,6 @@ namespace VKL
 	public:
 		PFN_vkDestroyInstance vkDestroyInstance{};
 		PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{};
+		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{};
 	};
 }
