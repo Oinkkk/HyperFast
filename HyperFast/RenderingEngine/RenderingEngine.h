@@ -25,6 +25,7 @@ namespace HyperFast
 		VKL::InstanceProcedure __instanceProc;
 
 		VkDebugUtilsMessengerEXT __debugMessenger{};
+		VkPhysicalDevice __physicalDevice{};
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
@@ -40,6 +41,9 @@ namespace HyperFast
 
 		void __createDebugMessenger();
 		void __destroyDebugMessenger() noexcept;
+
+		void __retrievePhysicalDevice();
+		void __resetPhysicalDevice() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

@@ -61,6 +61,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 
+		retVal.vkEnumeratePhysicalDevices =
+			reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkEnumeratePhysicalDevices"));
+
 		return retVal;
 	}
 

@@ -21,10 +21,14 @@ namespace HyperFast
 #ifndef NDEBUG
 		__createDebugMessenger();
 #endif
+
+		__retrievePhysicalDevice();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__resetPhysicalDevice();
+
 #ifndef NDEBUG
 		__destroyDebugMessenger();
 #endif
@@ -92,16 +96,6 @@ namespace HyperFast
 	{
 		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
 
-		const VkApplicationInfo appInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO,
-			.pApplicationName = __appName.c_str(),
-			.applicationVersion = VK_API_VERSION_1_0,
-			.pEngineName = __engineName.c_str(),
-			.engineVersion = VK_API_VERSION_1_0,
-			.apiVersion = __instanceVersion
-		};
-
 		std::vector<const char *> enabledLayers;
 		std::vector<const char *> enabledExtensions;
 
@@ -160,6 +154,16 @@ namespace HyperFast
 		pNext = &validationFeatures;
 #endif
 
+		const VkApplicationInfo appInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO,
+			.pApplicationName = __appName.c_str(),
+			.applicationVersion = VK_API_VERSION_1_0,
+			.pEngineName = __engineName.c_str(),
+			.engineVersion = VK_API_VERSION_1_0,
+			.apiVersion = __instanceVersion
+		};
+
 		const VkInstanceCreateInfo createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -210,6 +214,26 @@ namespace HyperFast
 	{
 		__instanceProc.vkDestroyDebugUtilsMessengerEXT(__instance, __debugMessenger, nullptr);
 		__debugMessenger = nullptr;
+	}
+
+	void RenderingEngine::__retrievePhysicalDevice()
+	{
+		uint32_t numDevices{};
+		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, nullptr);
+
+		if (!numDevices)
+			throw std::exception{ "There are no supported physical devices." };
+
+		std::vector<VkPhysicalDevice> devices;
+		devices.resize(numDevices);
+		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, devices.data());
+
+		__physicalDevice = devices[0];
+	}
+
+	void RenderingEngine::__resetPhysicalDevice() noexcept
+	{
+		__physicalDevice = nullptr;
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(
