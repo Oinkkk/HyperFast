@@ -65,6 +65,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkEnumeratePhysicalDevices"));
 
+		retVal.vkEnumeratePhysicalDeviceGroups =
+			reinterpret_cast<PFN_vkEnumeratePhysicalDeviceGroups>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkEnumeratePhysicalDeviceGroups"));
+
 		retVal.vkGetPhysicalDeviceProperties =
 			reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceProperties"));
@@ -81,9 +85,13 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceQueueFamilyProperties2"));
 
-		retVal.vkEnumeratePhysicalDeviceGroups =
-			reinterpret_cast<PFN_vkEnumeratePhysicalDeviceGroups>(
-				__globalProc.vkGetInstanceProcAddr(instance, "vkEnumeratePhysicalDeviceGroups"));
+		retVal.vkCreateDevice =
+			reinterpret_cast<PFN_vkCreateDevice>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateDevice"));
+
+		retVal.vkDestroyDevice =
+			reinterpret_cast<PFN_vkDestroyDevice>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkDestroyDevice"));
 
 		return retVal;
 	}

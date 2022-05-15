@@ -21,10 +21,12 @@ namespace VKL
 		PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{};
 		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{};
 		PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices{};
+		PFN_vkEnumeratePhysicalDeviceGroups vkEnumeratePhysicalDeviceGroups{};
 		PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties{};
 		PFN_vkGetPhysicalDeviceProperties2 vkGetPhysicalDeviceProperties2{};
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties{};
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{};
-		PFN_vkEnumeratePhysicalDeviceGroups vkEnumeratePhysicalDeviceGroups{};
+		PFN_vkCreateDevice vkCreateDevice{};
+		PFN_vkDestroyDevice vkDestroyDevice{};
 	};
 }

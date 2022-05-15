@@ -25,10 +25,12 @@ namespace HyperFast
 		__pickPhysicalDeviceGroup();
 		__queryPhysicalDeviceProps();
 		__retrieveQueueFamilies();
+		__createDevice();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__destroyDevice();
 		__resetQueueFamilies();
 		__resetPhysicalDeviceProps();
 		__resetPhysicalDeviceGroup();
@@ -305,6 +307,90 @@ namespace HyperFast
 		__queueFamilyProps.clear();
 	}
 
+	void RenderingEngine::__createDevice()
+	{
+		const void *pNext{};
+
+		VkPhysicalDeviceVulkan13Features device13Features
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES
+		};
+
+		VkPhysicalDeviceVulkan12Features device12Features
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+			.pNext = &device13Features
+		};
+
+		VkPhysicalDeviceVulkan11Features device11Features
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
+			.pNext = &device12Features
+		};
+
+		const VkPhysicalDeviceFeatures2 deviceFeatures2
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+			.pNext = &device11Features,
+		};
+
+		pNext = &deviceFeatures2;
+
+#ifndef NDEBUG
+		const VkDeviceDeviceMemoryReportCreateInfoEXT deviceMemoryReportCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_DEVICE_MEMORY_REPORT_CREATE_INFO_EXT,
+			.pNext = pNext,
+			.pfnUserCallback = vkDeviceMemoryReportCallbackEXT,
+			.pUserData = &__logger
+		};
+
+		pNext = &deviceMemoryReportCreateInfo;
+#endif
+
+		// 여기서 입력한 배열 순서가 향후 physical device 인덱스로 참조됨
+		const VkDeviceGroupDeviceCreateInfo deviceGroupCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO,
+			.pNext = pNext,
+			.physicalDeviceCount = __physicalDeviceGroupProp.physicalDeviceCount,
+			.pPhysicalDevices = __physicalDeviceGroupProp.physicalDevices
+		};
+
+		pNext = &deviceGroupCreateInfo;
+
+		// TODO: queue create info 채우기
+		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+
+
+		std::vector<const char *> enabledExtensions;
+		enabledExtensions.emplace_back(VK_EXT_DEVICE_MEMORY_REPORT_EXTENSION_NAME);
+
+		const VkDeviceCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+			.pNext = pNext,
+			.queueCreateInfoCount = uint32_t(queueCreateInfos.size()),
+			.pQueueCreateInfos = queueCreateInfos.data(),
+			.enabledExtensionCount = uint32_t(enabledExtensions.size()),
+			.ppEnabledExtensionNames = enabledExtensions.data()
+		};
+
+		// TODO: device 생성 후 device proc 찾아오기 로직 추가
+		__instanceProc.vkCreateDevice(__firstPhysicalDevice, &createInfo, nullptr, &__device);
+
+		if (__device)
+			return;
+
+		throw std::exception{ "Cannot create a VkDevice." };
+	}
+
+	void RenderingEngine::__destroyDevice() noexcept
+	{
+		__instanceProc.vkDestroyDevice(__device, nullptr);
+		__device = nullptr;
+	}
+
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(
 		const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
@@ -334,5 +420,67 @@ namespace HyperFast
 
 		pLogger->log(severityType, pCallbackData->pMessage);
 		return VK_FALSE;
+	}
+
+	void VKAPI_PTR RenderingEngine::vkDeviceMemoryReportCallbackEXT(
+		const VkDeviceMemoryReportCallbackDataEXT *const pCallbackData, void *const pUserData)
+	{
+		/*
+			구현부에 의해 비동기 호출될 수 있음
+			콜백 정보는 콜백이 실행되는 동안에만 믿을 수 있음
+			보통 실제 동작 수행 전 콜백이 처리되므로 인자로 들어온 핸들 값 등은 콜백 호출 시점에 유효하지 않을 수 있음
+		*/
+
+		Infra::Logger *const pLogger{ reinterpret_cast<Infra::Logger *>(pUserData) };
+
+		const bool sizeValid
+		{
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_IMPORT_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATION_FAILED_EXT)
+		};
+
+		const bool objectTypeValid
+		{
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_FREE_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_IMPORT_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_UNIMPORT_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATION_FAILED_EXT)
+		};
+
+		const bool objectHandleValid
+		{
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_FREE_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_IMPORT_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_UNIMPORT_EXT)
+		};
+
+		const bool heapIndexValid
+		{
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
+			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATION_FAILED_EXT)
+		};
+
+		std::ostringstream oss;
+
+		oss << "Memory event occurred." << std::endl;
+		oss << "Event type: " << pCallbackData->type << std::endl;
+		oss << "Memory object id: " << pCallbackData->memoryObjectId << std::endl;
+
+		if (sizeValid)
+			oss << "Size: " << pCallbackData->size << std::endl;
+
+		if (objectTypeValid)
+			oss << "Event source object type: " << pCallbackData->objectType << std::endl;
+
+		if (objectHandleValid)
+			oss << "Event source object handle: " << pCallbackData->objectHandle << std::endl;
+
+		if (heapIndexValid)
+			oss << "Heap index: " << pCallbackData->heapIndex;
+
+		pLogger->log(Infra::LogSeverityType::VERBOSE, oss.str());
 	}
 }

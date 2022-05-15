@@ -38,6 +38,8 @@ namespace HyperFast
 		uint32_t __graphicsQueueFamilyIndex{};
 		uint32_t __transferQueueFamilyIndex{};
 
+		VkDevice __device{};
+
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
 		void __getInstanceVersion() noexcept;
@@ -62,9 +64,15 @@ namespace HyperFast
 		void __retrieveQueueFamilies() noexcept;
 		void __resetQueueFamilies() noexcept;
 
+		void __createDevice();
+		void __destroyDevice() noexcept;
+
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
 			const VkDebugUtilsMessengerCallbackDataEXT *const pCallbackData, void *const pUserData);
+
+		static void VKAPI_PTR vkDeviceMemoryReportCallbackEXT(
+			const VkDeviceMemoryReportCallbackDataEXT *pCallbackData, void *pUserData);
 	};
 }
