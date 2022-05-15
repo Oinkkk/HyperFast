@@ -81,6 +81,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceQueueFamilyProperties2"));
 
+		retVal.vkEnumeratePhysicalDeviceGroups =
+			reinterpret_cast<PFN_vkEnumeratePhysicalDeviceGroups>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkEnumeratePhysicalDeviceGroups"));
+
 		return retVal;
 	}
 

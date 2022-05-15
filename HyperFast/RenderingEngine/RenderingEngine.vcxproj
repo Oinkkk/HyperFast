@@ -11,9 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="PhysicalDeviceGroupPicker.h" />
     <ClInclude Include="RenderingEngine.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="PhysicalDeviceGroupPicker.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
   </ItemGroup>
   <ItemGroup>

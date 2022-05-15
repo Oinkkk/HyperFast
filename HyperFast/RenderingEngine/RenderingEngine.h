@@ -25,7 +25,9 @@ namespace HyperFast
 		VKL::InstanceProcedure __instanceProc;
 		VkDebugUtilsMessengerEXT __debugMessenger{};
 
-		VkPhysicalDevice __physicalDevice{};
+		VkPhysicalDeviceGroupProperties __physicalDeviceGroupProp{};
+		VkPhysicalDevice __firstPhysicalDevice{};
+
 		VkPhysicalDeviceProperties2 __physicalDeviceProp2{};
 		VkPhysicalDeviceVulkan11Properties __physicalDevice11Prop{};
 		VkPhysicalDeviceVulkan12Properties __physicalDevice12Prop{};
@@ -51,11 +53,8 @@ namespace HyperFast
 		void __createDebugMessenger();
 		void __destroyDebugMessenger() noexcept;
 
-		bool __checkDeviceVersionSupport(const VkPhysicalDevice device) const noexcept;
-		bool __checkQueueSupport(const VkPhysicalDevice device) const noexcept;
-
-		void __retrievePhysicalDevice();
-		void __resetPhysicalDevice() noexcept;
+		void __pickPhysicalDeviceGroup();
+		void __resetPhysicalDeviceGroup() noexcept;
 
 		void __queryPhysicalDeviceProps() noexcept;
 		void __resetPhysicalDeviceProps() noexcept;

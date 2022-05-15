@@ -1,9 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="RenderingEngine.h" />
+    <Filter Include="Engine">
+      <UniqueIdentifier>{e52bff2b-64bf-4022-a9a9-9cb96311d5d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RenderingEngine.cpp" />
+    <ClCompile Include="RenderingEngine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicalDeviceGroupPicker.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RenderingEngine.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicalDeviceGroupPicker.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 ﻿#include "RenderingEngine.h"
 #include <sstream>
 #include <vector>
+#include "PhysicalDeviceGroupPicker.h"
 
 namespace HyperFast
 {
@@ -21,8 +22,7 @@ namespace HyperFast
 #ifndef NDEBUG
 		__createDebugMessenger();
 #endif
-
-		__retrievePhysicalDevice();
+		__pickPhysicalDeviceGroup();
 		__queryPhysicalDeviceProps();
 		__retrieveQueueFamilies();
 	}
@@ -31,7 +31,7 @@ namespace HyperFast
 	{
 		__resetQueueFamilies();
 		__resetPhysicalDeviceProps();
-		__resetPhysicalDevice();
+		__resetPhysicalDeviceGroup();
 
 #ifndef NDEBUG
 		__destroyDebugMessenger();
@@ -218,75 +218,19 @@ namespace HyperFast
 		__debugMessenger = nullptr;
 	}
 
-	bool RenderingEngine::__checkDeviceVersionSupport(const VkPhysicalDevice device) const noexcept
+	void RenderingEngine::__pickPhysicalDeviceGroup()
 	{
-		VkPhysicalDeviceProperties physicalDeviceProperties{};
-		__instanceProc.vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
+		PhysicalDeviceGroupPicker groupPicker{ __instance, __instanceProc };
+		if (!(groupPicker.pick(__physicalDeviceGroupProp)))
+			throw std::exception{ "There is a no suitable physical device group." };
 
-		const uint32_t deviceVersion{ physicalDeviceProperties.apiVersion };
-
-		const uint32_t major{ VK_API_VERSION_MAJOR(deviceVersion) };
-		const uint32_t minor{ VK_API_VERSION_MINOR(deviceVersion) };
-		const uint32_t patch{ VK_API_VERSION_PATCH(deviceVersion) };
-		const uint32_t variant{ VK_API_VERSION_VARIANT(deviceVersion) };
-
-		if (major > 1U)
-			return true;
-
-		return ((major == 1U) && (minor >= 3U));
+		__firstPhysicalDevice = __physicalDeviceGroupProp.physicalDevices[0];
 	}
 
-	bool RenderingEngine::__checkQueueSupport(const VkPhysicalDevice device) const noexcept
+	void RenderingEngine::__resetPhysicalDeviceGroup() noexcept
 	{
-		uint32_t numProps{};
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, nullptr);
-
-		std::vector<VkQueueFamilyProperties> queueFamilyProps;
-		queueFamilyProps.resize(numProps);
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(device, &numProps, queueFamilyProps.data());
-
-		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
-		{
-			const VkQueueFamilyProperties &queueFamilyProp{ queueFamilyProps[propIter] };
-
-			if (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT)
-				return true;
-		}
-
-		return false;
-	}
-
-	void RenderingEngine::__retrievePhysicalDevice()
-	{
-		uint32_t numDevices{};
-		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, nullptr);
-
-		if (!numDevices)
-			throw std::exception{ "There are no physical devices." };
-
-		std::vector<VkPhysicalDevice> devices;
-		devices.resize(numDevices);
-		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, devices.data());
-
-		for (const VkPhysicalDevice device : devices)
-		{
-			if (!__checkDeviceVersionSupport(device))
-				continue;
-
-			if (!__checkQueueSupport(device))
-				continue;
-
-			__physicalDevice = device;
-			break;
-		}
-
-		if (!__physicalDevice)
-			throw std::exception{ "There are no suitable physical devices." };
-	}
-
-	void RenderingEngine::__resetPhysicalDevice() noexcept
-	{
-		__physicalDevice = nullptr;
+		__firstPhysicalDevice = nullptr;
+		__physicalDeviceGroupProp = {};
 	}
 
 	void RenderingEngine::__queryPhysicalDeviceProps() noexcept
@@ -302,7 +246,7 @@ namespace HyperFast
 
 		__physicalDevice13Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
 
-		__instanceProc.vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProp2);
+		__instanceProc.vkGetPhysicalDeviceProperties2(__firstPhysicalDevice, &__physicalDeviceProp2);
 	}
 
 	void RenderingEngine::__resetPhysicalDeviceProps() noexcept
@@ -316,7 +260,7 @@ namespace HyperFast
 	void RenderingEngine::__retrieveQueueFamilies() noexcept
 	{
 		uint32_t numProps{};
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__physicalDevice, &numProps, nullptr);
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__firstPhysicalDevice, &numProps, nullptr);
 
 		__queueFamilyProps.resize(numProps);
 		__queueFamilyPriorityProps.resize(numProps);
@@ -331,7 +275,7 @@ namespace HyperFast
 			priorityProp.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR;
 		}
 
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__physicalDevice, &numProps, __queueFamilyProps.data());
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__firstPhysicalDevice, &numProps, __queueFamilyProps.data());
 
 		bool graphicsFound{};
 		bool dmaTransferFound{};
