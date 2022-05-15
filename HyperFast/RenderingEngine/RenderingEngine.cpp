@@ -23,14 +23,14 @@ namespace HyperFast
 #endif
 
 		__retrievePhysicalDevice();
-		__queryPhysicalDeviceProp();
+		__queryPhysicalDeviceProps();
 		__retrieveQueueFamilies();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
 		__resetQueueFamilies();
-		__resetPhysicalDeviceProp();
+		__resetPhysicalDeviceProps();
 		__resetPhysicalDevice();
 
 #ifndef NDEBUG
@@ -133,8 +133,6 @@ namespace HyperFast
 
 		static constexpr VkValidationFeatureEnableEXT enabledValidationFeatures[]
 		{
-			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
-			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT,
 			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
 			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT,
 			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
@@ -291,21 +289,34 @@ namespace HyperFast
 		__physicalDevice = nullptr;
 	}
 
-	void RenderingEngine::__queryPhysicalDeviceProp() noexcept
+	void RenderingEngine::__queryPhysicalDeviceProps() noexcept
 	{
 		__physicalDeviceProp2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		__physicalDeviceProp2.pNext = &__physicalDevice11Prop;
+
+		__physicalDevice11Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+		__physicalDevice11Prop.pNext = &__physicalDevice12Prop;
+
+		__physicalDevice12Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+		__physicalDevice12Prop.pNext = &__physicalDevice13Prop;
+
+		__physicalDevice13Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+
 		__instanceProc.vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProp2);
 	}
 
-	void RenderingEngine::__resetPhysicalDeviceProp() noexcept
+	void RenderingEngine::__resetPhysicalDeviceProps() noexcept
 	{
+		__physicalDevice13Prop = {};
+		__physicalDevice12Prop = {};
+		__physicalDevice11Prop = {};
 		__physicalDeviceProp2 = {};
 	}
 
 	void RenderingEngine::__retrieveQueueFamilies() noexcept
 	{
 		uint32_t numProps{};
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, nullptr);
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__physicalDevice, &numProps, nullptr);
 
 		__queueFamilyProps.resize(numProps);
 		__queueFamilyPriorityProps.resize(numProps);

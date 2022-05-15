@@ -27,6 +27,9 @@ namespace HyperFast
 
 		VkPhysicalDevice __physicalDevice{};
 		VkPhysicalDeviceProperties2 __physicalDeviceProp2{};
+		VkPhysicalDeviceVulkan11Properties __physicalDevice11Prop{};
+		VkPhysicalDeviceVulkan12Properties __physicalDevice12Prop{};
+		VkPhysicalDeviceVulkan13Properties __physicalDevice13Prop{};
 
 		std::vector<VkQueueFamilyProperties2> __queueFamilyProps;
 		std::vector<VkQueueFamilyGlobalPriorityPropertiesKHR> __queueFamilyPriorityProps;
@@ -54,8 +57,8 @@ namespace HyperFast
 		void __retrievePhysicalDevice();
 		void __resetPhysicalDevice() noexcept;
 
-		void __queryPhysicalDeviceProp() noexcept;
-		void __resetPhysicalDeviceProp() noexcept;
+		void __queryPhysicalDeviceProps() noexcept;
+		void __resetPhysicalDeviceProps() noexcept;
 
 		void __retrieveQueueFamilies() noexcept;
 		void __resetQueueFamilies() noexcept;

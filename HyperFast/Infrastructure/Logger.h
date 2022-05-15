@@ -14,6 +14,14 @@ namespace Infra
 
 	private:
 		std::mutex __mutex;
+
+		static constexpr inline std::string_view __severityTypeColors[]
+		{
+			"", "\u001b[36;1m", "\u001b[33;1m", "\u001b[31;1m"
+		};
+
+		static constexpr inline std::string_view __resetColor{ "\u001b[0m" };
+
 		static constexpr inline std::string_view __severityTypeStrings[]
 		{
 			"VERBOSE", "INFO", "WARNING", "FATAL"
