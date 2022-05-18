@@ -37,6 +37,7 @@ namespace HyperFast
 		uint32_t __graphicsQueueFamilyIndex{};
 
 		VkDevice __device{};
+		VKL::DeviceProcedure __deviceProc;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
@@ -64,6 +65,9 @@ namespace HyperFast
 
 		void __createDevice();
 		void __destroyDevice() noexcept;
+
+		void __queryDeviceProc() noexcept;
+		void __resetDeviceProc() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

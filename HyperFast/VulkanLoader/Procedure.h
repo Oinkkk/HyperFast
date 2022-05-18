@@ -27,5 +27,12 @@ namespace VKL
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties{};
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{};
 		PFN_vkCreateDevice vkCreateDevice{};
+		PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr{};
+	};
+
+	class DeviceProcedure
+	{
+	public:
+		PFN_vkDestroyDevice vkDestroyDevice{};
 	};
 }

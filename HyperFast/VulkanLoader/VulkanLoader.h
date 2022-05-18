@@ -17,6 +17,11 @@ namespace VKL
 		[[nodiscard]]
 		InstanceProcedure queryInstanceProcedure(const VkInstance instance) noexcept;
 
+		[[nodiscard]]
+		DeviceProcedure queryDeviceProcedure(
+			const PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr, const VkDevice device) noexcept;
+
+		[[nodiscard]]
 		static VulkanLoader &getInstance() noexcept;
 
 	private:

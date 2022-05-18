@@ -89,6 +89,24 @@ namespace VKL
 			reinterpret_cast<PFN_vkCreateDevice>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateDevice"));
 
+		retVal.vkGetDeviceProcAddr =
+			reinterpret_cast<PFN_vkGetDeviceProcAddr>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkGetDeviceProcAddr"));
+
+		return retVal;
+	}
+
+	DeviceProcedure VulkanLoader::queryDeviceProcedure(
+		const PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr, const VkDevice device) noexcept
+	{
+		assert(__handle);
+
+		DeviceProcedure retVal;
+
+		retVal.vkDestroyDevice =
+			reinterpret_cast<PFN_vkDestroyDevice>(
+				vkGetDeviceProcAddr(device, "vkDestroyDevice"));
+
 		return retVal;
 	}
 

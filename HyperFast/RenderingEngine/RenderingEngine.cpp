@@ -26,11 +26,13 @@ namespace HyperFast
 		__queryPhysicalDeviceProps();
 		__retrieveQueueFamilies();
 		__createDevice();
+		__queryDeviceProc();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
 		__destroyDevice();
+		__resetDeviceProc();
 		__resetQueueFamilies();
 		__resetPhysicalDeviceProps();
 		__resetPhysicalDeviceGroup();
@@ -345,9 +347,7 @@ namespace HyperFast
 			.ppEnabledExtensionNames = enabledExtensions.data()
 		};
 
-		// TODO: device 생성 후 device proc 찾아오기 로직 추가
 		__instanceProc.vkCreateDevice(__firstPhysicalDevice, &createInfo, nullptr, &__device);
-
 		if (__device)
 			return;
 
@@ -356,8 +356,19 @@ namespace HyperFast
 
 	void RenderingEngine::__destroyDevice() noexcept
 	{
-		//__instanceProc.vkDestroyDevice(__device, nullptr);
+		__deviceProc.vkDestroyDevice(__device, nullptr);
 		__device = nullptr;
+	}
+
+	void RenderingEngine::__queryDeviceProc() noexcept
+	{
+		__deviceProc =
+			VKL::VulkanLoader::getInstance().queryDeviceProcedure(__instanceProc.vkGetDeviceProcAddr, __device);
+	}
+
+	void RenderingEngine::__resetDeviceProc() noexcept
+	{
+		__deviceProc = {};
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(
