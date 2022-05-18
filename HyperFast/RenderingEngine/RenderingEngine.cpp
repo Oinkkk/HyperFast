@@ -237,16 +237,17 @@ namespace HyperFast
 
 	void RenderingEngine::__queryPhysicalDeviceProps() noexcept
 	{
-		__physicalDeviceProp2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-		__physicalDeviceProp2.pNext = &__physicalDevice11Prop;
-
-		__physicalDevice11Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
-		__physicalDevice11Prop.pNext = &__physicalDevice12Prop;
+		__physicalDevice13Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+		__physicalDevice12Prop.pNext = nullptr;
 
 		__physicalDevice12Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
 		__physicalDevice12Prop.pNext = &__physicalDevice13Prop;
 
-		__physicalDevice13Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+		__physicalDevice11Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+		__physicalDevice11Prop.pNext = &__physicalDevice12Prop;
+
+		__physicalDeviceProp2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		__physicalDeviceProp2.pNext = &__physicalDevice11Prop;
 
 		__instanceProc.vkGetPhysicalDeviceProperties2(__firstPhysicalDevice, &__physicalDeviceProp2);
 	}
@@ -262,48 +263,24 @@ namespace HyperFast
 	void RenderingEngine::__retrieveQueueFamilies() noexcept
 	{
 		uint32_t numProps{};
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__firstPhysicalDevice, &numProps, nullptr);
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__firstPhysicalDevice, &numProps, nullptr);
 
 		__queueFamilyProps.resize(numProps);
-		__queueFamilyPriorityProps.resize(numProps);
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__firstPhysicalDevice, &numProps, __queueFamilyProps.data());
+
 		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
 		{
-			VkQueueFamilyProperties2 &prop{ __queueFamilyProps[propIter] };
-			VkQueueFamilyGlobalPriorityPropertiesKHR &priorityProp{ __queueFamilyPriorityProps[propIter] };
-
-			prop.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
-			prop.pNext = &priorityProp;
-
-			priorityProp.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR;
-		}
-
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__firstPhysicalDevice, &numProps, __queueFamilyProps.data());
-
-		bool graphicsFound{};
-		bool dmaTransferFound{};
-		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
-		{
-			const VkQueueFamilyProperties &queueFamilyProp{ __queueFamilyProps[propIter].queueFamilyProperties };
-			if (!dmaTransferFound && (queueFamilyProp.queueFlags == VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT))
+			const VkQueueFamilyProperties &queueFamilyProp{ __queueFamilyProps[propIter] };
+			if (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT)
 			{
-				dmaTransferFound = true;
-				__transferQueueFamilyIndex = propIter;
-			}
-
-			if (!graphicsFound && (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT))
-			{
-				graphicsFound = true;
 				__graphicsQueueFamilyIndex = propIter;
+				break;
 			}
 		}
-
-		if (graphicsFound && !dmaTransferFound)
-			__transferQueueFamilyIndex = __graphicsQueueFamilyIndex;
 	}
 
 	void RenderingEngine::__resetQueueFamilies() noexcept
 	{
-		__queueFamilyPriorityProps.clear();
 		__queueFamilyProps.clear();
 	}
 
@@ -336,18 +313,6 @@ namespace HyperFast
 
 		pNext = &deviceFeatures2;
 
-#ifndef NDEBUG
-		const VkDeviceDeviceMemoryReportCreateInfoEXT deviceMemoryReportCreateInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_DEVICE_MEMORY_REPORT_CREATE_INFO_EXT,
-			.pNext = pNext,
-			.pfnUserCallback = vkDeviceMemoryReportCallbackEXT,
-			.pUserData = &__logger
-		};
-
-		pNext = &deviceMemoryReportCreateInfo;
-#endif
-
 		// 여기서 입력한 배열 순서가 향후 physical device 인덱스로 참조됨
 		const VkDeviceGroupDeviceCreateInfo deviceGroupCreateInfo
 		{
@@ -359,19 +324,23 @@ namespace HyperFast
 
 		pNext = &deviceGroupCreateInfo;
 
-		// TODO: queue create info 채우기
-		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-
+		static constexpr float queuePriority{ 1.f };
+		const VkDeviceQueueCreateInfo queueCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+			.queueFamilyIndex = __graphicsQueueFamilyIndex,
+			.queueCount = 1U,
+			.pQueuePriorities = &queuePriority
+		};
 
 		std::vector<const char *> enabledExtensions;
-		enabledExtensions.emplace_back(VK_EXT_DEVICE_MEMORY_REPORT_EXTENSION_NAME);
 
 		const VkDeviceCreateInfo createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 			.pNext = pNext,
-			.queueCreateInfoCount = uint32_t(queueCreateInfos.size()),
-			.pQueueCreateInfos = queueCreateInfos.data(),
+			.queueCreateInfoCount = 1U,
+			.pQueueCreateInfos = &queueCreateInfo,
 			.enabledExtensionCount = uint32_t(enabledExtensions.size()),
 			.ppEnabledExtensionNames = enabledExtensions.data()
 		};
@@ -387,7 +356,7 @@ namespace HyperFast
 
 	void RenderingEngine::__destroyDevice() noexcept
 	{
-		__instanceProc.vkDestroyDevice(__device, nullptr);
+		//__instanceProc.vkDestroyDevice(__device, nullptr);
 		__device = nullptr;
 	}
 
@@ -420,67 +389,5 @@ namespace HyperFast
 
 		pLogger->log(severityType, pCallbackData->pMessage);
 		return VK_FALSE;
-	}
-
-	void VKAPI_PTR RenderingEngine::vkDeviceMemoryReportCallbackEXT(
-		const VkDeviceMemoryReportCallbackDataEXT *const pCallbackData, void *const pUserData)
-	{
-		/*
-			구현부에 의해 비동기 호출될 수 있음
-			콜백 정보는 콜백이 실행되는 동안에만 믿을 수 있음
-			보통 실제 동작 수행 전 콜백이 처리되므로 인자로 들어온 핸들 값 등은 콜백 호출 시점에 유효하지 않을 수 있음
-		*/
-
-		Infra::Logger *const pLogger{ reinterpret_cast<Infra::Logger *>(pUserData) };
-
-		const bool sizeValid
-		{
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_IMPORT_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATION_FAILED_EXT)
-		};
-
-		const bool objectTypeValid
-		{
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_FREE_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_IMPORT_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_UNIMPORT_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATION_FAILED_EXT)
-		};
-
-		const bool objectHandleValid
-		{
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_FREE_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_IMPORT_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_UNIMPORT_EXT)
-		};
-
-		const bool heapIndexValid
-		{
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATE_EXT) ||
-			(pCallbackData->type == VkDeviceMemoryReportEventTypeEXT::VK_DEVICE_MEMORY_REPORT_EVENT_TYPE_ALLOCATION_FAILED_EXT)
-		};
-
-		std::ostringstream oss;
-
-		oss << "Memory event occurred." << std::endl;
-		oss << "Event type: " << pCallbackData->type << std::endl;
-		oss << "Memory object id: " << pCallbackData->memoryObjectId << std::endl;
-
-		if (sizeValid)
-			oss << "Size: " << pCallbackData->size << std::endl;
-
-		if (objectTypeValid)
-			oss << "Event source object type: " << pCallbackData->objectType << std::endl;
-
-		if (objectHandleValid)
-			oss << "Event source object handle: " << pCallbackData->objectHandle << std::endl;
-
-		if (heapIndexValid)
-			oss << "Heap index: " << pCallbackData->heapIndex;
-
-		pLogger->log(Infra::LogSeverityType::VERBOSE, oss.str());
 	}
 }

@@ -27,6 +27,5 @@ namespace VKL
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties{};
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{};
 		PFN_vkCreateDevice vkCreateDevice{};
-		PFN_vkDestroyDevice vkDestroyDevice{};
 	};
 }

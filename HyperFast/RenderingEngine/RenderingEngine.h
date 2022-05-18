@@ -33,10 +33,8 @@ namespace HyperFast
 		VkPhysicalDeviceVulkan12Properties __physicalDevice12Prop{};
 		VkPhysicalDeviceVulkan13Properties __physicalDevice13Prop{};
 
-		std::vector<VkQueueFamilyProperties2> __queueFamilyProps;
-		std::vector<VkQueueFamilyGlobalPriorityPropertiesKHR> __queueFamilyPriorityProps;
+		std::vector<VkQueueFamilyProperties> __queueFamilyProps;
 		uint32_t __graphicsQueueFamilyIndex{};
-		uint32_t __transferQueueFamilyIndex{};
 
 		VkDevice __device{};
 
@@ -71,8 +69,5 @@ namespace HyperFast
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
 			const VkDebugUtilsMessengerCallbackDataEXT *const pCallbackData, void *const pUserData);
-
-		static void VKAPI_PTR vkDeviceMemoryReportCallbackEXT(
-			const VkDeviceMemoryReportCallbackDataEXT *pCallbackData, void *pUserData);
 	};
 }

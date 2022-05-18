@@ -89,10 +89,6 @@ namespace VKL
 			reinterpret_cast<PFN_vkCreateDevice>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateDevice"));
 
-		retVal.vkDestroyDevice =
-			reinterpret_cast<PFN_vkDestroyDevice>(
-				__globalProc.vkGetInstanceProcAddr(instance, "vkDestroyDevice"));
-
 		return retVal;
 	}
 
