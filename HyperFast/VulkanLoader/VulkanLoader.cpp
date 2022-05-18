@@ -107,6 +107,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyDevice>(
 				vkGetDeviceProcAddr(device, "vkDestroyDevice"));
 
+		retVal.vkGetDeviceQueue =
+			reinterpret_cast<PFN_vkGetDeviceQueue>(
+				vkGetDeviceProcAddr(device, "vkGetDeviceQueue"));
+
 		return retVal;
 	}
 

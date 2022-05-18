@@ -27,22 +27,18 @@ namespace HyperFast
 		__retrieveQueueFamilies();
 		__createDevice();
 		__queryDeviceProc();
+		__queryDeviceQueue();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
 		__destroyDevice();
-		__resetDeviceProc();
-		__resetQueueFamilies();
-		__resetPhysicalDeviceProps();
-		__resetPhysicalDeviceGroup();
 
 #ifndef NDEBUG
 		__destroyDebugMessenger();
 #endif
 
 		__destroyInstance();
-		__resetInstanceProc();
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -200,11 +196,6 @@ namespace HyperFast
 		__instanceProc = VKL::VulkanLoader::getInstance().queryInstanceProcedure(__instance);
 	}
 
-	void RenderingEngine::__resetInstanceProc() noexcept
-	{
-		__instanceProc = {};
-	}
-
 	void RenderingEngine::__createDebugMessenger()
 	{
 		__instanceProc.vkCreateDebugUtilsMessengerEXT(
@@ -231,12 +222,6 @@ namespace HyperFast
 		__firstPhysicalDevice = __physicalDeviceGroupProp.physicalDevices[0];
 	}
 
-	void RenderingEngine::__resetPhysicalDeviceGroup() noexcept
-	{
-		__firstPhysicalDevice = nullptr;
-		__physicalDeviceGroupProp = {};
-	}
-
 	void RenderingEngine::__queryPhysicalDeviceProps() noexcept
 	{
 		__physicalDevice13Prop.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
@@ -252,14 +237,6 @@ namespace HyperFast
 		__physicalDeviceProp2.pNext = &__physicalDevice11Prop;
 
 		__instanceProc.vkGetPhysicalDeviceProperties2(__firstPhysicalDevice, &__physicalDeviceProp2);
-	}
-
-	void RenderingEngine::__resetPhysicalDeviceProps() noexcept
-	{
-		__physicalDevice13Prop = {};
-		__physicalDevice12Prop = {};
-		__physicalDevice11Prop = {};
-		__physicalDeviceProp2 = {};
 	}
 
 	void RenderingEngine::__retrieveQueueFamilies() noexcept
@@ -279,11 +256,6 @@ namespace HyperFast
 				break;
 			}
 		}
-	}
-
-	void RenderingEngine::__resetQueueFamilies() noexcept
-	{
-		__queueFamilyProps.clear();
 	}
 
 	void RenderingEngine::__createDevice()
@@ -366,9 +338,13 @@ namespace HyperFast
 			VKL::VulkanLoader::getInstance().queryDeviceProcedure(__instanceProc.vkGetDeviceProcAddr, __device);
 	}
 
-	void RenderingEngine::__resetDeviceProc() noexcept
+	void RenderingEngine::__queryDeviceQueue()
 	{
-		__deviceProc = {};
+		__deviceProc.vkGetDeviceQueue(__device, __graphicsQueueFamilyIndex, 0U, &__deviceQueue);
+		if (__deviceQueue)
+			return;
+
+		throw std::exception{ "Cannot retrieve the device queue." };
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(
