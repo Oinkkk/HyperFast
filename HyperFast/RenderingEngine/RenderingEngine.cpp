@@ -28,10 +28,12 @@ namespace HyperFast
 		__createDevice();
 		__queryDeviceProc();
 		__queryDeviceQueue();
+		__createMainCommandPool();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__destroyMainCommandPool();
 		__destroyDevice();
 
 #ifndef NDEBUG
@@ -79,7 +81,6 @@ namespace HyperFast
 		__debugMessengerCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		__debugMessengerCreateInfo.messageSeverity =
 		(
-			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT		|
 			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT		|
 			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT		|
 			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
@@ -188,7 +189,6 @@ namespace HyperFast
 	void RenderingEngine::__destroyInstance() noexcept
 	{
 		__instanceProc.vkDestroyInstance(__instance, nullptr);
-		__instance = nullptr;
 	}
 
 	void RenderingEngine::__queryInstanceProc() noexcept
@@ -210,7 +210,6 @@ namespace HyperFast
 	void RenderingEngine::__destroyDebugMessenger() noexcept
 	{
 		__instanceProc.vkDestroyDebugUtilsMessengerEXT(__instance, __debugMessenger, nullptr);
-		__debugMessenger = nullptr;
 	}
 
 	void RenderingEngine::__pickPhysicalDeviceGroup()
@@ -329,7 +328,6 @@ namespace HyperFast
 	void RenderingEngine::__destroyDevice() noexcept
 	{
 		__deviceProc.vkDestroyDevice(__device, nullptr);
-		__device = nullptr;
 	}
 
 	void RenderingEngine::__queryDeviceProc() noexcept
@@ -345,6 +343,26 @@ namespace HyperFast
 			return;
 
 		throw std::exception{ "Cannot retrieve the device queue." };
+	}
+
+	void RenderingEngine::__createMainCommandPool()
+	{
+		const VkCommandPoolCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+			.queueFamilyIndex = __graphicsQueueFamilyIndex
+		};
+
+		__deviceProc.vkCreateCommandPool(__device, &createInfo, nullptr, &__mainCommandPool);
+		if (__mainCommandPool)
+			return;
+
+		throw std::exception{ "Cannot create the main command pool." };
+	}
+
+	void RenderingEngine::__destroyMainCommandPool() noexcept
+	{
+		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

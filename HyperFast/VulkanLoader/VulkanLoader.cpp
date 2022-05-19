@@ -111,6 +111,14 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetDeviceQueue>(
 				vkGetDeviceProcAddr(device, "vkGetDeviceQueue"));
 
+		retVal.vkCreateCommandPool =
+			reinterpret_cast<PFN_vkCreateCommandPool>(
+				vkGetDeviceProcAddr(device, "vkCreateCommandPool"));
+
+		retVal.vkDestroyCommandPool =
+			reinterpret_cast<PFN_vkDestroyCommandPool>(
+				vkGetDeviceProcAddr(device, "vkDestroyCommandPool"));
+
 		return retVal;
 	}
 
@@ -122,7 +130,6 @@ namespace VKL
 
 	void VulkanLoader::__loadGlobalProc(const PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr) noexcept
 	{
-		// vkGetInstanceProcAddr은 dispatable object가 VkInstance지만 유일하게 global function으로 취급됨
 		// vkGetInstanceProcAddr(instance, "vkGetInstanceProcAddr") 반환 값이 nullptr 나옴
 		__globalProc.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
 

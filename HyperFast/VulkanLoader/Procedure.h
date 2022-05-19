@@ -35,5 +35,7 @@ namespace VKL
 	public:
 		PFN_vkDestroyDevice vkDestroyDevice{};
 		PFN_vkGetDeviceQueue vkGetDeviceQueue{};
+		PFN_vkCreateCommandPool vkCreateCommandPool{};
+		PFN_vkDestroyCommandPool vkDestroyCommandPool{};
 	};
 }
