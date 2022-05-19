@@ -16,6 +16,7 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="LogSeverityType.h" />
     <ClInclude Include="Looper.h" />
+    <ClInclude Include="ResourceAllocator.h" />
     <ClInclude Include="StringFormatter.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Unique.h" />

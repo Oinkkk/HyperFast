@@ -1,5 +1,6 @@
 #include <iostream>
 #include "../Infrastructure/Looper.h"
+#include "../Window/AppInstance.h"
 #include "../Window/Window.h"
 #include "../Window/MainLooper.h"
 #include "../VulkanLoader/VulkanLoader.h"
@@ -10,52 +11,26 @@ int main()
 	Infra::Logger logger;
 	logger.log(Infra::LogSeverityType::INFO, "The program starts.");
 
-	const auto pResizeEventListener
+	const auto pDestroyEventListener
 	{
-		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumptionView *, Win::Window::ResizingType>>()
+		std::make_shared<Infra::EventListener<Win::Window &>>()
 	};
 
-	const auto pDrawEventListener
+	pDestroyEventListener->setCallback([] (Win::Window &window)
 	{
-		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumptionView *>>()
-	};
-
-	const auto pCloseEventListener
-	{
-		std::make_shared<Infra::EventListener<Win::Window *, Win::EventConsumptionView *>>()
-	};
-
-	pResizeEventListener->setCallback(
-		[] (Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption,
-			const Win::Window::ResizingType resizingType)
-	{
-		pWindow->validate();
-		pEventConsumption->consume();
-	});
-
-	pDrawEventListener->setCallback([](Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption)
-	{
-		pWindow->validate();
-		pEventConsumption->consume();
-	});
-
-	pCloseEventListener->setCallback([] (Win::Window *const pWindow, Win::EventConsumptionView *const pEventConsumption)
-	{
-		pWindow->destroy();
-		pEventConsumption->consume();
 		Win::MainLooper::postQuitMessage();
 	});
 
-	Win::WindowClass winClass{ "DefaultWinClass" };
+	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
+
+	Win::WindowClass winClass{ appInstance.getHandle(), "DefaultWinClass" };
 	Win::Window win1{ winClass, "win1", true };
 	Win::Window win2{ winClass, "win2", true };
 
 	win1.setSize(400, 300);
 	win2.setSize(400, 300);
 
-	win1.getResizeEvent() += pResizeEventListener;
-	win1.getDrawEvent() += pDrawEventListener;
-	win1.getCloseEvent() += pCloseEventListener;
+	win1.getDestroyEvent() += pDestroyEventListener;
 
 	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
 	vulkanLoader.load();
@@ -68,6 +43,9 @@ int main()
 	};
 
 	logger.log(Infra::LogSeverityType::INFO, "The rendering engine is created.");
+
+	std::shared_ptr<HyperFast::Screen> pScreen1{ pRenderingEngine->createScreen(win1) };
+	std::shared_ptr<HyperFast::Screen> pScreen2{ pRenderingEngine->createScreen(win2) };
 
 	const Infra::Looper::MessageFunc messageFunc
 	{
@@ -92,6 +70,9 @@ int main()
 	logger.log(Infra::LogSeverityType::INFO, "MainLooper starts.");
 	Win::MainLooper::start();
 	logger.log(Infra::LogSeverityType::INFO, "MainLooper ends.");
+
+	pScreen2 = nullptr;
+	pScreen1 = nullptr;
 
 	updateLooper.stop();
 	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper ends.");

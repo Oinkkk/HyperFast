@@ -3,7 +3,6 @@
 #include "WindowClass.h"
 #include <string_view>
 #include "../Infrastructure/Event.h"
-#include "EventConsumption.h"
 
 namespace Win
 {
@@ -32,6 +31,9 @@ namespace Win
 
 		virtual ~Window() noexcept;
 
+		[[nodiscard]]
+		constexpr HWND getHandle() const noexcept;
+
 		void setShow(const bool show = true) noexcept;
 
 		[[nodiscard]]
@@ -59,26 +61,28 @@ namespace Win
 
 		void destroy();
 
+		[[nodiscard]]
+		constexpr bool isDestroyed() const noexcept;
+
 		LRESULT sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam);
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Window *, EventConsumptionView *, ResizingType> &getResizeEvent() noexcept;
+		constexpr Infra::EventView<Window &, ResizingType> &getResizeEvent() noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Window *, EventConsumptionView *> &getDrawEvent() noexcept;
+		constexpr Infra::EventView<Window &> &getDrawEvent() noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Window *, EventConsumptionView *> &getCloseEvent() noexcept;
+		constexpr Infra::EventView<Window &> &getDestroyEvent() noexcept;
 
 	private:
 		HWND __handle{};
 		RECT __windowRect{};
 		RECT __clientRect{};
 
-		EventConsumption __eventConsumption;
-		Infra::Event<Window *, EventConsumptionView *, ResizingType> __resizeEvent;
-		Infra::Event<Window *, EventConsumptionView *> __drawEvent;
-		Infra::Event<Window *, EventConsumptionView *> __closeEvent;
+		Infra::Event<Window &, ResizingType> __resizeEvent;
+		Infra::Event<Window &> __drawEvent;
+		Infra::Event<Window &> __destroyEvent;
 
 		[[nodiscard]]
 		constexpr int __getWindowWidth() const noexcept;
@@ -92,6 +96,11 @@ namespace Win
 			const WindowClass &windowClass, const std::string_view &title,
 			const int x, const int y, const int width, const int height, Window *const pThis);
 	};
+
+	constexpr HWND Window::getHandle() const noexcept
+	{
+		return __handle;
+	}
 
 	constexpr int Window::getX() const noexcept
 	{
@@ -113,19 +122,24 @@ namespace Win
 		return { __clientRect.bottom - __clientRect.top };
 	}
 
-	constexpr Infra::EventView<Window *, EventConsumptionView *, Window::ResizingType> &Window::getResizeEvent() noexcept
+	constexpr bool Window::isDestroyed() const noexcept
+	{
+		return __handle;
+	}
+
+	constexpr Infra::EventView<Window &, Window::ResizingType> &Window::getResizeEvent() noexcept
 	{
 		return __resizeEvent;
 	}
 
-	constexpr Infra::EventView<Window *, EventConsumptionView *> &Window::getDrawEvent() noexcept
+	constexpr Infra::EventView<Window &> &Window::getDrawEvent() noexcept
 	{
 		return __drawEvent;
 	}
 
-	constexpr Infra::EventView<Window *, Win::EventConsumptionView *> &Window::getCloseEvent() noexcept
+	constexpr Infra::EventView<Window &> &Window::getDestroyEvent() noexcept
 	{
-		return __closeEvent;
+		return __destroyEvent;
 	}
 
 	constexpr int Window::__getWindowWidth() const noexcept

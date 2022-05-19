@@ -44,26 +44,29 @@ namespace Win
 
 	LRESULT Window::sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 	{
-		__eventConsumption.reset();
+		bool customEvent{};
 
 		switch (uMsg)
 		{
 		case WM_SIZE:
 			GetWindowRect(__handle, &__windowRect);
 			GetClientRect(__handle, &__clientRect);
-			__resizeEvent.invoke(this, &__eventConsumption, ResizingType(wParam));
+			__resizeEvent.invoke(*this, ResizingType(wParam));
+			customEvent = true;
 			break;
 
 		case WM_PAINT:
-			__drawEvent.invoke(this, &__eventConsumption);
+			__drawEvent.invoke(*this);
+			customEvent = true;
 			break;
 
 		case WM_CLOSE:
-			__closeEvent.invoke(this, &__eventConsumption);
+			destroy();
+			customEvent = true;
 			break;
 		}
 
-		if (__eventConsumption.isConsumed())
+		if (customEvent)
 			return 0;
 
 		return DefWindowProc(__handle, uMsg, wParam, lParam);
@@ -115,6 +118,8 @@ namespace Win
 	{
 		if (!__handle)
 			return;
+
+		__destroyEvent.invoke(*this);
 
 		const BOOL result{ DestroyWindow(__handle) };
 		__handle = nullptr;

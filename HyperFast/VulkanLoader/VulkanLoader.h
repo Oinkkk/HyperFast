@@ -2,6 +2,7 @@
 
 #include "../Infrastructure/Unique.h"
 #include "Procedure.h"
+#include <Windows.h>
 
 namespace VKL
 {

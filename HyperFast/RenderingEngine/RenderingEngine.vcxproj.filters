@@ -4,6 +4,12 @@
     <Filter Include="Engine">
       <UniqueIdentifier>{e52bff2b-64bf-4022-a9a9-9cb96311d5d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Screen">
+      <UniqueIdentifier>{7867949f-4add-4323-b576-dfc6f5116899}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\ScreenManager">
+      <UniqueIdentifier>{f22afa61-1a2f-4419-a75f-7d7f4f94111b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -12,6 +18,12 @@
     <ClCompile Include="PhysicalDeviceGroupPicker.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Screen.cpp">
+      <Filter>Screen</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenManager.cpp">
+      <Filter>Engine\ScreenManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -19,6 +31,12 @@
     </ClInclude>
     <ClInclude Include="PhysicalDeviceGroupPicker.h">
       <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen.h">
+      <Filter>Screen</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenManager.h">
+      <Filter>Engine\ScreenManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

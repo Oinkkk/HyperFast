@@ -5,21 +5,18 @@
 
 namespace Win
 {
-	WindowClass::WindowClass(const std::string_view &name) :
-		__name{ name }, __atom{ __register(name) }
+	WindowClass::WindowClass(const HINSTANCE hInstance, const std::string_view &name) :
+		__hInstance{ hInstance }, __name { name }, __atom{ __register(hInstance, name) }
 	{}
 
 	WindowClass::~WindowClass() noexcept
 	{
-		const HINSTANCE hInstance{ AppInstance::getInstance().getHandle() };
-		const BOOL result{ UnregisterClass(__name.c_str(), hInstance) };
+		const BOOL result{ UnregisterClass(__name.c_str(), __hInstance) };
 		assert(result);
 	}
 
-	ATOM WindowClass::__register(const std::string_view &name)
+	ATOM WindowClass::__register(const HINSTANCE hInstance, const std::string_view &name)
 	{
-		const HINSTANCE hInstance{ AppInstance::getInstance().getHandle() };
-
 		const WNDCLASS wndClass
 		{
 			.style = (CS_HREDRAW | CS_VREDRAW),

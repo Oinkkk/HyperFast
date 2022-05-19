@@ -13,10 +13,14 @@
   <ItemGroup>
     <ClInclude Include="PhysicalDeviceGroupPicker.h" />
     <ClInclude Include="RenderingEngine.h" />
+    <ClInclude Include="Screen.h" />
+    <ClInclude Include="ScreenManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PhysicalDeviceGroupPicker.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
+    <ClCompile Include="Screen.cpp" />
+    <ClCompile Include="ScreenManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VulkanLoader\VulkanLoader.vcxproj">

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Infrastructure/Unique.h"
 #include <string>
 #include "../VulkanLoader/VulkanLoader.h"
 #include "../Infrastructure/Logger.h"
+#include "ScreenManager.h"
 
 namespace HyperFast
 {
@@ -12,6 +12,8 @@ namespace HyperFast
 	public:
 		RenderingEngine(Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName);
 		~RenderingEngine() noexcept;
+
+		std::shared_ptr<Screen> createScreen(Win::Window &window);
 
 	private:
 		Infra::Logger &__logger;
@@ -42,6 +44,8 @@ namespace HyperFast
 		VkQueue __deviceQueue{};
 		VkCommandPool __mainCommandPool{};
 
+		std::unique_ptr<ScreenManager> __pScreenManager;
+
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
 		void __getInstanceVersion() noexcept;
@@ -61,6 +65,7 @@ namespace HyperFast
 		void __queryDeviceQueue();
 		void __createMainCommandPool();
 		void __destroyMainCommandPool() noexcept;
+		void __createScreenManager() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

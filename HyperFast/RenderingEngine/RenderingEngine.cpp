@@ -29,10 +29,12 @@ namespace HyperFast
 		__queryDeviceProc();
 		__queryDeviceQueue();
 		__createMainCommandPool();
+		__createScreenManager();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__pScreenManager = nullptr;
 		__destroyMainCommandPool();
 		__destroyDevice();
 
@@ -41,6 +43,11 @@ namespace HyperFast
 #endif
 
 		__destroyInstance();
+	}
+
+	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
+	{
+		return std::make_shared<Screen>(*__pScreenManager, window);
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -156,6 +163,9 @@ namespace HyperFast
 
 		pNext = &validationFeatures;
 #endif
+
+		enabledExtensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
+		enabledExtensions.emplace_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 
 		const VkApplicationInfo appInfo
 		{
@@ -363,6 +373,11 @@ namespace HyperFast
 	void RenderingEngine::__destroyMainCommandPool() noexcept
 	{
 		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
+	}
+
+	void RenderingEngine::__createScreenManager() noexcept
+	{
+		__pScreenManager = std::make_unique<ScreenManager>();
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

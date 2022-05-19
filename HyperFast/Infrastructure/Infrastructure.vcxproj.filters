@@ -25,6 +25,9 @@
     <ClInclude Include="LogSeverityType.h">
       <Filter>Logger</Filter>
     </ClInclude>
+    <ClInclude Include="ResourceAllocator.h">
+      <Filter>ResourceAllocator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Unique">
@@ -47,6 +50,9 @@
     </Filter>
     <Filter Include="Logger">
       <UniqueIdentifier>{bd9f82a6-5ee7-48c7-9906-c46962d7addc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ResourceAllocator">
+      <UniqueIdentifier>{e61e8fe0-746c-4325-ae3d-6bae7d4664dc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
