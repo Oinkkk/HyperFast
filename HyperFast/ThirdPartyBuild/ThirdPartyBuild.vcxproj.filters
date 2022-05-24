@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="glslc">
+      <UniqueIdentifier>{0c39c60f-b9bf-4dd9-a712-cbe7bb4c5721}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libshaderc_util">
+      <UniqueIdentifier>{0cabfc68-4b21-45f5-b743-86afa44ea7da}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="file_includer.h">
+      <Filter>glslc</Filter>
+    </ClInclude>
+    <ClInclude Include="file_finder.h">
+      <Filter>libshaderc_util</Filter>
+    </ClInclude>
+    <ClInclude Include="string_piece.h">
+      <Filter>libshaderc_util</Filter>
+    </ClInclude>
+    <ClInclude Include="io_shaderc.h">
+      <Filter>libshaderc_util</Filter>
+    </ClInclude>
+    <ClInclude Include="universal_unistd.h">
+      <Filter>libshaderc_util</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="file_includer.cc">
+      <Filter>glslc</Filter>
+    </ClCompile>
+    <ClCompile Include="file_finder.cc">
+      <Filter>libshaderc_util</Filter>
+    </ClCompile>
+    <ClCompile Include="io_shaderc.cc">
+      <Filter>libshaderc_util</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
