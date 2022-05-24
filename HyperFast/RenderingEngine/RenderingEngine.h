@@ -46,8 +46,8 @@ namespace HyperFast
 		VkCommandPool __mainCommandPool{};
 
 		ShaderCompiler __shaderCompiler;
-		std::vector<uint32_t> __vertexShader;
-		std::vector<uint32_t> __fragShader;
+		VkShaderModule __vertexShader{};
+		VkShaderModule __fragShader{};
 
 		std::unique_ptr<ScreenManager> __pScreenManager;
 
@@ -72,6 +72,7 @@ namespace HyperFast
 		void __destroyMainCommandPool() noexcept;
 		void __setupShaderCompiler() noexcept;
 		void __createShaderModules();
+		void __destroyShaderModules() noexcept;
 
 		void __createScreenManager() noexcept;
 

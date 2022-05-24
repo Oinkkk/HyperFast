@@ -41,6 +41,7 @@ namespace HyperFast
 	RenderingEngine::~RenderingEngine() noexcept
 	{
 		__pScreenManager = nullptr;
+		__destroyShaderModules();
 		__destroyMainCommandPool();
 		__destroyDevice();
 
@@ -403,6 +404,34 @@ namespace HyperFast
 			__shaderCompiler.compile(
 				"shader/triangle.frag", shaderc_shader_kind::shaderc_fragment_shader)
 		};
+
+		const VkShaderModuleCreateInfo vertexShaderCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+			.codeSize = (sizeof(uint32_t) * vertexShader.size()),
+			.pCode = vertexShader.data()
+		};
+
+		const VkShaderModuleCreateInfo fragShaderCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+			.codeSize = (sizeof(uint32_t) * fragShader.size()),
+			.pCode = fragShader.data()
+		};
+
+		__deviceProc.vkCreateShaderModule(__device, &vertexShaderCreateInfo, nullptr, &__vertexShader);
+		if (!__vertexShader)
+			throw std::exception{ "Cannot create the vertex shader." };
+
+		__deviceProc.vkCreateShaderModule(__device, &fragShaderCreateInfo, nullptr, &__fragShader);
+		if (!__fragShader)
+			throw std::exception{ "Cannot create the fragment shader." };
+	}
+
+	void RenderingEngine::__destroyShaderModules() noexcept
+	{
+		__deviceProc.vkDestroyShaderModule(__device, __fragShader, nullptr);
+		__deviceProc.vkDestroyShaderModule(__device, __vertexShader, nullptr);
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept

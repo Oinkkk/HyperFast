@@ -119,6 +119,14 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyCommandPool>(
 				vkGetDeviceProcAddr(device, "vkDestroyCommandPool"));
 
+		retVal.vkCreateShaderModule =
+			reinterpret_cast<PFN_vkCreateShaderModule>(
+				vkGetDeviceProcAddr(device, "vkCreateShaderModule"));
+
+		retVal.vkDestroyShaderModule =
+			reinterpret_cast<PFN_vkDestroyShaderModule>(
+				vkGetDeviceProcAddr(device, "vkDestroyShaderModule"));
+
 		return retVal;
 	}
 
