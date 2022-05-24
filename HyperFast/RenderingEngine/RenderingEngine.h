@@ -4,6 +4,7 @@
 #include "../VulkanLoader/VulkanLoader.h"
 #include "../Infrastructure/Logger.h"
 #include "ScreenManager.h"
+#include "ShaderCompiler.h"
 
 namespace HyperFast
 {
@@ -44,6 +45,10 @@ namespace HyperFast
 		VkQueue __deviceQueue{};
 		VkCommandPool __mainCommandPool{};
 
+		ShaderCompiler __shaderCompiler;
+		std::vector<uint32_t> __vertexShader;
+		std::vector<uint32_t> __fragShader;
+
 		std::unique_ptr<ScreenManager> __pScreenManager;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
@@ -65,6 +70,9 @@ namespace HyperFast
 		void __queryDeviceQueue();
 		void __createMainCommandPool();
 		void __destroyMainCommandPool() noexcept;
+		void __setupShaderCompiler() noexcept;
+		void __createShaderModules();
+
 		void __createScreenManager() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(

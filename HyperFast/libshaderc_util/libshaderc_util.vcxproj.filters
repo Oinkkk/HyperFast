@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="universal_unistd.h" />
+    <ClInclude Include="file_finder.h" />
+    <ClInclude Include="io_shaderc.h" />
+    <ClInclude Include="string_piece.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="file_finder.cc" />
+    <ClCompile Include="io_shaderc.cc" />
+  </ItemGroup>
+</Project>

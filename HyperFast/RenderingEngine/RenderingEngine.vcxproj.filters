@@ -10,8 +10,11 @@
     <Filter Include="Engine\ScreenManager">
       <UniqueIdentifier>{f22afa61-1a2f-4419-a75f-7d7f4f94111b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderModule">
+    <Filter Include="RenderCommand">
       <UniqueIdentifier>{738bc1db-4e39-4e45-8d20-cae1f91453e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ShaderCompiler">
+      <UniqueIdentifier>{4f30ba62-d715-4932-89fa-9e8813eabb3b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -26,6 +29,9 @@
     </ClCompile>
     <ClCompile Include="ScreenManager.cpp">
       <Filter>Engine\ScreenManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderCompiler.cpp">
+      <Filter>ShaderCompiler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -42,7 +48,10 @@
       <Filter>Engine\ScreenManager</Filter>
     </ClInclude>
     <ClInclude Include="RenderCommand.h">
-      <Filter>RenderModule</Filter>
+      <Filter>RenderCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderCompiler.h">
+      <Filter>ShaderCompiler</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

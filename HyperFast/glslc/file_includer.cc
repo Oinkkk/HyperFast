@@ -17,7 +17,7 @@
 #include <mutex>
 #include <utility>
 
-#include "io_shaderc.h"
+#include "../libshaderc_util/io_shaderc.h"
 
 namespace glslc {
 

@@ -29,7 +29,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Scene", "Scene\Scene.vcxpro
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0. ThirdPartyBuild", "0. ThirdPartyBuild", "{5B616B22-2F28-47D8-A914-7D388E675CA0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThirdPartyBuild", "ThirdPartyBuild\ThirdPartyBuild.vcxproj", "{2A407F04-9097-4295-94FC-9EE8A5A6D3B1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shader", "Shader", "{6AC4CB2B-F481-4FA0-8D78-C947BA3F844B}"
+	ProjectSection(SolutionItems) = preProject
+		App\shader\triangle.frag = App\shader\triangle.frag
+		App\shader\triangle.vert = App\shader\triangle.vert
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glslc", "glslc\glslc.vcxproj", "{BB8B975D-E5A0-4B9A-B024-99203C2063CA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libshaderc_util", "libshaderc_util\libshaderc_util.vcxproj", "{049CCF30-6172-4A18-B572-F9179C22BA95}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,10 +69,14 @@ Global
 		{0B068852-8EEF-4877-953E-F39FC503994A}.Debug|x64.Build.0 = Debug|x64
 		{0B068852-8EEF-4877-953E-F39FC503994A}.Release|x64.ActiveCfg = Release|x64
 		{0B068852-8EEF-4877-953E-F39FC503994A}.Release|x64.Build.0 = Release|x64
-		{2A407F04-9097-4295-94FC-9EE8A5A6D3B1}.Debug|x64.ActiveCfg = Debug|x64
-		{2A407F04-9097-4295-94FC-9EE8A5A6D3B1}.Debug|x64.Build.0 = Debug|x64
-		{2A407F04-9097-4295-94FC-9EE8A5A6D3B1}.Release|x64.ActiveCfg = Release|x64
-		{2A407F04-9097-4295-94FC-9EE8A5A6D3B1}.Release|x64.Build.0 = Release|x64
+		{BB8B975D-E5A0-4B9A-B024-99203C2063CA}.Debug|x64.ActiveCfg = Debug|x64
+		{BB8B975D-E5A0-4B9A-B024-99203C2063CA}.Debug|x64.Build.0 = Debug|x64
+		{BB8B975D-E5A0-4B9A-B024-99203C2063CA}.Release|x64.ActiveCfg = Release|x64
+		{BB8B975D-E5A0-4B9A-B024-99203C2063CA}.Release|x64.Build.0 = Release|x64
+		{049CCF30-6172-4A18-B572-F9179C22BA95}.Debug|x64.ActiveCfg = Debug|x64
+		{049CCF30-6172-4A18-B572-F9179C22BA95}.Debug|x64.Build.0 = Debug|x64
+		{049CCF30-6172-4A18-B572-F9179C22BA95}.Release|x64.ActiveCfg = Release|x64
+		{049CCF30-6172-4A18-B572-F9179C22BA95}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -76,7 +88,9 @@ Global
 		{022E6446-DAF0-45D3-A57F-C041A461D5E0} = {775ED427-0721-4DDF-A791-912618BE52AA}
 		{9DD430D9-D58C-4E9B-A29E-0C5881B5F2F0} = {8B17F726-557B-46EF-87F5-054A4D5AE0C4}
 		{0B068852-8EEF-4877-953E-F39FC503994A} = {18F332F8-3D2F-4F58-8289-BA76CE059EFA}
-		{2A407F04-9097-4295-94FC-9EE8A5A6D3B1} = {5B616B22-2F28-47D8-A914-7D388E675CA0}
+		{6AC4CB2B-F481-4FA0-8D78-C947BA3F844B} = {8B17F726-557B-46EF-87F5-054A4D5AE0C4}
+		{BB8B975D-E5A0-4B9A-B024-99203C2063CA} = {5B616B22-2F28-47D8-A914-7D388E675CA0}
+		{049CCF30-6172-4A18-B572-F9179C22BA95} = {5B616B22-2F28-47D8-A914-7D388E675CA0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7A6862B8-A243-4486-AB01-AC621EA57447}

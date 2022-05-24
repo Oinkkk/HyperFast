@@ -23,7 +23,7 @@
 #include <vector>
 #include <unordered_set>
 
-#include "file_finder.h"
+#include "../libshaderc_util/file_finder.h"
 #include <shaderc/shaderc.hpp>
 
 namespace glslc {

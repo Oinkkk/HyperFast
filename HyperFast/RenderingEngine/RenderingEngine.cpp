@@ -2,6 +2,8 @@
 #include <sstream>
 #include <vector>
 #include "PhysicalDeviceGroupPicker.h"
+#include <shaderc/shaderc.hpp>
+#include "../glslc/file_includer.h"
 
 namespace HyperFast
 {
@@ -29,6 +31,10 @@ namespace HyperFast
 		__queryDeviceProc();
 		__queryDeviceQueue();
 		__createMainCommandPool();
+		__setupShaderCompiler();
+		__createShaderModules();
+
+
 		__createScreenManager();
 	}
 
@@ -373,6 +379,30 @@ namespace HyperFast
 	void RenderingEngine::__destroyMainCommandPool() noexcept
 	{
 		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
+	}
+
+	void RenderingEngine::__setupShaderCompiler() noexcept
+	{
+#ifndef NDEBUG
+		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
+#elif
+		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_performance);
+#endif
+	}
+
+	void RenderingEngine::__createShaderModules()
+	{
+		const std::vector<uint32_t> &vertexShader
+		{
+			__shaderCompiler.compile(
+				"shader/triangle.vert", shaderc_shader_kind::shaderc_vertex_shader)
+		};
+
+		const std::vector<uint32_t> &fragShader
+		{
+			__shaderCompiler.compile(
+				"shader/triangle.frag", shaderc_shader_kind::shaderc_fragment_shader)
+		};
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept
