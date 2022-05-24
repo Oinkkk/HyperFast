@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="PhysicalDeviceGroupPicker.h" />
     <ClInclude Include="RenderingEngine.h" />
+    <ClInclude Include="RenderCommand.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="ScreenManager.h" />
   </ItemGroup>

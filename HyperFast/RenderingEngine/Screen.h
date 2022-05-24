@@ -3,6 +3,7 @@
 #include "../Infrastructure/ResourceAllocator.h"
 #include <vulkan/vulkan.h>
 #include "../Window/Window.h"
+#include "RenderCommand.h"
 
 namespace HyperFast
 {
@@ -18,31 +19,23 @@ namespace HyperFast
 		Screen(SurfaceAllocator &surfaceAllocator, Win::Window &window);
 		virtual ~Screen() noexcept;
 
+		void setRenderCommand(RenderCommand *const pRenderCommand) noexcept;
+
 		void destroy() noexcept;
 
 		[[nodiscard]]
 		constexpr bool isDestroyed() const noexcept;
-
-		[[nodiscard]]
-		constexpr Infra::EventView<Screen &> &getDestroyEvent() noexcept;
 
 	private:
 		SurfaceAllocator &__surfaceAllocator;
 		Win::Window &__window;
 
 		VkSurfaceKHR __surface{};
-
-		Infra::Event<Screen &> __destroyEvent;
-		std::shared_ptr<Infra::EventListener<Win::Window &>> __pDestroyEventListener;
+		RenderCommand *__pRenderCommand{};
 	};
 
 	constexpr bool Screen::isDestroyed() const noexcept
 	{
 		return __surface;
-	}
-
-	constexpr Infra::EventView<Screen &> &Screen::getDestroyEvent() noexcept
-	{
-		return __destroyEvent;
 	}
 }
