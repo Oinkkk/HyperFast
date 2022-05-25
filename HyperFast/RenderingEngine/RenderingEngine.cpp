@@ -450,7 +450,7 @@ namespace HyperFast
 
 		const VkViewport viewport
 		{
-
+			
 		};
 
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;

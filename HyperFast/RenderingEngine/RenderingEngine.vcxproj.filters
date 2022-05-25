@@ -16,6 +16,9 @@
     <Filter Include="ShaderCompiler">
       <UniqueIdentifier>{4f30ba62-d715-4932-89fa-9e8813eabb3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PipelineFactory">
+      <UniqueIdentifier>{2063d3f5-4857-4bb9-b599-ddfa4d7c166b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -32,6 +35,9 @@
     </ClCompile>
     <ClCompile Include="ShaderCompiler.cpp">
       <Filter>ShaderCompiler</Filter>
+    </ClCompile>
+    <ClCompile Include="PipelineFactory.cpp">
+      <Filter>PipelineFactory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +58,9 @@
     </ClInclude>
     <ClInclude Include="ShaderCompiler.h">
       <Filter>ShaderCompiler</Filter>
+    </ClInclude>
+    <ClInclude Include="PipelineFactory.h">
+      <Filter>PipelineFactory</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

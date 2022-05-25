@@ -73,6 +73,7 @@ namespace HyperFast
 		void __setupShaderCompiler() noexcept;
 		void __createShaderModules();
 		void __destroyShaderModules() noexcept;
+		void __createPipeline();
 
 		void __createScreenManager() noexcept;
 

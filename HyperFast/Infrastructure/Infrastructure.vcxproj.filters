@@ -28,6 +28,9 @@
     <ClInclude Include="ResourceAllocator.h">
       <Filter>ResourceAllocator</Filter>
     </ClInclude>
+    <ClInclude Include="LruCache.h">
+      <Filter>LruCache</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Unique">
@@ -53,6 +56,9 @@
     </Filter>
     <Filter Include="ResourceAllocator">
       <UniqueIdentifier>{e61e8fe0-746c-4325-ae3d-6bae7d4664dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LruCache">
+      <UniqueIdentifier>{06616940-ae54-4fd8-9a80-917a837625a4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

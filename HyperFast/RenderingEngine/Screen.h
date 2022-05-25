@@ -39,7 +39,7 @@ namespace HyperFast
 		PipelineFactory __pipelineFactory;
 		RenderCommand *__pRenderCommand{};
 
-		void __initPipelineBuildParam() noexcept;
+		void __initPipelineFactoryBuildParam() noexcept;
 	};
 
 	constexpr bool Screen::isDestroyed() const noexcept
