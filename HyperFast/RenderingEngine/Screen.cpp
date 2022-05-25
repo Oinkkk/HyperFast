@@ -2,10 +2,14 @@
 
 namespace HyperFast
 {
-	Screen::Screen(SurfaceAllocator &surfaceAllocator, Win::Window &window) :
-		__surfaceAllocator{ surfaceAllocator }, __window{ window }, __surface{ surfaceAllocator.allocate(__window) }
+	Screen::Screen(
+		SurfaceAllocator &surfaceAllocator, Win::Window &window,
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc) :
+		__surfaceAllocator{ surfaceAllocator }, __window{ window },
+		__surface{ surfaceAllocator.allocate(__window) }, __pipelineFactory{ device, deviceProc }
 	{
-
+		__initPipelineFactoryBuildParam();
+		__pipelineFactory.build(__pipelineFactoryBuildParam);
 	}
 
 	Screen::~Screen() noexcept
@@ -28,5 +32,11 @@ namespace HyperFast
 
 		__surfaceAllocator.free(__surface);
 		__surface = nullptr;
+	}
+
+	void Screen::__initPipelineFactoryBuildParam() noexcept
+	{
+		__pipelineFactoryBuildParam.viewportWidth = float(__window.getWidth());
+		__pipelineFactoryBuildParam.viewportHeight = float(__window.getHeight());
 	}
 }

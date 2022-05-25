@@ -434,6 +434,40 @@ namespace HyperFast
 		__deviceProc.vkDestroyShaderModule(__device, __vertexShader, nullptr);
 	}
 
+	void RenderingEngine::__createPipeline()
+	{
+		const VkPipelineVertexInputStateCreateInfo vertexInputInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+		};
+
+		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+			.topology = VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.primitiveRestartEnable = VK_FALSE
+		};
+
+		const VkViewport viewport
+		{
+
+		};
+
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
+
+		VkPipelineShaderStageCreateInfo &vsStageInfo{ shaderStageInfos.emplace_back() };
+		vsStageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+		vsStageInfo.module = __vertexShader;
+		vsStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo &fsStageInfo{ shaderStageInfos.emplace_back() };
+		fsStageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+		fsStageInfo.module = __fragShader;
+		fsStageInfo.pName = "main";
+	}
+
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>();

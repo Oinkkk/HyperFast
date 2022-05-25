@@ -10,13 +10,13 @@ namespace HyperFast
 	class PhysicalDeviceGroupPicker : public Infra::Unique
 	{
 	public:
-		PhysicalDeviceGroupPicker(const VkInstance instance, VKL::InstanceProcedure &instanceProc) noexcept;
+		PhysicalDeviceGroupPicker(const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept;
 
 		bool pick(VkPhysicalDeviceGroupProperties &physicalDeviceGroupProp) const noexcept;
 
 	private:
 		const VkInstance __instance;
-		VKL::InstanceProcedure &__instanceProc;
+		const VKL::InstanceProcedure &__instanceProc;
 
 		[[nodiscard]]
 		bool __checkVersionSupport(const VkPhysicalDevice physicalDevice) const noexcept;

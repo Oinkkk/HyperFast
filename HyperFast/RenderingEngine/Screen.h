@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../Infrastructure/ResourceAllocator.h"
-#include <vulkan/vulkan.h>
 #include "../Window/Window.h"
+#include "PipelineFactory.h"
 #include "RenderCommand.h"
 
 namespace HyperFast
@@ -16,7 +16,10 @@ namespace HyperFast
 	class Screen : public Infra::Unique
 	{
 	public:
-		Screen(SurfaceAllocator &surfaceAllocator, Win::Window &window);
+		Screen(
+			SurfaceAllocator &surfaceAllocator, Win::Window &window,
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc);
+		
 		virtual ~Screen() noexcept;
 
 		void setRenderCommand(RenderCommand *const pRenderCommand) noexcept;
@@ -31,7 +34,12 @@ namespace HyperFast
 		Win::Window &__window;
 
 		VkSurfaceKHR __surface{};
+
+		PipelineFactory::BuildParam __pipelineFactoryBuildParam;
+		PipelineFactory __pipelineFactory;
 		RenderCommand *__pRenderCommand{};
+
+		void __initPipelineBuildParam() noexcept;
 	};
 
 	constexpr bool Screen::isDestroyed() const noexcept
