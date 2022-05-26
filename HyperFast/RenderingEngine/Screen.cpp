@@ -3,11 +3,14 @@
 namespace HyperFast
 {
 	Screen::Screen(
-		SurfaceAllocator &surfaceAllocator, Win::Window &window,
+		SurfaceCreater &surfaceAllocator, Win::Window &window,
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc) :
 		__surfaceAllocator{ surfaceAllocator }, __window{ window },
-		__surface{ surfaceAllocator.allocate(__window) }, __pipelineFactory{ device, deviceProc }
+		__surface{ surfaceAllocator.create(__window) }, __pipelineFactory{ device, deviceProc }
 	{
+		if (!__surface)
+			throw std::exception{ "Cannot create a surface." };
+
 		__initPipelineFactoryBuildParam();
 		__pipelineFactory.build(__pipelineFactoryBuildParam);
 	}
@@ -30,7 +33,7 @@ namespace HyperFast
 		if (!__surface)
 			return;
 
-		__surfaceAllocator.free(__surface);
+		__surfaceAllocator.destroy(__surface);
 		__surface = nullptr;
 	}
 

@@ -25,8 +25,8 @@
     <ClInclude Include="LogSeverityType.h">
       <Filter>Logger</Filter>
     </ClInclude>
-    <ClInclude Include="ResourceAllocator.h">
-      <Filter>ResourceAllocator</Filter>
+    <ClInclude Include="ResourceCreater.h">
+      <Filter>ResourceCreater</Filter>
     </ClInclude>
     <ClInclude Include="LruCache.h">
       <Filter>LruCache</Filter>
@@ -54,11 +54,11 @@
     <Filter Include="Logger">
       <UniqueIdentifier>{bd9f82a6-5ee7-48c7-9906-c46962d7addc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ResourceAllocator">
-      <UniqueIdentifier>{e61e8fe0-746c-4325-ae3d-6bae7d4664dc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="LruCache">
       <UniqueIdentifier>{06616940-ae54-4fd8-9a80-917a837625a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ResourceCreater">
+      <UniqueIdentifier>{e61e8fe0-746c-4325-ae3d-6bae7d4664dc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

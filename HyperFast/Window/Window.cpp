@@ -5,19 +5,21 @@
 
 namespace Win
 {
-	Window::Window(const WindowClass &windowClass, const std::string_view &title, const bool show) :
+	Window::Window(
+		WindowClass &windowClass, const std::string_view &title, const bool show) :
 		Window{ windowClass, title, show, CW_USEDEFAULT, CW_USEDEFAULT }
 	{}
 
 	Window::Window(
-		const WindowClass &windowClass, const std::string_view &title,
+		WindowClass &windowClass, const std::string_view &title,
 		const bool show, const int x, const int y) :
 		Window{ windowClass, title, show, x, y, CW_USEDEFAULT, CW_USEDEFAULT }
 	{}
 
 	Window::Window(
-		const WindowClass &windowClass, const std::string_view &title,
-		const bool show, const int x, const int y, const int width, const int height)
+		WindowClass &windowClass, const std::string_view &title,
+		const bool show, const int x, const int y, const int width, const int height) :
+		__windowClass{ windowClass }
 	{
 		__handle = __create(windowClass, title, x, y, width, height, this);
 		GetWindowRect(__handle, &__windowRect);
@@ -146,7 +148,7 @@ namespace Win
 	}
 
 	HWND Window::__create(
-		const WindowClass &windowClass, const std::string_view &title,
+		WindowClass &windowClass, const std::string_view &title,
 		const int x, const int y, const int width, const int height, Window *const pThis)
 	{
 		const HINSTANCE hInstance{ AppInstance::getInstance().getHandle() };

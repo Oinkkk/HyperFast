@@ -19,17 +19,20 @@ namespace Win
 		};
 
 		Window(
-			const WindowClass &windowClass, const std::string_view &title, const bool show);
+			WindowClass &windowClass, const std::string_view &title, const bool show);
 		
 		Window(
-			const WindowClass &windowClass, const std::string_view &title,
+			WindowClass &windowClass, const std::string_view &title,
 			const bool show, const int x, const int y);
 
 		Window(
-			const WindowClass &windowClass, const std::string_view &title,
+			WindowClass &windowClass, const std::string_view &title,
 			const bool show, const int x, const int y, const int width, const int height);
 
 		virtual ~Window() noexcept;
+
+		[[nodiscard]]
+		constexpr WindowClass &getClass() const noexcept;
 
 		[[nodiscard]]
 		constexpr HWND getHandle() const noexcept;
@@ -76,6 +79,8 @@ namespace Win
 		constexpr Infra::EventView<Window &> &getDestroyEvent() noexcept;
 
 	private:
+		WindowClass &__windowClass;
+
 		HWND __handle{};
 		RECT __windowRect{};
 		RECT __clientRect{};
@@ -93,9 +98,15 @@ namespace Win
 		void __updateAppearance(const int x, const int y, const int width, const int height) noexcept;
 
 		static HWND __create(
-			const WindowClass &windowClass, const std::string_view &title,
+			WindowClass &windowClass, const std::string_view &title,
 			const int x, const int y, const int width, const int height, Window *const pThis);
 	};
+
+	[[nodiscard]]
+	constexpr WindowClass &Window::getClass() const noexcept
+	{
+		return __windowClass;
+	}
 
 	constexpr HWND Window::getHandle() const noexcept
 	{

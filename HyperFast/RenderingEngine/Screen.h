@@ -1,23 +1,23 @@
 #pragma once
 
-#include "../Infrastructure/ResourceAllocator.h"
+#include "../Infrastructure/ResourceCreater.h"
 #include "../Window/Window.h"
 #include "PipelineFactory.h"
 #include "RenderCommand.h"
 
 namespace HyperFast
 {
-	class SurfaceAllocator : public Infra::ResourceAllocator<VkSurfaceKHR>
+	class SurfaceCreater : public Infra::ResourceCreater<VkSurfaceKHR>
 	{
 	public:
-		virtual VkSurfaceKHR allocate(Win::Window &window) = 0;
+		virtual VkSurfaceKHR create(Win::Window &window) noexcept = 0;
 	};
 
 	class Screen : public Infra::Unique
 	{
 	public:
 		Screen(
-			SurfaceAllocator &surfaceAllocator, Win::Window &window,
+			SurfaceCreater &surfaceAllocator, Win::Window &window,
 			const VkDevice device, const VKL::DeviceProcedure &deviceProc);
 		
 		virtual ~Screen() noexcept;
@@ -30,7 +30,7 @@ namespace HyperFast
 		constexpr bool isDestroyed() const noexcept;
 
 	private:
-		SurfaceAllocator &__surfaceAllocator;
+		SurfaceCreater &__surfaceAllocator;
 		Win::Window &__window;
 
 		VkSurfaceKHR __surface{};

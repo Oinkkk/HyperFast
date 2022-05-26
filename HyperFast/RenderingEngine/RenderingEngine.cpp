@@ -54,7 +54,7 @@ namespace HyperFast
 
 	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
 	{
-		return std::make_shared<Screen>(*__pScreenManager, window);
+		return std::make_shared<Screen>(*__pScreenManager, window, __device, __deviceProc);
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -324,6 +324,7 @@ namespace HyperFast
 		};
 
 		std::vector<const char *> enabledExtensions;
+		enabledExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
 		const VkDeviceCreateInfo createInfo
 		{
@@ -470,7 +471,7 @@ namespace HyperFast
 
 	void RenderingEngine::__createScreenManager() noexcept
 	{
-		__pScreenManager = std::make_unique<ScreenManager>();
+		__pScreenManager = std::make_unique<ScreenManager>(__instance, __instanceProc);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

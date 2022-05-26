@@ -2,23 +2,29 @@
 
 namespace HyperFast
 {
-	ScreenManager::ScreenManager() noexcept
-	{
+	ScreenManager::ScreenManager(const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept :
+		__instance{ instance }, __instanceProc{ instanceProc }
+	{}
 
+	VkSurfaceKHR ScreenManager::create(Win::Window &window) noexcept
+	{
+		Win::WindowClass &windowClass{ window.getClass() };
+
+		const VkWin32SurfaceCreateInfoKHR createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+			.hinstance = windowClass.getHInstance(),
+			.hwnd = window.getHandle()
+		};
+
+		VkSurfaceKHR retVal{};
+		__instanceProc.vkCreateWin32SurfaceKHR(__instance, &createInfo, nullptr, &retVal);
+
+		return retVal;
 	}
 
-	ScreenManager::~ScreenManager() noexcept
+	void ScreenManager::destroy(const VkSurfaceKHR handle) noexcept
 	{
-
-	}
-
-	VkSurfaceKHR ScreenManager::allocate(Win::Window &window)
-	{
-		return nullptr;
-	}
-
-	void ScreenManager::free(const VkSurfaceKHR handle) noexcept
-	{
-
+		__instanceProc.vkDestroySurfaceKHR(__instance, handle, nullptr);
 	}
 }

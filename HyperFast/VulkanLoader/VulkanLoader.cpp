@@ -85,6 +85,14 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceQueueFamilyProperties2"));
 
+		retVal.vkCreateWin32SurfaceKHR =
+			reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"));
+
+		retVal.vkDestroySurfaceKHR =
+			reinterpret_cast<PFN_vkDestroySurfaceKHR>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkDestroySurfaceKHR"));
+
 		retVal.vkCreateDevice =
 			reinterpret_cast<PFN_vkCreateDevice>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateDevice"));

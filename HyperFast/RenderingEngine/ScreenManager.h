@@ -1,20 +1,20 @@
 #pragma once
 
 #include "Screen.h"
-#include "../Window/Window.h"
 
 namespace HyperFast
 {
-	class ScreenManager : public SurfaceAllocator
+	class ScreenManager : public SurfaceCreater
 	{
 	public:
-		ScreenManager() noexcept;
-		~ScreenManager() noexcept;
+		ScreenManager(const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept;
+		virtual ~ScreenManager() noexcept = default;
 
-		virtual VkSurfaceKHR allocate(Win::Window &window) override;
-		virtual void free(const VkSurfaceKHR handle) noexcept override;
+		virtual VkSurfaceKHR create(Win::Window &window) noexcept override;
+		virtual void destroy(const VkSurfaceKHR handle) noexcept override;
 
 	private:
-
+		const VkInstance __instance;
+		const VKL::InstanceProcedure &__instanceProc;
 	};
 }
