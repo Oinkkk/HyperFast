@@ -10,28 +10,14 @@ int main()
 	Infra::Logger logger;
 	logger.log(Infra::LogSeverityType::INFO, "The program starts.");
 
-	std::shared_ptr<HyperFast::Screen> pScreen1;
-	std::shared_ptr<HyperFast::Screen> pScreen2;
-
-	const auto pDestroyEventListener1
+	const auto pDestroyEventListener
 	{
 		std::make_shared<Infra::EventListener<Win::Window &>>()
 	};
 
-	const auto pDestroyEventListener2
+	pDestroyEventListener->setCallback([] (Win::Window &window)
 	{
-		std::make_shared<Infra::EventListener<Win::Window &>>()
-	};
-
-	pDestroyEventListener1->setCallback([&pScreen1] (Win::Window &window)
-	{
-		pScreen1 = nullptr;
 		Win::MainLooper::postQuitMessage();
-	});
-
-	pDestroyEventListener2->setCallback([&pScreen2] (Win::Window &window)
-	{
-		pScreen2 = nullptr;
 	});
 
 	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
@@ -43,8 +29,7 @@ int main()
 	win1.setSize(400, 300);
 	win2.setSize(400, 300);
 
-	win1.getDestroyEvent() += pDestroyEventListener1;
-	win2.getDestroyEvent() += pDestroyEventListener2;
+	win1.getDestroyEvent() += pDestroyEventListener;
 
 	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
 	vulkanLoader.load();
@@ -58,8 +43,8 @@ int main()
 
 	logger.log(Infra::LogSeverityType::INFO, "The rendering engine is created.");
 
-	pScreen1 = pRenderingEngine->createScreen(win1);
-	pScreen2 = pRenderingEngine->createScreen(win2);
+	std::shared_ptr<HyperFast::Screen> pScreen1{ pRenderingEngine->createScreen(win1) };
+	std::shared_ptr<HyperFast::Screen> pScreen2{ pRenderingEngine->createScreen(win2) };
 
 	const Infra::Looper::MessageFunc messageFunc
 	{
@@ -88,6 +73,8 @@ int main()
 	updateLooper.stop();
 	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper ends.");
 
+	pScreen2 = nullptr;
+	pScreen1 = nullptr;
 	pRenderingEngine = nullptr;
 	logger.log(Infra::LogSeverityType::INFO, "The rendering engine destroyed.");
 
