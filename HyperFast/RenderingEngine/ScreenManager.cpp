@@ -4,18 +4,24 @@ namespace HyperFast
 {
 	ScreenManager::ScreenManager(
 		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+		const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept :
 		__instance{ instance }, __instanceProc{ instanceProc },
+		__firstPhysicalDevice{ firstPhysicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __deviceProc{ deviceProc }
 	{}
 
 	std::unique_ptr<ScreenManager::ScreenImpl> ScreenManager::create(Win::Window &window) noexcept
 	{
-		return std::make_unique<ScreenImpl>(__instance, __instanceProc, __device, __deviceProc, window);
+		return std::make_unique<ScreenImpl>(
+			__instance, __instanceProc,
+			__firstPhysicalDevice, __graphicsQueueFamilyIndex,
+			__device, __deviceProc, window);
 	}
 
 	ScreenManager::ScreenImpl::ScreenImpl(
 		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+		const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window) :
 		__instance{ instance }, __instanceProc{ instanceProc },
 		__device{ device }, __deviceProc{ deviceProc }, __window{ window },
@@ -24,6 +30,13 @@ namespace HyperFast
 	{
 		if (!__surface)
 			throw std::exception{ "Cannot create a surface." };
+
+		VkBool32 surfaceSupported{};
+		instanceProc.vkGetPhysicalDeviceSurfaceSupportKHR(
+			firstPhysicalDevice, graphicsQueueFamilyIndex, __surface, &surfaceSupported);
+
+		if (!surfaceSupported)
+			throw std::exception{ "The physical device doesn't support the surface." };
 
 		__initPipelineFactoryBuildParam();
 		__pipelineFactory.build(__pipelineFactoryBuildParam);

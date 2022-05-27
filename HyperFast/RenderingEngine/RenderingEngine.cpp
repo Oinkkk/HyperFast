@@ -261,11 +261,20 @@ namespace HyperFast
 		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
 		{
 			const VkQueueFamilyProperties &queueFamilyProp{ __queueFamilyProps[propIter] };
-			if (queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT)
+
+			if (!(queueFamilyProp.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT))
+				continue;
+
+			const VkBool32 win32SupportResult
 			{
-				__graphicsQueueFamilyIndex = propIter;
-				break;
-			}
+				__instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__firstPhysicalDevice, propIter)
+			};
+
+			if (!win32SupportResult)
+				continue;
+
+			__graphicsQueueFamilyIndex = propIter;
+			break;
 		}
 	}
 
@@ -381,7 +390,9 @@ namespace HyperFast
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
-			__instance, __instanceProc, __device, __deviceProc);
+			__instance, __instanceProc,
+			__firstPhysicalDevice, __graphicsQueueFamilyIndex,
+			__device, __deviceProc);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

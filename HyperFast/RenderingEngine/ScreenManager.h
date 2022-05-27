@@ -13,6 +13,7 @@ namespace HyperFast
 		public:
 			ScreenImpl(
 				const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+				const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
 				const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window);
 
 			~ScreenImpl() noexcept;
@@ -27,6 +28,8 @@ namespace HyperFast
 			Win::Window &__window;
 			VkSurfaceKHR __surface{};
 
+			VkSurfaceCapabilitiesKHR __surfaceCapabilities;
+
 			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
 			PipelineFactory __pipelineFactory;
 
@@ -39,6 +42,7 @@ namespace HyperFast
 
 		ScreenManager(
 			const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+			const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
 			const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
 
 		~ScreenManager() noexcept = default;
@@ -49,6 +53,9 @@ namespace HyperFast
 	private:
 		const VkInstance __instance;
 		const VKL::InstanceProcedure &__instanceProc;
+
+		const VkPhysicalDevice __firstPhysicalDevice;
+		const uint32_t __graphicsQueueFamilyIndex;
 
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
