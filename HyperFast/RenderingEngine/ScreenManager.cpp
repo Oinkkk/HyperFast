@@ -34,6 +34,7 @@ namespace HyperFast
 
 		__checkSurfaceSupport();
 		__querySurfaceCapabilities();
+		__querySupportedSurfaceFormats();
 		__initPipelineFactoryBuildParam();
 		__pipelineFactory.build(__pipelineFactoryBuildParam);
 	}
@@ -62,6 +63,17 @@ namespace HyperFast
 	{
 		__instanceProc.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
 			__firstPhysicalDevice, __surface, &__surfaceCapabilities);
+	}
+
+	void ScreenManager::ScreenImpl::__querySupportedSurfaceFormats() noexcept
+	{
+		uint32_t numFormats{};
+		__instanceProc.vkGetPhysicalDeviceSurfaceFormatsKHR(
+			__firstPhysicalDevice, __surface, &numFormats, nullptr);
+
+		__supportedSurfaceFormats.resize(numFormats);
+		__instanceProc.vkGetPhysicalDeviceSurfaceFormatsKHR(
+			__firstPhysicalDevice, __surface, &numFormats, __supportedSurfaceFormats.data());
 	}
 
 	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept

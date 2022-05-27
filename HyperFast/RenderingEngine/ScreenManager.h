@@ -29,8 +29,10 @@ namespace HyperFast
 			const VKL::DeviceProcedure &__deviceProc;
 
 			Win::Window &__window;
+
 			VkSurfaceKHR __surface{};
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
+			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
 
 			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
 			PipelineFactory __pipelineFactory;
@@ -39,6 +41,7 @@ namespace HyperFast
 			void __checkSurfaceSupport() const;
 			void __initPipelineFactoryBuildParam() noexcept;
 			void __querySurfaceCapabilities() noexcept;
+			void __querySupportedSurfaceFormats() noexcept;
 
 			[[nodiscard]]
 			static VkSurfaceKHR __createSurface(

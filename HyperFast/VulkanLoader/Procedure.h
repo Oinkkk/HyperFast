@@ -31,6 +31,7 @@ namespace VKL
 		PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR{};
 		PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR{};
 		PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR{};
+		PFN_vkGetPhysicalDeviceSurfaceFormatsKHR vkGetPhysicalDeviceSurfaceFormatsKHR{};
 		PFN_vkCreateDevice vkCreateDevice{};
 		PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr{};
 	};
