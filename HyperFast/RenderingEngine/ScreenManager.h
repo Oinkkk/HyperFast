@@ -2,6 +2,7 @@
 
 #include "../Window/Window.h"
 #include "PipelineFactory.h"
+#include "../Infrastructure/Logger.h"
 
 namespace HyperFast
 {
@@ -14,7 +15,8 @@ namespace HyperFast
 			ScreenImpl(
 				const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
 				const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-				const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window);
+				const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window,
+				Infra::Logger &logger);
 
 			~ScreenImpl() noexcept;
 
@@ -29,6 +31,7 @@ namespace HyperFast
 			const VKL::DeviceProcedure &__deviceProc;
 
 			Win::Window &__window;
+			Infra::Logger &__logger;
 
 			VkSurfaceKHR __surface{};
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
@@ -58,7 +61,8 @@ namespace HyperFast
 		ScreenManager(
 			const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
 			const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-			const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+			Infra::Logger &logger) noexcept;
 
 		~ScreenManager() noexcept = default;
 
@@ -74,5 +78,7 @@ namespace HyperFast
 
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
+
+		Infra::Logger &__logger;
 	};
 }
