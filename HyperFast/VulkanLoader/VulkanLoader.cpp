@@ -89,10 +89,6 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
 
-		retVal.vkGetPhysicalDeviceSurfaceSupportKHR =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceSurfaceSupportKHR>(
-				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceSurfaceSupportKHR"));
-
 		retVal.vkCreateWin32SurfaceKHR =
 			reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"));
@@ -100,6 +96,14 @@ namespace VKL
 		retVal.vkDestroySurfaceKHR =
 			reinterpret_cast<PFN_vkDestroySurfaceKHR>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkDestroySurfaceKHR"));
+
+		retVal.vkGetPhysicalDeviceSurfaceSupportKHR =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceSurfaceSupportKHR>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceSurfaceSupportKHR"));
+
+		retVal.vkGetPhysicalDeviceSurfaceCapabilitiesKHR =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR"));
 
 		retVal.vkCreateDevice =
 			reinterpret_cast<PFN_vkCreateDevice>(

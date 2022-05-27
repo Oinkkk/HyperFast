@@ -22,22 +22,27 @@ namespace HyperFast
 			const VkInstance __instance;
 			const VKL::InstanceProcedure &__instanceProc;
 
+			const VkPhysicalDevice __firstPhysicalDevice;
+			const uint32_t __graphicsQueueFamilyIndex;
+
 			const VkDevice __device;
 			const VKL::DeviceProcedure &__deviceProc;
 
 			Win::Window &__window;
 			VkSurfaceKHR __surface{};
-
-			VkSurfaceCapabilitiesKHR __surfaceCapabilities;
+			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 
 			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
 			PipelineFactory __pipelineFactory;
 
+			void __destroySurface() noexcept;
+			void __checkSurfaceSupport() const;
+			void __initPipelineFactoryBuildParam() noexcept;
+			void __querySurfaceCapabilities() noexcept;
+
 			[[nodiscard]]
 			static VkSurfaceKHR __createSurface(
 				const VkInstance instance, const VKL::InstanceProcedure &instanceProc, Win::Window &window);
-
-			void __initPipelineFactoryBuildParam() noexcept;
 		};
 
 		ScreenManager(

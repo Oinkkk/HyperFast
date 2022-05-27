@@ -24,6 +24,7 @@ namespace HyperFast
 		const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window) :
 		__instance{ instance }, __instanceProc{ instanceProc },
+		__firstPhysicalDevice{ firstPhysicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __deviceProc{ deviceProc }, __window{ window },
 		__surface{ __createSurface(instance, instanceProc, window) },
 		__pipelineFactory{ device, deviceProc }
@@ -31,20 +32,36 @@ namespace HyperFast
 		if (!__surface)
 			throw std::exception{ "Cannot create a surface." };
 
-		VkBool32 surfaceSupported{};
-		instanceProc.vkGetPhysicalDeviceSurfaceSupportKHR(
-			firstPhysicalDevice, graphicsQueueFamilyIndex, __surface, &surfaceSupported);
-
-		if (!surfaceSupported)
-			throw std::exception{ "The physical device doesn't support the surface." };
-
+		__checkSurfaceSupport();
+		__querySurfaceCapabilities();
 		__initPipelineFactoryBuildParam();
 		__pipelineFactory.build(__pipelineFactoryBuildParam);
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
+		__destroySurface();
+	}
+
+	void ScreenManager::ScreenImpl::__destroySurface() noexcept
+	{
 		__instanceProc.vkDestroySurfaceKHR(__instance, __surface, nullptr);
+	}
+
+	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const
+	{
+		VkBool32 surfaceSupported{};
+		__instanceProc.vkGetPhysicalDeviceSurfaceSupportKHR(
+			__firstPhysicalDevice, __graphicsQueueFamilyIndex, __surface, &surfaceSupported);
+
+		if (!surfaceSupported)
+			throw std::exception{ "The physical device doesn't support the surface." };
+	}
+
+	void ScreenManager::ScreenImpl::__querySurfaceCapabilities() noexcept
+	{
+		__instanceProc.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+			__firstPhysicalDevice, __surface, &__surfaceCapabilities);
 	}
 
 	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept

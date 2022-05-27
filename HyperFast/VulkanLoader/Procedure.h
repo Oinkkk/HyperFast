@@ -27,9 +27,10 @@ namespace VKL
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties{};
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{};
 		PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR{};
-		PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR{};
 		PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
 		PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR{};
+		PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR{};
+		PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR{};
 		PFN_vkCreateDevice vkCreateDevice{};
 		PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr{};
 	};
