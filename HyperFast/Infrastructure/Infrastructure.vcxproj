@@ -13,17 +13,18 @@
   <ItemGroup>
     <ClInclude Include="ConcurrentMessageQueue.h" />
     <ClInclude Include="Event.h" />
+    <ClInclude Include="IdAllocator.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="LogSeverityType.h" />
     <ClInclude Include="Looper.h" />
     <ClInclude Include="LruCache.h" />
-    <ClInclude Include="ResourceCreater.h" />
     <ClInclude Include="StringFormatter.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Unique.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConcurrentMessageQueue.cpp" />
+    <ClCompile Include="IdAllocator.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Looper.cpp" />
   </ItemGroup>

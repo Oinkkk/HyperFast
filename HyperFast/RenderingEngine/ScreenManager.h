@@ -1,20 +1,56 @@
 #pragma once
 
-#include "Screen.h"
+#include "../Window/Window.h"
+#include "PipelineFactory.h"
 
 namespace HyperFast
 {
-	class ScreenManager : public SurfaceCreater
+	class ScreenManager final : public Infra::Unique
 	{
 	public:
-		ScreenManager(const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept;
-		virtual ~ScreenManager() noexcept = default;
+		class ScreenImpl final : public Infra::Unique
+		{
+		public:
+			ScreenImpl(
+				const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+				const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window);
 
-		virtual VkSurfaceKHR create(Win::Window &window) noexcept override;
-		virtual void destroy(const VkSurfaceKHR handle) noexcept override;
+			~ScreenImpl() noexcept;
+
+		private:
+			const VkInstance __instance;
+			const VKL::InstanceProcedure &__instanceProc;
+
+			const VkDevice __device;
+			const VKL::DeviceProcedure &__deviceProc;
+
+			Win::Window &__window;
+			VkSurfaceKHR __surface{};
+
+			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
+			PipelineFactory __pipelineFactory;
+
+			[[nodiscard]]
+			static VkSurfaceKHR __createSurface(
+				const VkInstance instance, const VKL::InstanceProcedure &instanceProc, Win::Window &window);
+
+			void __initPipelineFactoryBuildParam() noexcept;
+		};
+
+		ScreenManager(
+			const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
+
+		~ScreenManager() noexcept = default;
+
+		[[nodiscard]]
+		std::unique_ptr<ScreenImpl> create(Win::Window &window) noexcept;
 
 	private:
 		const VkInstance __instance;
 		const VKL::InstanceProcedure &__instanceProc;
+
+		const VkDevice __device;
+		const VKL::DeviceProcedure &__deviceProc;
 	};
 }

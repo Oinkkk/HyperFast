@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Infrastructure/Unique.h"
+#include "ShaderCompiler.h"
 #include "../VulkanLoader/Procedure.h"
 
 namespace HyperFast
@@ -16,6 +16,7 @@ namespace HyperFast
 		};
 
 		PipelineFactory(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
+		~PipelineFactory() noexcept;
 
 		void build(const BuildParam &param);
 
@@ -25,5 +26,18 @@ namespace HyperFast
 	private:
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
+
+		ShaderCompiler __shaderCompiler;
+		VkShaderModule __vertexShader{};
+		VkShaderModule __fragShader{};
+
+		VkPipeline __pipeline{};
+
+		void __setupShaderCompiler() noexcept;
+		void __createShaderModules();
+		void __destroyShaderModules() noexcept;
+
+		void __createPipeline(const BuildParam &buildParam);
+		void __destroyPipeline() noexcept;
 	};
 }

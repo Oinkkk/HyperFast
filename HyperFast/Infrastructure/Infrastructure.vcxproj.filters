@@ -25,11 +25,11 @@
     <ClInclude Include="LogSeverityType.h">
       <Filter>Logger</Filter>
     </ClInclude>
-    <ClInclude Include="ResourceCreater.h">
-      <Filter>ResourceCreater</Filter>
-    </ClInclude>
     <ClInclude Include="LruCache.h">
       <Filter>LruCache</Filter>
+    </ClInclude>
+    <ClInclude Include="IdAllocator.h">
+      <Filter>IdAllocator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -57,8 +57,8 @@
     <Filter Include="LruCache">
       <UniqueIdentifier>{06616940-ae54-4fd8-9a80-917a837625a4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ResourceCreater">
-      <UniqueIdentifier>{e61e8fe0-746c-4325-ae3d-6bae7d4664dc}</UniqueIdentifier>
+    <Filter Include="IdAllocator">
+      <UniqueIdentifier>{4e7500cf-4b6e-46e2-a166-16e43cb233c0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="IdAllocator.cpp">
+      <Filter>IdAllocator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

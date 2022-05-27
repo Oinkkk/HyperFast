@@ -4,6 +4,7 @@
 #include "../Window/Window.h"
 #include "../Window/MainLooper.h"
 #include "../RenderingEngine/RenderingEngine.h"
+#include "../RenderingEngine/Screen.h"
 
 int main()
 {
@@ -43,8 +44,9 @@ int main()
 
 	logger.log(Infra::LogSeverityType::INFO, "The rendering engine is created.");
 
-	std::shared_ptr<HyperFast::Screen> pScreen1{ pRenderingEngine->createScreen(win1) };
-	std::shared_ptr<HyperFast::Screen> pScreen2{ pRenderingEngine->createScreen(win2) };
+	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
+	std::shared_ptr<HyperFast::Screen> pScreen1{ std::make_shared<HyperFast::Screen>(screenManager, win1) };
+	std::shared_ptr<HyperFast::Screen> pScreen2{ std::make_shared<HyperFast::Screen>(screenManager, win2) };
 
 	const Infra::Looper::MessageFunc messageFunc
 	{

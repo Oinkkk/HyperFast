@@ -14,7 +14,8 @@ namespace HyperFast
 		RenderingEngine(Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName);
 		~RenderingEngine() noexcept;
 
-		std::shared_ptr<Screen> createScreen(Win::Window &window);
+		[[nodiscard]]
+		ScreenManager &getScreenManager() noexcept;
 
 	private:
 		Infra::Logger &__logger;
@@ -45,10 +46,6 @@ namespace HyperFast
 		VkQueue __deviceQueue{};
 		VkCommandPool __mainCommandPool{};
 
-		ShaderCompiler __shaderCompiler;
-		VkShaderModule __vertexShader{};
-		VkShaderModule __fragShader{};
-
 		std::unique_ptr<ScreenManager> __pScreenManager;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
@@ -70,10 +67,6 @@ namespace HyperFast
 		void __queryDeviceQueue();
 		void __createMainCommandPool();
 		void __destroyMainCommandPool() noexcept;
-		void __setupShaderCompiler() noexcept;
-		void __createShaderModules();
-		void __destroyShaderModules() noexcept;
-		void __createPipeline();
 
 		void __createScreenManager() noexcept;
 

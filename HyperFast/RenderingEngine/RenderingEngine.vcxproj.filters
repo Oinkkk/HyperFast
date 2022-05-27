@@ -7,9 +7,6 @@
     <Filter Include="Screen">
       <UniqueIdentifier>{7867949f-4add-4323-b576-dfc6f5116899}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\ScreenManager">
-      <UniqueIdentifier>{f22afa61-1a2f-4419-a75f-7d7f4f94111b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="RenderCommand">
       <UniqueIdentifier>{738bc1db-4e39-4e45-8d20-cae1f91453e8}</UniqueIdentifier>
     </Filter>
@@ -30,14 +27,14 @@
     <ClCompile Include="Screen.cpp">
       <Filter>Screen</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenManager.cpp">
-      <Filter>Engine\ScreenManager</Filter>
-    </ClCompile>
     <ClCompile Include="ShaderCompiler.cpp">
       <Filter>ShaderCompiler</Filter>
     </ClCompile>
     <ClCompile Include="PipelineFactory.cpp">
       <Filter>PipelineFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenManager.cpp">
+      <Filter>Screen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -50,9 +47,6 @@
     <ClInclude Include="Screen.h">
       <Filter>Screen</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenManager.h">
-      <Filter>Engine\ScreenManager</Filter>
-    </ClInclude>
     <ClInclude Include="RenderCommand.h">
       <Filter>RenderCommand</Filter>
     </ClInclude>
@@ -61,6 +55,9 @@
     </ClInclude>
     <ClInclude Include="PipelineFactory.h">
       <Filter>PipelineFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenManager.h">
+      <Filter>Screen</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

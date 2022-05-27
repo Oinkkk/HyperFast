@@ -12,6 +12,5 @@ namespace Framework
 
 	private:
 		HyperFast::RenderingEngine &__renderingEngine;
-		HyperFast::RenderCommand __renderCommand;
 	};
 }

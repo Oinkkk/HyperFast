@@ -2,11 +2,46 @@
 
 namespace HyperFast
 {
-	ScreenManager::ScreenManager(const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept :
-		__instance{ instance }, __instanceProc{ instanceProc }
+	ScreenManager::ScreenManager(
+		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept :
+		__instance{ instance }, __instanceProc{ instanceProc },
+		__device{ device }, __deviceProc{ deviceProc }
 	{}
 
-	VkSurfaceKHR ScreenManager::create(Win::Window &window) noexcept
+	std::unique_ptr<ScreenManager::ScreenImpl> ScreenManager::create(Win::Window &window) noexcept
+	{
+		return std::make_unique<ScreenImpl>(__instance, __instanceProc, __device, __deviceProc, window);
+	}
+
+	ScreenManager::ScreenImpl::ScreenImpl(
+		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window) :
+		__instance{ instance }, __instanceProc{ instanceProc },
+		__device{ device }, __deviceProc{ deviceProc }, __window{ window },
+		__surface{ __createSurface(instance, instanceProc, window) },
+		__pipelineFactory{ device, deviceProc }
+	{
+		if (!__surface)
+			throw std::exception{ "Cannot create a surface." };
+
+		__initPipelineFactoryBuildParam();
+		__pipelineFactory.build(__pipelineFactoryBuildParam);
+	}
+
+	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
+	{
+		__instanceProc.vkDestroySurfaceKHR(__instance, __surface, nullptr);
+	}
+
+	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept
+	{
+		__pipelineFactoryBuildParam.viewportWidth = float(__window.getWidth());
+		__pipelineFactoryBuildParam.viewportHeight = float(__window.getHeight());
+	}
+
+	VkSurfaceKHR ScreenManager::ScreenImpl::__createSurface(
+		const VkInstance instance, const VKL::InstanceProcedure &instanceProc, Win::Window &window)
 	{
 		Win::WindowClass &windowClass{ window.getClass() };
 
@@ -18,13 +53,8 @@ namespace HyperFast
 		};
 
 		VkSurfaceKHR retVal{};
-		__instanceProc.vkCreateWin32SurfaceKHR(__instance, &createInfo, nullptr, &retVal);
+		instanceProc.vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &retVal);
 
 		return retVal;
-	}
-
-	void ScreenManager::destroy(const VkSurfaceKHR handle) noexcept
-	{
-		__instanceProc.vkDestroySurfaceKHR(__instance, handle, nullptr);
 	}
 }

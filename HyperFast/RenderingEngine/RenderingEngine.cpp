@@ -31,17 +31,12 @@ namespace HyperFast
 		__queryDeviceProc();
 		__queryDeviceQueue();
 		__createMainCommandPool();
-		__setupShaderCompiler();
-		__createShaderModules();
-
-
 		__createScreenManager();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
 		__pScreenManager = nullptr;
-		__destroyShaderModules();
 		__destroyMainCommandPool();
 		__destroyDevice();
 
@@ -52,9 +47,9 @@ namespace HyperFast
 		__destroyInstance();
 	}
 
-	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
+	ScreenManager &RenderingEngine::getScreenManager() noexcept
 	{
-		return std::make_shared<Screen>(*__pScreenManager, window, __device, __deviceProc);
+		return *__pScreenManager;
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -383,95 +378,10 @@ namespace HyperFast
 		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
 	}
 
-	void RenderingEngine::__setupShaderCompiler() noexcept
-	{
-#ifndef NDEBUG
-		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
-#elif
-		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_performance);
-#endif
-	}
-
-	void RenderingEngine::__createShaderModules()
-	{
-		const std::vector<uint32_t> &vertexShader
-		{
-			__shaderCompiler.compile(
-				"shader/triangle.vert", shaderc_shader_kind::shaderc_vertex_shader)
-		};
-
-		const std::vector<uint32_t> &fragShader
-		{
-			__shaderCompiler.compile(
-				"shader/triangle.frag", shaderc_shader_kind::shaderc_fragment_shader)
-		};
-
-		const VkShaderModuleCreateInfo vertexShaderCreateInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-			.codeSize = (sizeof(uint32_t) * vertexShader.size()),
-			.pCode = vertexShader.data()
-		};
-
-		const VkShaderModuleCreateInfo fragShaderCreateInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-			.codeSize = (sizeof(uint32_t) * fragShader.size()),
-			.pCode = fragShader.data()
-		};
-
-		__deviceProc.vkCreateShaderModule(__device, &vertexShaderCreateInfo, nullptr, &__vertexShader);
-		if (!__vertexShader)
-			throw std::exception{ "Cannot create the vertex shader." };
-
-		__deviceProc.vkCreateShaderModule(__device, &fragShaderCreateInfo, nullptr, &__fragShader);
-		if (!__fragShader)
-			throw std::exception{ "Cannot create the fragment shader." };
-	}
-
-	void RenderingEngine::__destroyShaderModules() noexcept
-	{
-		__deviceProc.vkDestroyShaderModule(__device, __fragShader, nullptr);
-		__deviceProc.vkDestroyShaderModule(__device, __vertexShader, nullptr);
-	}
-
-	void RenderingEngine::__createPipeline()
-	{
-		const VkPipelineVertexInputStateCreateInfo vertexInputInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
-		};
-
-		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-			.topology = VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.primitiveRestartEnable = VK_FALSE
-		};
-
-		const VkViewport viewport
-		{
-			
-		};
-
-		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
-
-		VkPipelineShaderStageCreateInfo &vsStageInfo{ shaderStageInfos.emplace_back() };
-		vsStageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-		vsStageInfo.module = __vertexShader;
-		vsStageInfo.pName = "main";
-
-		VkPipelineShaderStageCreateInfo &fsStageInfo{ shaderStageInfos.emplace_back() };
-		fsStageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
-		fsStageInfo.module = __fragShader;
-		fsStageInfo.pName = "main";
-	}
-
 	void RenderingEngine::__createScreenManager() noexcept
 	{
-		__pScreenManager = std::make_unique<ScreenManager>(__instance, __instanceProc);
+		__pScreenManager = std::make_unique<ScreenManager>(
+			__instance, __instanceProc, __device, __deviceProc);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(
