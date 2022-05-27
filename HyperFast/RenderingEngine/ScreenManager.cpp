@@ -35,8 +35,10 @@ namespace HyperFast
 		__checkSurfaceSupport();
 		__querySurfaceCapabilities();
 		__querySupportedSurfaceFormats();
+		__querySupportedSurfacePresentModes();
+
 		__initPipelineFactoryBuildParam();
-		__pipelineFactory.build(__pipelineFactoryBuildParam);
+		__buildPipelines();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
@@ -76,10 +78,26 @@ namespace HyperFast
 			__firstPhysicalDevice, __surface, &numFormats, __supportedSurfaceFormats.data());
 	}
 
+	void ScreenManager::ScreenImpl::__querySupportedSurfacePresentModes() noexcept
+	{
+		uint32_t numModes{};
+		__instanceProc.vkGetPhysicalDeviceSurfacePresentModesKHR(
+			__firstPhysicalDevice, __surface, &numModes, nullptr);
+
+		__supportedSurfacePresentModes.resize(numModes);
+		__instanceProc.vkGetPhysicalDeviceSurfacePresentModesKHR(
+			__firstPhysicalDevice, __surface, &numModes, __supportedSurfacePresentModes.data());
+	}
+
 	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept
 	{
 		__pipelineFactoryBuildParam.viewportWidth = float(__window.getWidth());
 		__pipelineFactoryBuildParam.viewportHeight = float(__window.getHeight());
+	}
+
+	void ScreenManager::ScreenImpl::__buildPipelines()
+	{
+		__pipelineFactory.build(__pipelineFactoryBuildParam);
 	}
 
 	VkSurfaceKHR ScreenManager::ScreenImpl::__createSurface(

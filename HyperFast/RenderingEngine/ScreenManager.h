@@ -33,15 +33,19 @@ namespace HyperFast
 			VkSurfaceKHR __surface{};
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
+			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
 
 			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
 			PipelineFactory __pipelineFactory;
 
 			void __destroySurface() noexcept;
 			void __checkSurfaceSupport() const;
-			void __initPipelineFactoryBuildParam() noexcept;
 			void __querySurfaceCapabilities() noexcept;
 			void __querySupportedSurfaceFormats() noexcept;
+			void __querySupportedSurfacePresentModes() noexcept;
+
+			void __initPipelineFactoryBuildParam() noexcept;
+			void __buildPipelines();
 
 			[[nodiscard]]
 			static VkSurfaceKHR __createSurface(

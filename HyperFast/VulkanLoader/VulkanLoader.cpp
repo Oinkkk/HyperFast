@@ -109,6 +109,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetPhysicalDeviceSurfaceFormatsKHR>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceSurfaceFormatsKHR"));
 
+		retVal.vkGetPhysicalDeviceSurfacePresentModesKHR =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceSurfacePresentModesKHR>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceSurfacePresentModesKHR"));
+
 		retVal.vkCreateDevice =
 			reinterpret_cast<PFN_vkCreateDevice>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkCreateDevice"));
