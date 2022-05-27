@@ -16,12 +16,12 @@
     <Filter Include="PipelineFactory">
       <UniqueIdentifier>{2063d3f5-4857-4bb9-b599-ddfa4d7c166b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PhysicalDevicePicker">
+      <UniqueIdentifier>{8a42bd0c-8177-48c8-9793-1bd4dfcd5b0d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicalDeviceGroupPicker.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Screen.cpp">
@@ -36,12 +36,12 @@
     <ClCompile Include="ScreenManager.cpp">
       <Filter>Screen</Filter>
     </ClCompile>
+    <ClCompile Include="PhysicalDevicePicker.cpp">
+      <Filter>PhysicalDevicePicker</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicalDeviceGroupPicker.h">
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Screen.h">
@@ -58,6 +58,9 @@
     </ClInclude>
     <ClInclude Include="ScreenManager.h">
       <Filter>Screen</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicalDevicePicker.h">
+      <Filter>PhysicalDevicePicker</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

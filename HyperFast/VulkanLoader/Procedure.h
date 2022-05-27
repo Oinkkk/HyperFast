@@ -44,6 +44,8 @@ namespace VKL
 		PFN_vkGetDeviceQueue vkGetDeviceQueue{};
 		PFN_vkCreateCommandPool vkCreateCommandPool{};
 		PFN_vkDestroyCommandPool vkDestroyCommandPool{};
+		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{};
+		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{};
 		PFN_vkCreateShaderModule vkCreateShaderModule{};
 		PFN_vkDestroyShaderModule vkDestroyShaderModule{};
 	};

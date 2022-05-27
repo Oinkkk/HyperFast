@@ -7,12 +7,13 @@
 
 namespace HyperFast
 {
-	class PhysicalDeviceGroupPicker : public Infra::Unique
+	class PhysicalDevicePicker : public Infra::Unique
 	{
 	public:
-		PhysicalDeviceGroupPicker(const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept;
+		PhysicalDevicePicker(const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept;
 
-		bool pick(VkPhysicalDeviceGroupProperties &physicalDeviceGroupProp) const noexcept;
+		[[nodiscard]]
+		VkPhysicalDevice pick() const noexcept;
 
 	private:
 		const VkInstance __instance;
@@ -25,6 +26,6 @@ namespace HyperFast
 		bool __checkQueueSupport(const VkPhysicalDevice physicalDevice) const noexcept;
 
 		[[nodiscard]]
-		uint32_t __getScoreOf(const VkPhysicalDeviceGroupProperties &physicalDeviceGroupProp) const noexcept;
+		uint32_t __getScoreOf(const VkPhysicalDevice physicalDevice) const noexcept;
 	};
 }

@@ -13,7 +13,7 @@ namespace HyperFast
 		public:
 			ScreenImpl(
 				const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
-				const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
+				const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
 				const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window);
 
 			~ScreenImpl() noexcept;
@@ -22,7 +22,7 @@ namespace HyperFast
 			const VkInstance __instance;
 			const VKL::InstanceProcedure &__instanceProc;
 
-			const VkPhysicalDevice __firstPhysicalDevice;
+			const VkPhysicalDevice __physicalDevice;
 			const uint32_t __graphicsQueueFamilyIndex;
 
 			const VkDevice __device;
@@ -34,6 +34,7 @@ namespace HyperFast
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
 			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
+			VkSwapchainKHR __swapchain{};
 
 			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
 			PipelineFactory __pipelineFactory;
@@ -43,6 +44,8 @@ namespace HyperFast
 			void __querySurfaceCapabilities() noexcept;
 			void __querySupportedSurfaceFormats() noexcept;
 			void __querySupportedSurfacePresentModes() noexcept;
+			void __createSwapchain();
+			void __destroySwapchain() noexcept;
 
 			void __initPipelineFactoryBuildParam() noexcept;
 			void __buildPipelines();
@@ -54,7 +57,7 @@ namespace HyperFast
 
 		ScreenManager(
 			const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
-			const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
+			const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
 			const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
 
 		~ScreenManager() noexcept = default;
@@ -66,7 +69,7 @@ namespace HyperFast
 		const VkInstance __instance;
 		const VKL::InstanceProcedure &__instanceProc;
 
-		const VkPhysicalDevice __firstPhysicalDevice;
+		const VkPhysicalDevice __physicalDevice;
 		const uint32_t __graphicsQueueFamilyIndex;
 
 		const VkDevice __device;

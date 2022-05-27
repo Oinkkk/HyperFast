@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PhysicalDeviceGroupPicker.h" />
+    <ClInclude Include="PhysicalDevicePicker.h" />
     <ClInclude Include="PipelineFactory.h" />
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="RenderCommand.h" />
@@ -20,7 +20,7 @@
     <ClInclude Include="ShaderCompiler.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="PhysicalDeviceGroupPicker.cpp" />
+    <ClCompile Include="PhysicalDevicePicker.cpp" />
     <ClCompile Include="PipelineFactory.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
     <ClCompile Include="Screen.cpp" />

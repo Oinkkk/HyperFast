@@ -1,7 +1,7 @@
 ﻿#include "RenderingEngine.h"
 #include <sstream>
 #include <vector>
-#include "PhysicalDeviceGroupPicker.h"
+#include "PhysicalDevicePicker.h"
 #include <shaderc/shaderc.hpp>
 #include "../glslc/file_includer.h"
 
@@ -24,7 +24,7 @@ namespace HyperFast
 #ifndef NDEBUG
 		__createDebugMessenger();
 #endif
-		__pickPhysicalDeviceGroup();
+		__pickPhysicalDevice();
 		__queryPhysicalDeviceProps();
 		__retrieveQueueFamilies();
 		__createDevice();
@@ -36,7 +36,7 @@ namespace HyperFast
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
-		__pScreenManager = nullptr;
+		__destroyScreenManager();
 		__destroyMainCommandPool();
 		__destroyDevice();
 
@@ -224,13 +224,13 @@ namespace HyperFast
 		__instanceProc.vkDestroyDebugUtilsMessengerEXT(__instance, __debugMessenger, nullptr);
 	}
 
-	void RenderingEngine::__pickPhysicalDeviceGroup()
+	void RenderingEngine::__pickPhysicalDevice()
 	{
-		PhysicalDeviceGroupPicker groupPicker{ __instance, __instanceProc };
-		if (!(groupPicker.pick(__physicalDeviceGroupProp)))
+		PhysicalDevicePicker groupPicker{ __instance, __instanceProc };
+		
+		__physicalDevice = groupPicker.pick();
+		if (!__physicalDevice)
 			throw std::exception{ "There is a no suitable physical device group." };
-
-		__firstPhysicalDevice = __physicalDeviceGroupProp.physicalDevices[0];
 	}
 
 	void RenderingEngine::__queryPhysicalDeviceProps() noexcept
@@ -247,16 +247,16 @@ namespace HyperFast
 		__physicalDeviceProp2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 		__physicalDeviceProp2.pNext = &__physicalDevice11Prop;
 
-		__instanceProc.vkGetPhysicalDeviceProperties2(__firstPhysicalDevice, &__physicalDeviceProp2);
+		__instanceProc.vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProp2);
 	}
 
 	void RenderingEngine::__retrieveQueueFamilies() noexcept
 	{
 		uint32_t numProps{};
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__firstPhysicalDevice, &numProps, nullptr);
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, nullptr);
 
 		__queueFamilyProps.resize(numProps);
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__firstPhysicalDevice, &numProps, __queueFamilyProps.data());
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, __queueFamilyProps.data());
 
 		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
 		{
@@ -267,7 +267,7 @@ namespace HyperFast
 
 			const VkBool32 win32SupportResult
 			{
-				__instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__firstPhysicalDevice, propIter)
+				__instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__physicalDevice, propIter)
 			};
 
 			if (!win32SupportResult)
@@ -307,17 +307,6 @@ namespace HyperFast
 
 		pNext = &deviceFeatures2;
 
-		// 여기서 입력한 배열 순서가 향후 physical device 인덱스로 참조됨
-		const VkDeviceGroupDeviceCreateInfo deviceGroupCreateInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO,
-			.pNext = pNext,
-			.physicalDeviceCount = __physicalDeviceGroupProp.physicalDeviceCount,
-			.pPhysicalDevices = __physicalDeviceGroupProp.physicalDevices
-		};
-
-		pNext = &deviceGroupCreateInfo;
-
 		static constexpr float queuePriority{ 1.f };
 		const VkDeviceQueueCreateInfo queueCreateInfo
 		{
@@ -340,7 +329,7 @@ namespace HyperFast
 			.ppEnabledExtensionNames = enabledExtensions.data()
 		};
 
-		__instanceProc.vkCreateDevice(__firstPhysicalDevice, &createInfo, nullptr, &__device);
+		__instanceProc.vkCreateDevice(__physicalDevice, &createInfo, nullptr, &__device);
 		if (__device)
 			return;
 
@@ -390,9 +379,12 @@ namespace HyperFast
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
-			__instance, __instanceProc,
-			__firstPhysicalDevice, __graphicsQueueFamilyIndex,
-			__device, __deviceProc);
+			__instance, __instanceProc, __physicalDevice, __graphicsQueueFamilyIndex, __device, __deviceProc);
+	}
+
+	void RenderingEngine::__destroyScreenManager() noexcept
+	{
+		__pScreenManager = nullptr;
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

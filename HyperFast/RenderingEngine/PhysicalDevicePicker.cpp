@@ -1,49 +1,42 @@
-#include "PhysicalDeviceGroupPicker.h"
+#include "PhysicalDevicePicker.h"
 #include <map>
 
 namespace HyperFast
 {
-	PhysicalDeviceGroupPicker::PhysicalDeviceGroupPicker(
+	PhysicalDevicePicker::PhysicalDevicePicker(
 		const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept :
 		__instance{ instance }, __instanceProc{ instanceProc }
 	{}
 
-	bool PhysicalDeviceGroupPicker::pick(VkPhysicalDeviceGroupProperties &physicalDeviceGroupProp) const noexcept
+	VkPhysicalDevice PhysicalDevicePicker::pick() const noexcept
 	{
-		uint32_t numGroups{};
-		__instanceProc.vkEnumeratePhysicalDeviceGroups(__instance, &numGroups, nullptr);
+		uint32_t numDevices{};
+		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, nullptr);
 
-		std::vector<VkPhysicalDeviceGroupProperties> groupProps;
-		groupProps.resize(numGroups);
-		__instanceProc.vkEnumeratePhysicalDeviceGroups(__instance, &numGroups, groupProps.data());
+		std::vector<VkPhysicalDevice> devices;
+		devices.resize(numDevices);
+		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, devices.data());
 		
-		std::multimap<uint32_t, uint32_t, std::greater<uint32_t>> scoreMap;
-
-		for (uint32_t groupIter = 0U; groupIter < numGroups; groupIter++)
+		std::multimap<uint32_t, VkPhysicalDevice, std::greater<uint32_t>> scoreMap;
+		for (const VkPhysicalDevice device : devices)
 		{
-			const VkPhysicalDeviceGroupProperties &groupProp{ groupProps[groupIter] };
-			const VkPhysicalDevice firstDevice{ groupProp.physicalDevices[0] };
-			
-			if (!__checkVersionSupport(firstDevice))
+			if (!__checkVersionSupport(device))
 				continue;
 
-			if (!__checkQueueSupport(firstDevice))
+			if (!__checkQueueSupport(device))
 				continue;
 
-			const uint32_t score{ __getScoreOf(groupProp) };
-			scoreMap.emplace(score, groupIter);
+			const uint32_t score{ __getScoreOf(device) };
+			scoreMap.emplace(score, device);
 		}
 
 		if (scoreMap.empty())
-			return false;
+			return VK_NULL_HANDLE;
 
-		const uint32_t groupIdx{ scoreMap.begin()->second };
-		physicalDeviceGroupProp = groupProps[groupIdx];
-
-		return true;
+		return scoreMap.begin()->second;
 	}
 
-	bool PhysicalDeviceGroupPicker::__checkVersionSupport(const VkPhysicalDevice physicalDevice) const noexcept
+	bool PhysicalDevicePicker::__checkVersionSupport(const VkPhysicalDevice physicalDevice) const noexcept
 	{
 		VkPhysicalDeviceProperties physicalDeviceProperties{};
 		__instanceProc.vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
@@ -61,7 +54,7 @@ namespace HyperFast
 		return ((major == 1U) && (minor >= 3U));
 	}
 
-	bool PhysicalDeviceGroupPicker::__checkQueueSupport(const VkPhysicalDevice physicalDevice) const noexcept
+	bool PhysicalDevicePicker::__checkQueueSupport(const VkPhysicalDevice physicalDevice) const noexcept
 	{
 		uint32_t numProps{};
 		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numProps, nullptr);
@@ -81,13 +74,10 @@ namespace HyperFast
 		return false;
 	}
 
-	uint32_t PhysicalDeviceGroupPicker::__getScoreOf(
-		const VkPhysicalDeviceGroupProperties &physicalDeviceGroupProp) const noexcept
+	uint32_t PhysicalDevicePicker::__getScoreOf(const VkPhysicalDevice physicalDevice) const noexcept
 	{
-		const VkPhysicalDevice firstDevice{ physicalDeviceGroupProp.physicalDevices[0] };
-
 		VkPhysicalDeviceProperties deviceProp{};
-		__instanceProc.vkGetPhysicalDeviceProperties(firstDevice, &deviceProp);
+		__instanceProc.vkGetPhysicalDeviceProperties(physicalDevice, &deviceProp);
 
 		uint32_t retVal{};
 

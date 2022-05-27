@@ -4,10 +4,10 @@ namespace HyperFast
 {
 	ScreenManager::ScreenManager(
 		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
-		const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
+		const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept :
 		__instance{ instance }, __instanceProc{ instanceProc },
-		__firstPhysicalDevice{ firstPhysicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
+		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __deviceProc{ deviceProc }
 	{}
 
@@ -15,16 +15,16 @@ namespace HyperFast
 	{
 		return std::make_unique<ScreenImpl>(
 			__instance, __instanceProc,
-			__firstPhysicalDevice, __graphicsQueueFamilyIndex,
+			__physicalDevice, __graphicsQueueFamilyIndex,
 			__device, __deviceProc, window);
 	}
 
 	ScreenManager::ScreenImpl::ScreenImpl(
 		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
-		const VkPhysicalDevice firstPhysicalDevice, const uint32_t graphicsQueueFamilyIndex,
+		const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window) :
 		__instance{ instance }, __instanceProc{ instanceProc },
-		__firstPhysicalDevice{ firstPhysicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
+		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __deviceProc{ deviceProc }, __window{ window },
 		__surface{ __createSurface(instance, instanceProc, window) },
 		__pipelineFactory{ device, deviceProc }
@@ -36,6 +36,7 @@ namespace HyperFast
 		__querySurfaceCapabilities();
 		__querySupportedSurfaceFormats();
 		__querySupportedSurfacePresentModes();
+		__createSwapchain();
 
 		__initPipelineFactoryBuildParam();
 		__buildPipelines();
@@ -43,6 +44,7 @@ namespace HyperFast
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
+		__destroySwapchain();
 		__destroySurface();
 	}
 
@@ -55,7 +57,7 @@ namespace HyperFast
 	{
 		VkBool32 surfaceSupported{};
 		__instanceProc.vkGetPhysicalDeviceSurfaceSupportKHR(
-			__firstPhysicalDevice, __graphicsQueueFamilyIndex, __surface, &surfaceSupported);
+			__physicalDevice, __graphicsQueueFamilyIndex, __surface, &surfaceSupported);
 
 		if (!surfaceSupported)
 			throw std::exception{ "The physical device doesn't support the surface." };
@@ -64,29 +66,42 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__querySurfaceCapabilities() noexcept
 	{
 		__instanceProc.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-			__firstPhysicalDevice, __surface, &__surfaceCapabilities);
+			__physicalDevice, __surface, &__surfaceCapabilities);
 	}
 
 	void ScreenManager::ScreenImpl::__querySupportedSurfaceFormats() noexcept
 	{
 		uint32_t numFormats{};
 		__instanceProc.vkGetPhysicalDeviceSurfaceFormatsKHR(
-			__firstPhysicalDevice, __surface, &numFormats, nullptr);
+			__physicalDevice, __surface, &numFormats, nullptr);
 
 		__supportedSurfaceFormats.resize(numFormats);
 		__instanceProc.vkGetPhysicalDeviceSurfaceFormatsKHR(
-			__firstPhysicalDevice, __surface, &numFormats, __supportedSurfaceFormats.data());
+			__physicalDevice, __surface, &numFormats, __supportedSurfaceFormats.data());
 	}
 
 	void ScreenManager::ScreenImpl::__querySupportedSurfacePresentModes() noexcept
 	{
 		uint32_t numModes{};
 		__instanceProc.vkGetPhysicalDeviceSurfacePresentModesKHR(
-			__firstPhysicalDevice, __surface, &numModes, nullptr);
+			__physicalDevice, __surface, &numModes, nullptr);
 
 		__supportedSurfacePresentModes.resize(numModes);
 		__instanceProc.vkGetPhysicalDeviceSurfacePresentModesKHR(
-			__firstPhysicalDevice, __surface, &numModes, __supportedSurfacePresentModes.data());
+			__physicalDevice, __surface, &numModes, __supportedSurfacePresentModes.data());
+	}
+
+	void ScreenManager::ScreenImpl::__createSwapchain()
+	{
+		const VkSwapchainCreateInfoKHR createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR
+		};
+	}
+
+	void ScreenManager::ScreenImpl::__destroySwapchain() noexcept
+	{
+
 	}
 
 	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept
