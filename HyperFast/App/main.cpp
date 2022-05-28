@@ -5,84 +5,88 @@
 #include "../Window/MainLooper.h"
 #include "../RenderingEngine/RenderingEngine.h"
 #include "../RenderingEngine/Screen.h"
+#include "RenderMessageType.h"
 
 int main()
 {
-	Infra::Logger logger;
-	logger.log(Infra::LogSeverityType::INFO, "The program starts.");
-
-	const auto pDestroyEventListener
-	{
-		std::make_shared<Infra::EventListener<Win::Window &>>()
-	};
-
-	pDestroyEventListener->setCallback([] (Win::Window &window)
-	{
-		Win::MainLooper::postQuitMessage();
-	});
-
-	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
-
-	Win::WindowClass winClass{ appInstance.getHandle(), "DefaultWinClass" };
-	Win::Window win1{ winClass, "win1", true };
-	Win::Window win2{ winClass, "win2", true };
-
-	win1.setSize(400, 300);
-	win2.setSize(400, 300);
-
-	win1.getDestroyEvent() += pDestroyEventListener;
-
 	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
 	vulkanLoader.load();
 
-	logger.log(Infra::LogSeverityType::INFO, "Start to create the rendering engine.");
+	Infra::Logger logger;
 
 	std::unique_ptr<HyperFast::RenderingEngine> pRenderingEngine
 	{
 		std::make_unique<HyperFast::RenderingEngine>(logger, "HyperFastDemo", "HyperFast")
 	};
 
-	logger.log(Infra::LogSeverityType::INFO, "The rendering engine is created.");
-
 	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
+	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
+
+	Win::WindowClass winClass{ appInstance.getHandle(), "DefaultWinClass" };
+	Win::Window win1{ winClass, "win1", true };
+	Win::Window win2{ winClass, "win2", true };
+
 	std::shared_ptr<HyperFast::Screen> pScreen1{ std::make_shared<HyperFast::Screen>(screenManager, win1) };
 	std::shared_ptr<HyperFast::Screen> pScreen2{ std::make_shared<HyperFast::Screen>(screenManager, win2) };
 
-	const Infra::Looper::MessageFunc messageFunc
+	std::unordered_map<Win::Window *, HyperFast::Screen *> window2ScreenMap;
+	window2ScreenMap.emplace(&win1, pScreen1.get());
+	window2ScreenMap.emplace(&win2, pScreen2.get());
+
+	Infra::MessageLooper renderLooper;
+
+	const Infra::MessageFunc messageFunc
 	{
 		[] (const uint64_t id, const std::vector<std::any> &arguments)
 		{
-			int a = 0;
+			const RenderMessageType messageType{ RenderMessageType(id) };
+			switch (messageType)
+			{
+			case RenderMessageType::INVALIDATE_SCREEN:
+				{
+					HyperFast::Screen *const pScreen{ std::any_cast<HyperFast::Screen *>(arguments[0]) };
+					pScreen->draw();
+				}
+				break;
+			}
 		}
 	};
 
-	const Infra::Looper::UpdateFunc updateFunc
+	renderLooper.start(messageFunc);
+
+	const auto pDrawEventListener
 	{
-		[] (const float deltaTime)
+		Infra::EventListener<Win::Window &>::make([&] (Win::Window &window)
 		{
-			int a = 0;
-		}
+			renderLooper.enqueueMessage(
+				uint64_t(RenderMessageType::INVALIDATE_SCREEN),
+				window2ScreenMap[&window]);
+
+			window.validate();
+		})
 	};
 
-	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper starts.");
-	Infra::Looper updateLooper;
-	updateLooper.start(messageFunc, updateFunc);
+	const auto pDestroyEventListener
+	{
+		Infra::EventListener<Win::Window &>::make([] (Win::Window &window)
+		{
+			Win::MainLooper::postQuitMessage();
+		})
+	};
 
-	logger.log(Infra::LogSeverityType::INFO, "MainLooper starts.");
+	win1.getDrawEvent() += pDrawEventListener;
+	win2.getDrawEvent() += pDrawEventListener;
+	win1.getDestroyEvent() += pDestroyEventListener;
+
+	win1.setSize(400, 300);
+	win2.setSize(400, 300);
+
 	Win::MainLooper::start();
-	logger.log(Infra::LogSeverityType::INFO, "MainLooper ends.");
-
-	updateLooper.stop();
-	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper ends.");
 
 	pScreen2 = nullptr;
 	pScreen1 = nullptr;
 	pRenderingEngine = nullptr;
-	logger.log(Infra::LogSeverityType::INFO, "The rendering engine destroyed.");
 
 	vulkanLoader.free();
-	logger.log(Infra::LogSeverityType::INFO, "UpdateLooper ends.");
-
-	logger.log(Infra::LogSeverityType::INFO, "End of the program");
 	return 0;
 }

@@ -20,6 +20,8 @@ namespace HyperFast
 
 			~ScreenImpl() noexcept;
 
+			void draw() noexcept;
+
 		private:
 			const VkInstance __instance;
 			const VKL::InstanceProcedure &__instanceProc;

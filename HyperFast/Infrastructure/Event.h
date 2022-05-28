@@ -11,11 +11,12 @@ namespace Infra
 	class EventListener : public Unique
 	{
 	public:
-		[[nodiscard]]
-		const std::function<void(const $Args &...)> &getCallback() const noexcept;
 		void setCallback(const std::function<void(const $Args &...)> &callback) noexcept;
-
 		void send(const $Args &...args);
+
+		[[nodiscard]]
+		static std::shared_ptr<EventListener<$Args...>>
+			make(const std::function<void(const $Args &...)> &callback) noexcept;
 
 	private:
 		std::function<void(const $Args &...)> __callbackFunc;
@@ -57,12 +58,6 @@ namespace Infra
 	};
 
 	template <typename ...$Args>
-	const std::function<void(const $Args &...)> &EventListener<$Args...>::getCallback() const noexcept
-	{
-		return __callbackFunc;
-	}
-
-	template <typename ...$Args>
 	void EventListener<$Args...>::setCallback(const std::function<void(const $Args &...)> &callback) noexcept
 	{
 		__callbackFunc = callback;
@@ -72,6 +67,19 @@ namespace Infra
 	void EventListener<$Args...>::send(const $Args &...args)
 	{
 		__callbackFunc(args...);
+	}
+
+	template <typename ...$Args>
+	std::shared_ptr<EventListener<$Args...>>
+		EventListener<$Args...>::make(const std::function<void(const $Args &...)> &callback) noexcept
+	{
+		const std::shared_ptr<EventListener<$Args...>> pRetVal
+		{
+			std::make_shared<EventListener<$Args...>>()
+		};
+
+		pRetVal->setCallback(callback);
+		return pRetVal;
 	}
 
 	template <typename ...$Args>

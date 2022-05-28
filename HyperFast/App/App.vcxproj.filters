@@ -13,4 +13,7 @@
       <Filter>Resources</Filter>
     </Text>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RenderMessageType.h" />
+  </ItemGroup>
 </Project>

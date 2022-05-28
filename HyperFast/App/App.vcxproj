@@ -113,6 +113,9 @@
   <ItemGroup>
     <Text Include="vk_layer_settings.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RenderMessageType.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -10,9 +10,6 @@
     <ClInclude Include="StringFormatter.h">
       <Filter>StringFormatter</Filter>
     </ClInclude>
-    <ClInclude Include="ConcurrentMessageQueue.h">
-      <Filter>ConcurrentMessageQueue</Filter>
-    </ClInclude>
     <ClInclude Include="Looper.h">
       <Filter>Looper</Filter>
     </ClInclude>
@@ -42,9 +39,6 @@
     <Filter Include="StringFormatter">
       <UniqueIdentifier>{6f32ab87-064a-49ee-b1d1-936d8ae33acf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ConcurrentMessageQueue">
-      <UniqueIdentifier>{5fa0b951-ba13-425d-adbf-78173ccb12f5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Looper">
       <UniqueIdentifier>{7b908e68-b7ad-4066-9131-dee8c1e05dfd}</UniqueIdentifier>
     </Filter>
@@ -64,9 +58,6 @@
   <ItemGroup>
     <ClCompile Include="Looper.cpp">
       <Filter>Looper</Filter>
-    </ClCompile>
-    <ClCompile Include="ConcurrentMessageQueue.cpp">
-      <Filter>ConcurrentMessageQueue</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Logger</Filter>

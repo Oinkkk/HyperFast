@@ -1,13 +1,61 @@
 #include "Looper.h"
+#include "Timer.h"
 
 namespace Infra
 {
-	Looper::~Looper() noexcept
+	MessageLooper::~MessageLooper() noexcept
 	{
 		stop();
 	}
 
-	void Looper::start(const MessageFunc &messageFunc, const UpdateFunc &updateFunc)
+	void MessageLooper::start(const MessageFunc &messageFunc)
+	{
+		stop();
+
+		__loopFlag = true;
+		__loopThread = std::thread
+		{
+			[this, messageFunc]
+			{
+				std::unique_lock emptyConditionLock{ __emptyConditionMutex };
+
+				while (true)
+				{
+					__emptyCondition.wait(emptyConditionLock, [this]
+					{
+						return !(__loopFlag && __messageQueue.empty());
+					});
+
+					if (!__loopFlag)
+						break;
+
+					for (const Message &message : __messageQueue)
+						messageFunc(message.id, message.arguments);
+
+					__messageQueue.clear();
+				}
+			}
+		};
+	}
+
+	void MessageLooper::stop() noexcept
+	{
+		if (!__loopFlag)
+			return;
+
+		std::unique_lock emptyConditionLock{ __emptyConditionMutex };
+		__loopFlag = false;
+		emptyConditionLock.unlock();
+		__emptyCondition.notify_one();
+		__loopThread.join();
+	}
+
+	UpdateLooper::~UpdateLooper() noexcept
+	{
+		stop();
+	}
+
+	void UpdateLooper::start(const MessageFunc &messageFunc, const UpdateFunc &updateFunc)
 	{
 		stop();
 
@@ -16,18 +64,26 @@ namespace Infra
 		{
 			[this, messageFunc, updateFunc]
 			{
+				Timer<> timer;
+				std::unique_lock messageLock{ __messageMutex, std::defer_lock };
+
 				while (__loopFlag)
 				{
-					if (!(__messageQueue.isEmpty()))
+					messageLock.lock();
+
+					if (!(__messageQueue.empty()))
 					{
-						const std::vector<ConcurrentMessageQueue::Message> &messages{ __messageQueue.dequeueMessages() };
-						for (const ConcurrentMessageQueue::Message &message : messages)
+						for (const Message &message : __messageQueue)
 							messageFunc(message.id, message.arguments);
+
+						__messageQueue.clear();
 					}
 
-					__timer.end();
-					const float elaped{ __timer.getElapsed() };
-					__timer.start();
+					messageLock.unlock();
+
+					timer.end();
+					const float elaped{ timer.getElapsed() };
+					timer.start();
 
 					updateFunc(elaped);
 				}
@@ -35,14 +91,14 @@ namespace Infra
 		};
 	}
 
-	void Looper::stop()
+	void UpdateLooper::stop() noexcept
 	{
 		if (!__loopFlag)
 			return;
 
+		std::unique_lock messageLock{ __messageMutex };
 		__loopFlag = false;
+		messageLock.unlock();
 		__loopThread.join();
-
-		__timer.reset();
 	}
 }

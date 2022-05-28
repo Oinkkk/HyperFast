@@ -49,6 +49,11 @@ namespace HyperFast
 		__destroySurface();
 	}
 
+	void ScreenManager::ScreenImpl::draw() noexcept
+	{
+		int a = 0;
+	}
+
 	void ScreenManager::ScreenImpl::__destroySurface() noexcept
 	{
 		__instanceProc.vkDestroySurfaceKHR(__instance, __surface, nullptr);

@@ -1,40 +1,88 @@
 #pragma once
 
 #include "Unique.h"
-#include "ConcurrentMessageQueue.h"
-#include "Timer.h"
+#include <vector>
+#include <any>
 #include <functional>
+#include <condition_variable>
 
 namespace Infra
 {
-	class Looper : public Unique
+	class Message
 	{
 	public:
-		using InitFunc = std::function<void()>;
-		using MessageFunc = std::function<void(const uint64_t, const std::vector<std::any> &)>;
-		using UpdateFunc = std::function<void(const float)>;
-		using EndFunc = std::function<void()>;
+		uint64_t id;
+		std::vector<std::any> arguments;
 
-		virtual ~Looper() noexcept;
+		template <typename ...$Args>
+		Message(const uint64_t id, $Args &&...args);
+	};
+
+	using MessageFunc = std::function<void(const uint64_t, const std::vector<std::any> &)>;
+	using UpdateFunc = std::function<void(const float)>;
+
+	class MessageLooper final : public Unique
+	{
+	public:
+		MessageLooper() = default;
+		~MessageLooper() noexcept;
+
+		template <typename ...$Args>
+		void enqueueMessage(const uint64_t id, $Args &&...args);
+
+		void start(const MessageFunc &messageFunc);
+		void stop() noexcept;
+
+	private:
+		std::vector<Message> __messageQueue;
+		std::mutex __emptyConditionMutex;
+		std::condition_variable __emptyCondition;
+
+		bool __loopFlag;
+		std::thread __loopThread;
+	};
+
+	class UpdateLooper final : public Unique
+	{
+	public:
+		UpdateLooper() = default;
+		~UpdateLooper() noexcept;
 
 		template <typename ...$Args>
 		void enqueueMessage(const uint64_t id, $Args &&...args);
 
 		void start(const MessageFunc &messageFunc, const UpdateFunc &updateFunc);
-		void stop();
+		void stop() noexcept;
 
 	private:
-		ConcurrentMessageQueue __messageQueue;
+		std::vector<Message> __messageQueue;
+		std::mutex __messageMutex;
 
 		bool __loopFlag;
 		std::thread __loopThread;
-
-		Timer<> __timer;
 	};
 
 	template <typename ...$Args>
-	void Looper::enqueueMessage(const uint64_t id, $Args &&...args)
+	Message::Message(const uint64_t id, $Args &&...args) : id{ id }
 	{
-		__messageQueue.enqueueMessage(id, std::forward<$Args>(args)...);
+		(arguments.emplace_back(std::forward<$Args>(args)), ...);
+	}
+
+	template <typename ...$Args>
+	void MessageLooper::enqueueMessage(const uint64_t id, $Args &&...args)
+	{
+		std::unique_lock emptyConditionLock{ __emptyConditionMutex };
+		__messageQueue.emplace_back(id, std::forward<$Args>(args)...);
+		emptyConditionLock.unlock();
+
+		__emptyCondition.notify_one();
+	}
+
+	template <typename ...$Args>
+	void UpdateLooper::enqueueMessage(const uint64_t id, $Args &&...args)
+	{
+		std::unique_lock messageLock{ __messageMutex };
+		__messageQueue.emplace_back(id, std::forward<$Args>(args)...);
+		messageLock.unlock();
 	}
 }
