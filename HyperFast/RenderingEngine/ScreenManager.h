@@ -42,7 +42,9 @@ namespace HyperFast
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
 			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
+			
 			VkSwapchainKHR __swapchain{};
+			std::vector<VkImage> __swapChainImages;
 
 			void __init();
 			void __reset() noexcept;
@@ -55,6 +57,7 @@ namespace HyperFast
 			void __querySupportedSurfacePresentModes() noexcept;
 			void __createSwapchain();
 			void __destroySwapchain() noexcept;
+			void __retrieveSwapchainImages() noexcept;
 
 			void __initPipelineFactoryBuildParam() noexcept;
 			void __buildPipelines();

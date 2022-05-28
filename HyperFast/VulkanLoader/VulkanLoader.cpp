@@ -155,6 +155,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroySwapchainKHR>(
 				vkGetDeviceProcAddr(device, "vkDestroySwapchainKHR"));
 
+		retVal.vkGetSwapchainImagesKHR =
+			reinterpret_cast<PFN_vkGetSwapchainImagesKHR>(
+				vkGetDeviceProcAddr(device, "vkGetSwapchainImagesKHR"));
+
 		retVal.vkCreateShaderModule =
 			reinterpret_cast<PFN_vkCreateShaderModule>(
 				vkGetDeviceProcAddr(device, "vkCreateShaderModule"));

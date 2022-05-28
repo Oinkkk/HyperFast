@@ -51,6 +51,7 @@ namespace HyperFast
 		__querySupportedSurfaceFormats();
 		__querySupportedSurfacePresentModes();
 		__createSwapchain();
+		__retrieveSwapchainImages();
 	}
 
 	void ScreenManager::ScreenImpl::__reset() noexcept
@@ -216,6 +217,15 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__destroySwapchain() noexcept
 	{
 		__deviceProc.vkDestroySwapchainKHR(__device, __swapchain, nullptr);
+	}
+
+	void ScreenManager::ScreenImpl::__retrieveSwapchainImages() noexcept
+	{
+		uint32_t numImages{};
+		__deviceProc.vkGetSwapchainImagesKHR(__device, __swapchain, &numImages, nullptr);
+
+		__swapChainImages.resize(numImages);
+		__deviceProc.vkGetSwapchainImagesKHR(__device, __swapchain, &numImages, __swapChainImages.data());
 	}
 
 	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept

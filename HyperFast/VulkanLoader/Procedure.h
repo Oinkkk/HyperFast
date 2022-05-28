@@ -46,6 +46,7 @@ namespace VKL
 		PFN_vkDestroyCommandPool vkDestroyCommandPool{};
 		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{};
 		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{};
+		PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR{};
 		PFN_vkCreateShaderModule vkCreateShaderModule{};
 		PFN_vkDestroyShaderModule vkDestroyShaderModule{};
 	};
