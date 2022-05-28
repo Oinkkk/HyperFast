@@ -35,15 +35,19 @@ namespace HyperFast
 			Win::Window &__window;
 			Infra::Logger &__logger;
 
+			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
+			PipelineFactory __pipelineFactory;
+
 			VkSurfaceKHR __surface{};
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
 			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
 			VkSwapchainKHR __swapchain{};
 
-			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
-			PipelineFactory __pipelineFactory;
+			void __init();
+			void __reset() noexcept;
 
+			void __createSurface();
 			void __destroySurface() noexcept;
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
@@ -54,10 +58,6 @@ namespace HyperFast
 
 			void __initPipelineFactoryBuildParam() noexcept;
 			void __buildPipelines();
-
-			[[nodiscard]]
-			static VkSurfaceKHR __createSurface(
-				const VkInstance instance, const VKL::InstanceProcedure &instanceProc, Win::Window &window);
 		};
 
 		ScreenManager(

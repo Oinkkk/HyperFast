@@ -26,32 +26,53 @@ namespace HyperFast
 		Infra::Logger &logger) :
 		__instance{ instance }, __instanceProc{ instanceProc },
 		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
-		__device{ device }, __deviceProc{ deviceProc }, __window{ window },
-		__surface{ __createSurface(instance, instanceProc, window) },
-		__pipelineFactory{ device, deviceProc }, __logger{ logger }
+		__device{ device }, __deviceProc{ deviceProc }, __window{ window }, __logger{ logger },
+		__pipelineFactory{ device, deviceProc }
 	{
-		if (!__surface)
-			throw std::exception{ "Cannot create a surface." };
-
-		__checkSurfaceSupport();
-		__querySurfaceCapabilities();
-		__querySupportedSurfaceFormats();
-		__querySupportedSurfacePresentModes();
-		__createSwapchain();
-
-		__initPipelineFactoryBuildParam();
-		__buildPipelines();
+		__createSurface();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
-		__destroySwapchain();
+		__reset();
 		__destroySurface();
 	}
 
 	void ScreenManager::ScreenImpl::draw() noexcept
 	{
-		int a = 0;
+		if (!__swapchain)
+			__init();
+	}
+
+	void ScreenManager::ScreenImpl::__init()
+	{
+		__checkSurfaceSupport();
+		__querySurfaceCapabilities();
+		__querySupportedSurfaceFormats();
+		__querySupportedSurfacePresentModes();
+		__createSwapchain();
+	}
+
+	void ScreenManager::ScreenImpl::__reset() noexcept
+	{
+		__destroySwapchain();
+		__swapchain = nullptr;
+	}
+
+	void ScreenManager::ScreenImpl::__createSurface()
+	{
+		Win::WindowClass &windowClass{ __window.getClass() };
+
+		const VkWin32SurfaceCreateInfoKHR createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+			.hinstance = windowClass.getHInstance(),
+			.hwnd = __window.getHandle()
+		};
+
+		 __instanceProc.vkCreateWin32SurfaceKHR(__instance, &createInfo, nullptr, &__surface);
+		 if (!__surface)
+			 throw std::exception{ "Cannot create a surface." };
 	}
 
 	void ScreenManager::ScreenImpl::__destroySurface() noexcept
@@ -184,7 +205,7 @@ namespace HyperFast
 			.compositeAlpha = compositeAlpha,
 			.presentMode = desiredPresentMode,
 			.clipped = VK_TRUE,
-			.oldSwapchain = VK_NULL_HANDLE
+			.oldSwapchain = __swapchain
 		};
 
 		__deviceProc.vkCreateSwapchainKHR(__device, &createInfo, nullptr, &__swapchain);
@@ -206,23 +227,5 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__buildPipelines()
 	{
 		__pipelineFactory.build(__pipelineFactoryBuildParam);
-	}
-
-	VkSurfaceKHR ScreenManager::ScreenImpl::__createSurface(
-		const VkInstance instance, const VKL::InstanceProcedure &instanceProc, Win::Window &window)
-	{
-		Win::WindowClass &windowClass{ window.getClass() };
-
-		const VkWin32SurfaceCreateInfoKHR createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
-			.hinstance = windowClass.getHInstance(),
-			.hwnd = window.getHandle()
-		};
-
-		VkSurfaceKHR retVal{};
-		instanceProc.vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &retVal);
-
-		return retVal;
 	}
 }
