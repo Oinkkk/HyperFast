@@ -52,12 +52,14 @@ namespace HyperFast
 		__querySupportedSurfacePresentModes();
 		__createSwapchain();
 		__retrieveSwapchainImages();
+		__createSwapchainImageViews();
 	}
 
 	void ScreenManager::ScreenImpl::__reset() noexcept
 	{
+		__destroySwapchainImageViews();
+		__resetSwapchainImages();
 		__destroySwapchain();
-		__swapchain = nullptr;
 	}
 
 	void ScreenManager::ScreenImpl::__createSurface()
@@ -212,11 +214,14 @@ namespace HyperFast
 		__deviceProc.vkCreateSwapchainKHR(__device, &createInfo, nullptr, &__swapchain);
 		if (!__swapchain)
 			throw std::exception{ "Cannot create a VkSwapchainKHR." };
+
+		__swapchainFormat = createInfo.imageFormat;
 	}
 
 	void ScreenManager::ScreenImpl::__destroySwapchain() noexcept
 	{
 		__deviceProc.vkDestroySwapchainKHR(__device, __swapchain, nullptr);
+		__swapchain = VK_NULL_HANDLE;
 	}
 
 	void ScreenManager::ScreenImpl::__retrieveSwapchainImages() noexcept
@@ -226,6 +231,57 @@ namespace HyperFast
 
 		__swapChainImages.resize(numImages);
 		__deviceProc.vkGetSwapchainImagesKHR(__device, __swapchain, &numImages, __swapChainImages.data());
+	}
+
+	void ScreenManager::ScreenImpl::__resetSwapchainImages() noexcept
+	{
+		__swapChainImages.clear();
+	}
+
+	void ScreenManager::ScreenImpl::__createSwapchainImageViews()
+	{
+		VkImageViewCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
+			.format = __swapchainFormat,
+			.components =
+			{
+				.r = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+				.g = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+				.b = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+				.a = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY
+			},
+			.subresourceRange = 
+			{
+				.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0U,
+				.levelCount = 1U,
+				.baseArrayLayer = 0U,
+				.layerCount = 1U
+			}
+		};
+
+		for (const VkImage swapchainImage : __swapChainImages)
+		{
+			createInfo.image = swapchainImage;
+
+			VkImageView swapchainImageView{};
+			__deviceProc.vkCreateImageView(__device, &createInfo, nullptr, &swapchainImageView);
+
+			if (!swapchainImageView)
+				throw std::exception{ "Cannot create a VkImageView for the swapchain." };
+
+			__swapChainImageViews.emplace_back(swapchainImageView);
+		}
+	}
+
+	void ScreenManager::ScreenImpl::__destroySwapchainImageViews() noexcept
+	{
+		for (const VkImageView swapchainImageView : __swapChainImageViews)
+			__deviceProc.vkDestroyImageView(__device, swapchainImageView, nullptr);
+
+		__swapChainImages.clear();
 	}
 
 	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept

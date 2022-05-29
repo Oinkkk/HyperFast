@@ -36,6 +36,7 @@ namespace HyperFast
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__waitDeviceIdle();
 		__destroyScreenManager();
 		__destroyMainCommandPool();
 		__destroyDevice();
@@ -387,6 +388,11 @@ namespace HyperFast
 	void RenderingEngine::__destroyScreenManager() noexcept
 	{
 		__pScreenManager = nullptr;
+	}
+
+	void RenderingEngine::__waitDeviceIdle() const noexcept
+	{
+		__deviceProc.vkDeviceWaitIdle(__device);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

@@ -135,9 +135,17 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyDevice>(
 				vkGetDeviceProcAddr(device, "vkDestroyDevice"));
 
+		retVal.vkDeviceWaitIdle =
+			reinterpret_cast<PFN_vkDeviceWaitIdle>(
+				vkGetDeviceProcAddr(device, "vkDeviceWaitIdle"));
+
 		retVal.vkGetDeviceQueue =
 			reinterpret_cast<PFN_vkGetDeviceQueue>(
 				vkGetDeviceProcAddr(device, "vkGetDeviceQueue"));
+
+		retVal.vkQueueWaitIdle =
+			reinterpret_cast<PFN_vkQueueWaitIdle>(
+				vkGetDeviceProcAddr(device, "vkQueueWaitIdle"));
 
 		retVal.vkCreateCommandPool =
 			reinterpret_cast<PFN_vkCreateCommandPool>(
@@ -158,6 +166,14 @@ namespace VKL
 		retVal.vkGetSwapchainImagesKHR =
 			reinterpret_cast<PFN_vkGetSwapchainImagesKHR>(
 				vkGetDeviceProcAddr(device, "vkGetSwapchainImagesKHR"));
+
+		retVal.vkCreateImageView =
+			reinterpret_cast<PFN_vkCreateImageView>(
+				vkGetDeviceProcAddr(device, "vkCreateImageView"));
+
+		retVal.vkDestroyImageView =
+			reinterpret_cast<PFN_vkDestroyImageView>(
+				vkGetDeviceProcAddr(device, "vkDestroyImageView"));
 
 		retVal.vkCreateShaderModule =
 			reinterpret_cast<PFN_vkCreateShaderModule>(

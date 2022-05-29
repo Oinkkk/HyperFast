@@ -69,6 +69,8 @@ namespace HyperFast
 		void __createScreenManager() noexcept;
 		void __destroyScreenManager() noexcept;
 
+		void __waitDeviceIdle() const noexcept;
+
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			const VkDebugUtilsMessageTypeFlagsEXT messageTypes,

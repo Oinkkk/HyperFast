@@ -41,12 +41,16 @@ namespace VKL
 	{
 	public:
 		PFN_vkDestroyDevice vkDestroyDevice{};
+		PFN_vkDeviceWaitIdle vkDeviceWaitIdle{};
 		PFN_vkGetDeviceQueue vkGetDeviceQueue{};
+		PFN_vkQueueWaitIdle vkQueueWaitIdle{};
 		PFN_vkCreateCommandPool vkCreateCommandPool{};
 		PFN_vkDestroyCommandPool vkDestroyCommandPool{};
 		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{};
 		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{};
 		PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR{};
+		PFN_vkCreateImageView vkCreateImageView{};
+		PFN_vkDestroyImageView vkDestroyImageView{};
 		PFN_vkCreateShaderModule vkCreateShaderModule{};
 		PFN_vkDestroyShaderModule vkDestroyShaderModule{};
 	};

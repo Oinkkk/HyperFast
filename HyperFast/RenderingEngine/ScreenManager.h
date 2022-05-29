@@ -44,7 +44,10 @@ namespace HyperFast
 			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
 			
 			VkSwapchainKHR __swapchain{};
+			VkFormat __swapchainFormat{};
+
 			std::vector<VkImage> __swapChainImages;
+			std::vector<VkImageView> __swapChainImageViews;
 
 			void __init();
 			void __reset() noexcept;
@@ -58,6 +61,9 @@ namespace HyperFast
 			void __createSwapchain();
 			void __destroySwapchain() noexcept;
 			void __retrieveSwapchainImages() noexcept;
+			void __resetSwapchainImages() noexcept;
+			void __createSwapchainImageViews();
+			void __destroySwapchainImageViews() noexcept;
 
 			void __initPipelineFactoryBuildParam() noexcept;
 			void __buildPipelines();
