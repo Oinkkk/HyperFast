@@ -183,6 +183,30 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyShaderModule>(
 				vkGetDeviceProcAddr(device, "vkDestroyShaderModule"));
 
+		retVal.vkCreatePipelineLayout =
+			reinterpret_cast<PFN_vkCreatePipelineLayout>(
+				vkGetDeviceProcAddr(device, "vkCreatePipelineLayout"));
+
+		retVal.vkDestroyPipelineLayout =
+			reinterpret_cast<PFN_vkDestroyPipelineLayout>(
+				vkGetDeviceProcAddr(device, "vkDestroyPipelineLayout"));
+
+		retVal.vkCreatePipelineCache =
+			reinterpret_cast<PFN_vkCreatePipelineCache>(
+				vkGetDeviceProcAddr(device, "vkCreatePipelineCache"));
+
+		retVal.vkDestroyPipelineCache =
+			reinterpret_cast<PFN_vkDestroyPipelineCache>(
+				vkGetDeviceProcAddr(device, "vkDestroyPipelineCache"));
+
+		retVal.vkCreateGraphicsPipelines =
+			reinterpret_cast<PFN_vkCreateGraphicsPipelines>(
+				vkGetDeviceProcAddr(device, "vkCreateGraphicsPipelines"));
+
+		retVal.vkDestroyPipeline =
+			reinterpret_cast<PFN_vkDestroyPipeline>(
+				vkGetDeviceProcAddr(device, "vkDestroyPipeline"));
+
 		return retVal;
 	}
 

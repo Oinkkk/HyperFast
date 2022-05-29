@@ -202,6 +202,7 @@ namespace HyperFast
 	void RenderingEngine::__destroyInstance() noexcept
 	{
 		__instanceProc.vkDestroyInstance(__instance, nullptr);
+		__instance = VK_NULL_HANDLE;
 	}
 
 	void RenderingEngine::__queryInstanceProc() noexcept
@@ -223,6 +224,7 @@ namespace HyperFast
 	void RenderingEngine::__destroyDebugMessenger() noexcept
 	{
 		__instanceProc.vkDestroyDebugUtilsMessengerEXT(__instance, __debugMessenger, nullptr);
+		__debugMessenger = VK_NULL_HANDLE;
 	}
 
 	void RenderingEngine::__pickPhysicalDevice()
@@ -285,7 +287,8 @@ namespace HyperFast
 
 		VkPhysicalDeviceVulkan13Features device13Features
 		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+			.pipelineCreationCacheControl = VK_TRUE
 		};
 
 		VkPhysicalDeviceVulkan12Features device12Features
@@ -340,6 +343,7 @@ namespace HyperFast
 	void RenderingEngine::__destroyDevice() noexcept
 	{
 		__deviceProc.vkDestroyDevice(__device, nullptr);
+		__device = VK_NULL_HANDLE;
 	}
 
 	void RenderingEngine::__queryDeviceProc() noexcept
@@ -375,6 +379,7 @@ namespace HyperFast
 	void RenderingEngine::__destroyMainCommandPool() noexcept
 	{
 		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
+		__mainCommandPool = VK_NULL_HANDLE;
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept

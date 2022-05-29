@@ -7,22 +7,26 @@ namespace HyperFast
 	{
 		__setupShaderCompiler();
 		__createShaderModules();
+		__createPipelineLayouts();
+		__createPipelineCaches();
 	}
 
 	PipelineFactory::~PipelineFactory() noexcept
 	{
 		if (__pipeline)
-			__destroyPipeline();
+			__destroyPipelines();
 
+		__destroyPipelineCaches();
+		__destroyPipelineLayouts();
 		__destroyShaderModules();
 	}
 
 	void PipelineFactory::build(const BuildParam &param)
 	{
 		if (__pipeline)
-			__destroyPipeline();
+			__destroyPipelines();
 
-		__createPipeline(param);
+		__createPipelines(param);
 	}
 
 	VkPipeline PipelineFactory::get() const noexcept
@@ -81,9 +85,49 @@ namespace HyperFast
 	{
 		__deviceProc.vkDestroyShaderModule(__device, __fragShader, nullptr);
 		__deviceProc.vkDestroyShaderModule(__device, __vertexShader, nullptr);
+
+		__vertexShader = VK_NULL_HANDLE;
+		__fragShader = VK_NULL_HANDLE;
 	}
 
-	void PipelineFactory::__createPipeline(const BuildParam &buildParam)
+	void PipelineFactory::__createPipelineLayouts()
+	{
+		const VkPipelineLayoutCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
+		};
+
+		__deviceProc.vkCreatePipelineLayout(__device, &createInfo, nullptr, &__pipelineLayout);
+		if (!__pipelineLayout)
+			throw std::exception{ "Cannot create a VkPipelineLayout." };
+	}
+
+	void PipelineFactory::__destroyPipelineLayouts() noexcept
+	{
+		__deviceProc.vkDestroyPipelineLayout(__device, __pipelineLayout, nullptr);
+		__pipelineLayout = VK_NULL_HANDLE;
+	}
+
+	void PipelineFactory::__createPipelineCaches()
+	{
+		const VkPipelineCacheCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+			.flags = VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT
+		};
+
+		__deviceProc.vkCreatePipelineCache(__device, &createInfo, nullptr, &__pipelineCache);
+		if (!__pipelineCache)
+			throw std::exception{ "Cannot create a VkPipelineCache." };
+	}
+
+	void PipelineFactory::__destroyPipelineCaches() noexcept
+	{
+		__deviceProc.vkDestroyPipelineCache(__device, __pipelineCache, nullptr);
+		__pipelineCache = VK_NULL_HANDLE;
+	}
+
+	void PipelineFactory::__createPipelines(const BuildParam &buildParam)
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
 
@@ -111,44 +155,64 @@ namespace HyperFast
 			.primitiveRestartEnable = VK_FALSE
 		};
 
-		const VkPipelineTessellationStateCreateInfo tessellationInfo
-		{
-
-		};
-
 		const VkPipelineViewportStateCreateInfo viewportInfo
 		{
-
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+			.viewportCount = 1U,
+			.pViewports = &(buildParam.viewport),
+			.scissorCount = 1U,
+			.pScissors = &(buildParam.scissor)
 		};
 
 		const VkPipelineRasterizationStateCreateInfo rasterizationInfo
 		{
-
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+			.depthClampEnable = VK_FALSE,
+			.rasterizerDiscardEnable = VK_FALSE,
+			.polygonMode = VkPolygonMode::VK_POLYGON_MODE_FILL,
+			.cullMode = VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT,
+			.frontFace = VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE,
+			.depthBiasEnable = VK_FALSE,
+			.lineWidth = 1.0f
 		};
 
 		const VkPipelineMultisampleStateCreateInfo multisampleInfo
 		{
-
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+			.rasterizationSamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+			.sampleShadingEnable = VK_FALSE
 		};
 
 		const VkPipelineDepthStencilStateCreateInfo depthStencilInfo
 		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+			.depthTestEnable = VK_FALSE,
+			.depthWriteEnable = VK_FALSE,
+			.depthBoundsTestEnable = VK_FALSE,
+			.stencilTestEnable = VK_FALSE
+		};
 
+		const VkPipelineColorBlendAttachmentState colorBlendAttachmentInfo
+		{
+			.blendEnable = VK_FALSE
 		};
 
 		const VkPipelineColorBlendStateCreateInfo colorBlendInfo
 		{
-
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+			.logicOpEnable = VK_FALSE,
+			.attachmentCount = 1U,
+			.pAttachments = &colorBlendAttachmentInfo,
 		};
 
 		const VkPipelineDynamicStateCreateInfo dynamicState
 		{
-
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO
 		};
 	}
 
-	void PipelineFactory::__destroyPipeline() noexcept
+	void PipelineFactory::__destroyPipelines() noexcept
 	{
-
+		__pipeline = VK_NULL_HANDLE;
 	}
 }

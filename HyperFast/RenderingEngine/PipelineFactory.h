@@ -31,13 +31,19 @@ namespace HyperFast
 		VkShaderModule __vertexShader{};
 		VkShaderModule __fragShader{};
 
+		VkPipelineLayout __pipelineLayout{};
+		VkPipelineCache __pipelineCache{};
 		VkPipeline __pipeline{};
 
 		void __setupShaderCompiler() noexcept;
 		void __createShaderModules();
 		void __destroyShaderModules() noexcept;
+		void __createPipelineLayouts();
+		void __destroyPipelineLayouts() noexcept;
+		void __createPipelineCaches();
+		void __destroyPipelineCaches() noexcept;
 
-		void __createPipeline(const BuildParam &buildParam);
-		void __destroyPipeline() noexcept;
+		void __createPipelines(const BuildParam &buildParam);
+		void __destroyPipelines() noexcept;
 	};
 }
