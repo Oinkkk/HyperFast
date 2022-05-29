@@ -53,6 +53,9 @@ namespace HyperFast
 		__createSwapchain();
 		__retrieveSwapchainImages();
 		__createSwapchainImageViews();
+
+		__populatePipelineBuildParam();
+		__buildPipelines();
 	}
 
 	void ScreenManager::ScreenImpl::__reset() noexcept
@@ -168,14 +171,14 @@ namespace HyperFast
 			pDesiredFormat = __supportedSurfaceFormats.data();
 		}
 
-		VkExtent2D imageExtent{};
+		VkExtent2D desiredExtent{};
 		if (__surfaceCapabilities.currentExtent.width == 0xFFFFFFFFU)
 		{
-			imageExtent.width = uint32_t(__window.getWidth());
-			imageExtent.height = uint32_t(__window.getHeight());
+			desiredExtent.width = uint32_t(__window.getWidth());
+			desiredExtent.height = uint32_t(__window.getHeight());
 		}
 		else
-			imageExtent = __surfaceCapabilities.currentExtent;
+			desiredExtent = __surfaceCapabilities.currentExtent;
 
 		VkCompositeAlphaFlagBitsKHR compositeAlpha{};
 		if (__surfaceCapabilities.supportedCompositeAlpha & VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
@@ -200,7 +203,7 @@ namespace HyperFast
 			.minImageCount = numDesiredImages,
 			.imageFormat = pDesiredFormat->format,
 			.imageColorSpace = pDesiredFormat->colorSpace,
-			.imageExtent = imageExtent,
+			.imageExtent = desiredExtent,
 			.imageArrayLayers = 1U,
 			.imageUsage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 			.imageSharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE,
@@ -216,6 +219,7 @@ namespace HyperFast
 			throw std::exception{ "Cannot create a VkSwapchainKHR." };
 
 		__swapchainFormat = createInfo.imageFormat;
+		__swapchainExtent = createInfo.imageExtent;
 	}
 
 	void ScreenManager::ScreenImpl::__destroySwapchain() noexcept
@@ -284,14 +288,27 @@ namespace HyperFast
 		__swapChainImages.clear();
 	}
 
-	void ScreenManager::ScreenImpl::__initPipelineFactoryBuildParam() noexcept
+	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
 	{
-		__pipelineFactoryBuildParam.viewportWidth = float(__window.getWidth());
-		__pipelineFactoryBuildParam.viewportHeight = float(__window.getHeight());
+		__pipelineBuildParam.viewport =
+		{
+			.x = 0.0f,
+			.y = 0.0f,
+			.width = float(__swapchainExtent.width),
+			.height = float(__swapchainExtent.height),
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+
+		__pipelineBuildParam.scissor =
+		{
+			.offset = { 0, 0 },
+			.extent = __swapchainExtent
+		};
 	}
 
 	void ScreenManager::ScreenImpl::__buildPipelines()
 	{
-		__pipelineFactory.build(__pipelineFactoryBuildParam);
+		__pipelineFactory.build(__pipelineBuildParam);
 	}
 }

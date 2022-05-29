@@ -11,12 +11,17 @@ namespace HyperFast
 
 	PipelineFactory::~PipelineFactory() noexcept
 	{
-		__destroyPipeline();
+		if (__pipeline)
+			__destroyPipeline();
+
 		__destroyShaderModules();
 	}
 
 	void PipelineFactory::build(const BuildParam &param)
 	{
+		if (__pipeline)
+			__destroyPipeline();
+
 		__createPipeline(param);
 	}
 
@@ -80,23 +85,6 @@ namespace HyperFast
 
 	void PipelineFactory::__createPipeline(const BuildParam &buildParam)
 	{
-		const VkPipelineVertexInputStateCreateInfo vertexInputInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
-		};
-
-		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-			.topology = VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.primitiveRestartEnable = VK_FALSE
-		};
-
-		const VkViewport viewport
-		{
-
-		};
-
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
 
 		VkPipelineShaderStageCreateInfo &vsStageInfo{ shaderStageInfos.emplace_back() };
@@ -110,6 +98,53 @@ namespace HyperFast
 		fsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
 		fsStageInfo.module = __fragShader;
 		fsStageInfo.pName = "main";
+
+		const VkPipelineVertexInputStateCreateInfo vertexInputInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+		};
+
+		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+			.topology = VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.primitiveRestartEnable = VK_FALSE
+		};
+
+		const VkPipelineTessellationStateCreateInfo tessellationInfo
+		{
+
+		};
+
+		const VkPipelineViewportStateCreateInfo viewportInfo
+		{
+
+		};
+
+		const VkPipelineRasterizationStateCreateInfo rasterizationInfo
+		{
+
+		};
+
+		const VkPipelineMultisampleStateCreateInfo multisampleInfo
+		{
+
+		};
+
+		const VkPipelineDepthStencilStateCreateInfo depthStencilInfo
+		{
+
+		};
+
+		const VkPipelineColorBlendStateCreateInfo colorBlendInfo
+		{
+
+		};
+
+		const VkPipelineDynamicStateCreateInfo dynamicState
+		{
+
+		};
 	}
 
 	void PipelineFactory::__destroyPipeline() noexcept

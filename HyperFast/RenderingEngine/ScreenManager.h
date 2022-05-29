@@ -35,7 +35,7 @@ namespace HyperFast
 			Win::Window &__window;
 			Infra::Logger &__logger;
 
-			PipelineFactory::BuildParam __pipelineFactoryBuildParam;
+			PipelineFactory::BuildParam __pipelineBuildParam;
 			PipelineFactory __pipelineFactory;
 
 			VkSurfaceKHR __surface{};
@@ -45,6 +45,7 @@ namespace HyperFast
 			
 			VkSwapchainKHR __swapchain{};
 			VkFormat __swapchainFormat{};
+			VkExtent2D __swapchainExtent{};
 
 			std::vector<VkImage> __swapChainImages;
 			std::vector<VkImageView> __swapChainImageViews;
@@ -65,7 +66,7 @@ namespace HyperFast
 			void __createSwapchainImageViews();
 			void __destroySwapchainImageViews() noexcept;
 
-			void __initPipelineFactoryBuildParam() noexcept;
+			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines();
 		};
 

@@ -11,8 +11,8 @@ namespace HyperFast
 		class BuildParam
 		{
 		public:
-			float viewportWidth{};
-			float viewportHeight{};
+			VkViewport viewport{};
+			VkRect2D scissor{};
 		};
 
 		PipelineFactory(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
