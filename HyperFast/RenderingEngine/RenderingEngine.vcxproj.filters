@@ -19,6 +19,9 @@
     <Filter Include="PhysicalDevicePicker">
       <UniqueIdentifier>{8a42bd0c-8177-48c8-9793-1bd4dfcd5b0d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CommandBufferManager">
+      <UniqueIdentifier>{2ee5a5d1-9269-4210-a936-0382e59fc916}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -38,6 +41,9 @@
     </ClCompile>
     <ClCompile Include="PhysicalDevicePicker.cpp">
       <Filter>PhysicalDevicePicker</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandBufferManager.cpp">
+      <Filter>CommandBufferManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="PhysicalDevicePicker.h">
       <Filter>PhysicalDevicePicker</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandBufferManager.h">
+      <Filter>CommandBufferManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

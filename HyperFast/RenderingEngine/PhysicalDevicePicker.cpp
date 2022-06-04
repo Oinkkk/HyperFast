@@ -1,5 +1,6 @@
 #include "PhysicalDevicePicker.h"
 #include <map>
+#include <vector>
 
 namespace HyperFast
 {

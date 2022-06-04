@@ -46,6 +46,10 @@ namespace VKL
 		PFN_vkQueueWaitIdle vkQueueWaitIdle{};
 		PFN_vkCreateCommandPool vkCreateCommandPool{};
 		PFN_vkDestroyCommandPool vkDestroyCommandPool{};
+		PFN_vkResetCommandPool vkResetCommandPool{};
+		PFN_vkAllocateCommandBuffers vkAllocateCommandBuffers{};
+		PFN_vkBeginCommandBuffer vkBeginCommandBuffer{};
+		PFN_vkEndCommandBuffer vkEndCommandBuffer{};
 		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{};
 		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{};
 		PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR{};
@@ -63,5 +67,10 @@ namespace VKL
 		PFN_vkDestroyPipelineCache vkDestroyPipelineCache{};
 		PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines{};
 		PFN_vkDestroyPipeline vkDestroyPipeline{};
+
+		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
+		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};
+		PFN_vkCmdBindPipeline vkCmdBindPipeline{};
+		PFN_vkCmdDraw vkCmdDraw{};
 	};
 }

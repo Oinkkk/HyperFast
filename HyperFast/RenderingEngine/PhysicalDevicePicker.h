@@ -2,8 +2,6 @@
 
 #include "../Infrastructure/Unique.h"
 #include "../VulkanLoader/Procedure.h"
-#include <optional>
-#include <vector>
 
 namespace HyperFast
 {

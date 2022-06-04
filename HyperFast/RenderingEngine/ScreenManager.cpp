@@ -30,13 +30,13 @@ namespace HyperFast
 		__pipelineFactory{ device, deviceProc }
 	{
 		__createSurface();
-		__createMainCommandPool();
+		__createMainCommandBufferManager();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
 		__reset();
-		__destroyMainCommandPool();
+		__destroyMainCommandBufferManager();
 		__destroySurface();
 	}
 
@@ -60,6 +60,7 @@ namespace HyperFast
 
 		__populatePipelineBuildParam();
 		__buildPipelines();
+		__recordMainCommands();
 	}
 
 	void ScreenManager::ScreenImpl::__reset() noexcept
@@ -92,25 +93,15 @@ namespace HyperFast
 		__instanceProc.vkDestroySurfaceKHR(__instance, __surface, nullptr);
 	}
 
-	void ScreenManager::ScreenImpl::__createMainCommandPool()
+	void ScreenManager::ScreenImpl::__createMainCommandBufferManager()
 	{
-		const VkCommandPoolCreateInfo createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-			.queueFamilyIndex = __graphicsQueueFamilyIndex
-		};
-
-		__deviceProc.vkCreateCommandPool(__device, &createInfo, nullptr, &__mainCommandPool);
-		if (__mainCommandPool)
-			return;
-
-		throw std::exception{ "Cannot create the main command pool." };
+		__pMainCommandBufferManager = std::make_unique<CommandBufferManager>(
+			__device, __deviceProc, __graphicsQueueFamilyIndex, 20ULL);
 	}
 
-	void ScreenManager::ScreenImpl::__destroyMainCommandPool() noexcept
+	void ScreenManager::ScreenImpl::__destroyMainCommandBufferManager() noexcept
 	{
-		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
-		__mainCommandPool = VK_NULL_HANDLE;
+		__pMainCommandBufferManager = nullptr;
 	}
 
 	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const
@@ -350,7 +341,7 @@ namespace HyperFast
 		dependency.srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.srcAccessMask = 0U;
-		dependency.dstAccessMask = 0U;
+		dependency.dstAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		dependency.dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
 
 		/*
@@ -453,5 +444,61 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__buildPipelines()
 	{
 		__pipelineFactory.build(__pipelineBuildParam);
+	}
+
+	void ScreenManager::ScreenImpl::__recordMainCommands() noexcept
+	{
+		const size_t numBuffers{ __swapChainImageViews.size() };
+		__pMainCommandBufferManager->getNextBuffers(numBuffers, __mainCommandBuffers);
+
+		const VkCommandBufferBeginInfo commandBufferBeginInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
+		};
+
+		VkRenderPassAttachmentBeginInfo renderPassAttachmentInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO,
+			.attachmentCount = 1U
+		};
+
+		const VkClearValue clearColor
+		{
+			.color = { .float32 = { 0.0f, 0.0f, 0.0f, 1.0f } }
+		};
+
+		const VkRenderPassBeginInfo renderPassBeginInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+			.pNext = &renderPassAttachmentInfo,
+			.renderPass = __renderPass,
+			.framebuffer = __framebuffer,
+			.renderArea =
+			{
+				.offset = { 0, 0 },
+				.extent = __swapchainExtent
+			},
+			.clearValueCount = 1U,
+			.pClearValues = &clearColor
+		};
+
+		for (size_t bufferIter = 0ULL; bufferIter < numBuffers; bufferIter++)
+		{
+			const VkCommandBuffer commandBuffer{ __mainCommandBuffers[bufferIter] };
+			__deviceProc.vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
+			const VkImageView colorAttachment{ __swapChainImageViews[bufferIter] };
+			renderPassAttachmentInfo.pAttachments = &colorAttachment;
+
+			__deviceProc.vkCmdBeginRenderPass(
+				commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+
+			__deviceProc.vkCmdBindPipeline(
+				commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
+
+			__deviceProc.vkCmdDraw(commandBuffer, 3U, 1U, 0U, 0U);
+			__deviceProc.vkCmdEndRenderPass(commandBuffer);
+			__deviceProc.vkEndCommandBuffer(commandBuffer);
+		}
 	}
 }

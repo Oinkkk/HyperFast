@@ -31,7 +31,7 @@ namespace HyperFast
 
 	VkPipeline PipelineFactory::get() const noexcept
 	{
-		return nullptr;
+		return __pipeline;
 	}
 
 	void PipelineFactory::__setupShaderCompiler() noexcept

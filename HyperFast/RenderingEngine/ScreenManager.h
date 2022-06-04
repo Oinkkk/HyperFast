@@ -3,6 +3,7 @@
 #include "../Window/Window.h"
 #include "PipelineFactory.h"
 #include "../Infrastructure/Logger.h"
+#include "CommandBufferManager.h"
 
 namespace HyperFast
 {
@@ -39,7 +40,7 @@ namespace HyperFast
 			PipelineFactory __pipelineFactory;
 
 			VkSurfaceKHR __surface{};
-			VkCommandPool __mainCommandPool{};
+			std::unique_ptr<CommandBufferManager> __pMainCommandBufferManager;
 
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
@@ -55,13 +56,15 @@ namespace HyperFast
 			VkRenderPass __renderPass{};
 			VkFramebuffer __framebuffer{};
 
+			std::vector<VkCommandBuffer> __mainCommandBuffers;
+
 			void __init();
 			void __reset() noexcept;
 
 			void __createSurface();
 			void __destroySurface() noexcept;
-			void __createMainCommandPool();
-			void __destroyMainCommandPool() noexcept;
+			void __createMainCommandBufferManager();
+			void __destroyMainCommandBufferManager() noexcept;
 
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
@@ -80,6 +83,7 @@ namespace HyperFast
 
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines();
+			void __recordMainCommands() noexcept;
 		};
 
 		ScreenManager(

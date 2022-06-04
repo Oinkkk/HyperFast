@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommandBufferManager.h" />
     <ClInclude Include="PhysicalDevicePicker.h" />
     <ClInclude Include="PipelineFactory.h" />
     <ClInclude Include="RenderingEngine.h" />
@@ -20,6 +21,7 @@
     <ClInclude Include="ShaderCompiler.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CommandBufferManager.cpp" />
     <ClCompile Include="PhysicalDevicePicker.cpp" />
     <ClCompile Include="PipelineFactory.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
