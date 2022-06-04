@@ -294,7 +294,8 @@ namespace HyperFast
 		VkPhysicalDeviceVulkan12Features device12Features
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-			.pNext = &device13Features
+			.pNext = &device13Features,
+			.imagelessFramebuffer = VK_TRUE
 		};
 
 		VkPhysicalDeviceVulkan11Features device11Features

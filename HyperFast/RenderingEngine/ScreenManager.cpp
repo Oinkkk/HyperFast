@@ -53,6 +53,8 @@ namespace HyperFast
 		__createSwapchain();
 		__retrieveSwapchainImages();
 		__createSwapchainImageViews();
+		__createRenderPasses();
+		__createFramebuffer();
 
 		__populatePipelineBuildParam();
 		__buildPipelines();
@@ -60,6 +62,8 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__reset() noexcept
 	{
+		__destroyFramebuffer();
+		__destroyRenderPasses();
 		__destroySwapchainImageViews();
 		__resetSwapchainImages();
 		__destroySwapchain();
@@ -288,9 +292,124 @@ namespace HyperFast
 		__swapChainImages.clear();
 	}
 
+	void ScreenManager::ScreenImpl::__createRenderPasses()
+	{
+		std::vector<VkAttachmentDescription> attachments;
+		std::vector<VkSubpassDescription> subpasses;
+		std::vector<VkSubpassDependency> dependencies;
+
+		VkAttachmentDescription &colorAttachment{ attachments.emplace_back() };
+		colorAttachment.format = __swapchainFormat;
+		colorAttachment.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachment.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		const VkAttachmentReference colorAttachmentRef
+		{
+			.attachment = 0U,
+			.layout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+		};
+
+		VkSubpassDescription &subpass{ subpasses.emplace_back() };
+		subpass.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1U;
+		subpass.pColorAttachments = &colorAttachmentRef;
+
+		VkSubpassDependency &dependency{ dependencies.emplace_back() };
+
+		// srcSubpass의 srcStageMask 파이프가 idle이 되고, 거기에 srcAccessMask가 모두 available해질 때까지 블록
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+
+		// dstSubpass 진행에 대해 위 조건 + dstAccessMask가 visible 해질 때 까지 dstStageMask를 블록
+		dependency.dstSubpass = 0U;
+		dependency.srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0U;
+		dependency.dstAccessMask = 0U;
+		dependency.dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
+
+		/*
+			세마포어나 펜스는 시그널이 들어오면 해당 큐가 모든 작업을 처리했음을 보장
+			또한 모든 메모리 access에 대해 available을 보장 (암묵적 메모리 디펜던시)
+			vkQueueSubmit는 host visible 메모리의 모든 access에 대해 visible함을 보장 (암묵적 메모리 디펜던시)
+			세마포어 대기 요청은 모든 메모리 access에 대해 visible함을 보장 (암묵적 메모리 디펜던시)
+		*/
+
+		const VkRenderPassCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+			.attachmentCount = uint32_t(attachments.size()),
+			.pAttachments = attachments.data(),
+			.subpassCount = uint32_t(subpasses.size()),
+			.pSubpasses = subpasses.data(),
+			.dependencyCount = uint32_t(dependencies.size()),
+			.pDependencies = dependencies.data()
+		};
+
+		__deviceProc.vkCreateRenderPass(__device, &createInfo, nullptr, &__renderPass);
+		if (!__renderPass)
+			throw std::exception{ "Cannot create a VkRenderPass." };
+	}
+
+	void ScreenManager::ScreenImpl::__destroyRenderPasses() noexcept
+	{
+		__deviceProc.vkDestroyRenderPass(__device, __renderPass, nullptr);
+		__renderPass = VK_NULL_HANDLE;
+	}
+
+	void ScreenManager::ScreenImpl::__createFramebuffer()
+	{
+		/*
+			When beginning the render pass, pass in a VkRenderPassAttachmentBeginInfo structure
+			into VkRenderPassBeginInfo::pNext with the compatible attachments
+		*/
+
+		std::vector<VkFramebufferAttachmentImageInfo> attachmentImageInfos;
+
+		VkFramebufferAttachmentImageInfo &colorAttachmentImageInfo{ attachmentImageInfos.emplace_back() };
+		colorAttachmentImageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO;
+		colorAttachmentImageInfo.usage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		colorAttachmentImageInfo.width = __swapchainExtent.width;
+		colorAttachmentImageInfo.height = __swapchainExtent.height;
+		colorAttachmentImageInfo.layerCount = 1U;
+		colorAttachmentImageInfo.viewFormatCount = 1U;
+		colorAttachmentImageInfo.pViewFormats = &__swapchainFormat;
+
+		const VkFramebufferAttachmentsCreateInfo attachmentInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO,
+			.attachmentImageInfoCount = uint32_t(attachmentImageInfos.size()),
+			.pAttachmentImageInfos = attachmentImageInfos.data()
+		};
+
+		const VkFramebufferCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+			.pNext = &attachmentInfo,
+			.flags = VkFramebufferCreateFlagBits::VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT,
+			.renderPass = __renderPass,
+			.attachmentCount = 1U,
+			.width = __swapchainExtent.width,
+			.height = __swapchainExtent.height,
+			.layers = 1U
+		};
+
+		__deviceProc.vkCreateFramebuffer(__device, &createInfo, nullptr, &__framebuffer);
+		if (!__framebuffer)
+			throw std::exception{ "Cannot create a VkFramebuffer." };
+	}
+
+	void ScreenManager::ScreenImpl::__destroyFramebuffer() noexcept
+	{
+		__deviceProc.vkDestroyFramebuffer(__device, __framebuffer, nullptr);
+		__framebuffer = VK_NULL_HANDLE;
+	}
+
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
 	{
-		__pipelineBuildParam.swapchainFormat = __swapchainFormat;
+		__pipelineBuildParam.renderPass = __renderPass;
 		__pipelineBuildParam.viewport =
 		{
 			.x = 0.0f,

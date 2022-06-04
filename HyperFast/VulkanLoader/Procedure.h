@@ -51,6 +51,8 @@ namespace VKL
 		PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR{};
 		PFN_vkCreateImageView vkCreateImageView{};
 		PFN_vkDestroyImageView vkDestroyImageView{};
+		PFN_vkCreateFramebuffer vkCreateFramebuffer{};
+		PFN_vkDestroyFramebuffer vkDestroyFramebuffer{};
 		PFN_vkCreateShaderModule vkCreateShaderModule{};
 		PFN_vkDestroyShaderModule vkDestroyShaderModule{};
 		PFN_vkCreateRenderPass vkCreateRenderPass{};

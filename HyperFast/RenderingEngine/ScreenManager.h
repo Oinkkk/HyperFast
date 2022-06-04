@@ -50,6 +50,9 @@ namespace HyperFast
 			std::vector<VkImage> __swapChainImages;
 			std::vector<VkImageView> __swapChainImageViews;
 
+			VkRenderPass __renderPass{};
+			VkFramebuffer __framebuffer{};
+
 			void __init();
 			void __reset() noexcept;
 
@@ -65,6 +68,10 @@ namespace HyperFast
 			void __resetSwapchainImages() noexcept;
 			void __createSwapchainImageViews();
 			void __destroySwapchainImageViews() noexcept;
+			void __createRenderPasses();
+			void __destroyRenderPasses() noexcept;
+			void __createFramebuffer();
+			void __destroyFramebuffer() noexcept;
 
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines();

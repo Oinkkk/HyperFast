@@ -175,6 +175,14 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyImageView>(
 				vkGetDeviceProcAddr(device, "vkDestroyImageView"));
 
+		retVal.vkCreateFramebuffer =
+			reinterpret_cast<PFN_vkCreateFramebuffer>(
+				vkGetDeviceProcAddr(device, "vkCreateFramebuffer"));
+
+		retVal.vkDestroyFramebuffer =
+			reinterpret_cast<PFN_vkDestroyFramebuffer>(
+				vkGetDeviceProcAddr(device, "vkDestroyFramebuffer"));
+
 		retVal.vkCreateShaderModule =
 			reinterpret_cast<PFN_vkCreateShaderModule>(
 				vkGetDeviceProcAddr(device, "vkCreateShaderModule"));
