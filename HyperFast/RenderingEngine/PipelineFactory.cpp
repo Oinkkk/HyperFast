@@ -1,4 +1,4 @@
-#include "PipelineFactory.h"
+﻿#include "PipelineFactory.h"
 
 namespace HyperFast
 {
@@ -14,7 +14,10 @@ namespace HyperFast
 	PipelineFactory::~PipelineFactory() noexcept
 	{
 		if (__pipeline)
+		{
 			__destroyPipelines();
+			__destroyRenderPasses();
+		}
 
 		__destroyPipelineCaches();
 		__destroyPipelineLayouts();
@@ -24,8 +27,12 @@ namespace HyperFast
 	void PipelineFactory::build(const BuildParam &param)
 	{
 		if (__pipeline)
+		{
 			__destroyPipelines();
+			__destroyRenderPasses();
+		}
 
+		__createRenderPasses(param);
 		__createPipelines(param);
 	}
 
@@ -127,6 +134,73 @@ namespace HyperFast
 		__pipelineCache = VK_NULL_HANDLE;
 	}
 
+	void PipelineFactory::__createRenderPasses(const BuildParam &buildParam)
+	{
+		std::vector<VkAttachmentDescription> attachments;
+		std::vector<VkSubpassDescription> subpasses;
+		std::vector<VkSubpassDependency> dependencies;
+
+		VkAttachmentDescription &colorAttachment{ attachments.emplace_back() };
+		colorAttachment.format = buildParam.swapchainFormat;
+		colorAttachment.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachment.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		const VkAttachmentReference colorAttachmentRef
+		{
+			.attachment = 0U,
+			.layout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+		};
+
+		VkSubpassDescription &subpass{ subpasses.emplace_back() };
+		subpass.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1U;
+		subpass.pColorAttachments = &colorAttachmentRef;
+
+		VkSubpassDependency &dependency{ dependencies.emplace_back() };
+
+		// srcSubpass의 srcStageMask 파이프가 idle이 되고, 거기에 srcAccessMask가 모두 available해질 때까지 블록
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+
+		// dstSubpass 진행에 대해 위 조건 + dstAccessMask가 visible 해질 때 까지 dstStageMask를 블록
+		dependency.dstSubpass = 0U;
+		dependency.srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0U;
+		dependency.dstAccessMask = 0U;
+		dependency.dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
+
+		/*
+			세마포어나 펜스는 시그널이 들어오면 해당 큐가 모든 작업을 처리했음을 보장
+			또한 모든 메모리 access에 대해 available을 보장 (암묵적 메모리 디펜던시)
+			vkQueueSubmit는 host visible 메모리의 모든 access에 대해 visible함을 보장 (암묵적 메모리 디펜던시)
+			세마포어 대기 요청은 모든 메모리 access에 대해 visible함을 보장 (암묵적 메모리 디펜던시)
+		*/
+
+		const VkRenderPassCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+			.attachmentCount = uint32_t(attachments.size()),
+			.pAttachments = attachments.data(),
+			.subpassCount = uint32_t(subpasses.size()),
+			.pSubpasses = subpasses.data(),
+			.dependencyCount = uint32_t(dependencies.size()),
+			.pDependencies = dependencies.data()
+		};
+
+		__deviceProc.vkCreateRenderPass(__device, &createInfo, nullptr, &__renderPass);
+		if (!__renderPass)
+			throw std::exception{ "Cannot create a VkRenderPass." };
+	}
+
+	void PipelineFactory::__destroyRenderPasses() noexcept
+	{
+		__deviceProc.vkDestroyRenderPass(__device, __renderPass, nullptr);
+		__renderPass = VK_NULL_HANDLE;
+	}
+
 	void PipelineFactory::__createPipelines(const BuildParam &buildParam)
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
@@ -209,10 +283,38 @@ namespace HyperFast
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO
 		};
+
+		const VkGraphicsPipelineCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+			.stageCount = uint32_t(shaderStageInfos.size()),
+			.pStages = shaderStageInfos.data(),
+			.pVertexInputState = &vertexInputInfo,
+			.pInputAssemblyState = &inputAssemblyInfo,
+			.pTessellationState = nullptr,
+			.pViewportState = &viewportInfo,
+			.pRasterizationState = &rasterizationInfo,
+			.pMultisampleState = &multisampleInfo,
+			.pDepthStencilState = &depthStencilInfo,
+			.pColorBlendState = &colorBlendInfo,
+			.pDynamicState = &dynamicState,
+			.layout = __pipelineLayout,
+			.renderPass = __renderPass,
+			.subpass = 0,
+			.basePipelineHandle = VK_NULL_HANDLE,
+			.basePipelineIndex = -1
+		};
+
+		__deviceProc.vkCreateGraphicsPipelines(
+			__device, __pipelineCache, 1U, &createInfo, nullptr, &__pipeline);
+
+		if (!__pipeline)
+			throw std::exception{ "Cannot create a graphics pipeline." };
 	}
 
 	void PipelineFactory::__destroyPipelines() noexcept
 	{
+		__deviceProc.vkDestroyPipeline(__device, __pipeline, nullptr);
 		__pipeline = VK_NULL_HANDLE;
 	}
 }

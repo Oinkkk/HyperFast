@@ -290,6 +290,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
 	{
+		__pipelineBuildParam.swapchainFormat = __swapchainFormat;
 		__pipelineBuildParam.viewport =
 		{
 			.x = 0.0f,

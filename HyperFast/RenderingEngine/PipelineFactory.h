@@ -11,6 +11,7 @@ namespace HyperFast
 		class BuildParam
 		{
 		public:
+			VkFormat swapchainFormat{};
 			VkViewport viewport{};
 			VkRect2D scissor{};
 		};
@@ -30,7 +31,7 @@ namespace HyperFast
 		ShaderCompiler __shaderCompiler;
 		VkShaderModule __vertexShader{};
 		VkShaderModule __fragShader{};
-
+		VkRenderPass __renderPass{};
 		VkPipelineLayout __pipelineLayout{};
 		VkPipelineCache __pipelineCache{};
 		VkPipeline __pipeline{};
@@ -43,6 +44,8 @@ namespace HyperFast
 		void __createPipelineCaches();
 		void __destroyPipelineCaches() noexcept;
 
+		void __createRenderPasses(const BuildParam &buildParam);
+		void __destroyRenderPasses() noexcept;
 		void __createPipelines(const BuildParam &buildParam);
 		void __destroyPipelines() noexcept;
 	};

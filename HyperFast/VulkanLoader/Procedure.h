@@ -53,6 +53,8 @@ namespace VKL
 		PFN_vkDestroyImageView vkDestroyImageView{};
 		PFN_vkCreateShaderModule vkCreateShaderModule{};
 		PFN_vkDestroyShaderModule vkDestroyShaderModule{};
+		PFN_vkCreateRenderPass vkCreateRenderPass{};
+		PFN_vkDestroyRenderPass vkDestroyRenderPass{};
 		PFN_vkCreatePipelineLayout vkCreatePipelineLayout{};
 		PFN_vkDestroyPipelineLayout vkDestroyPipelineLayout{};
 		PFN_vkCreatePipelineCache vkCreatePipelineCache{};

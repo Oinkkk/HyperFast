@@ -183,6 +183,14 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyShaderModule>(
 				vkGetDeviceProcAddr(device, "vkDestroyShaderModule"));
 
+		retVal.vkCreateRenderPass =
+			reinterpret_cast<PFN_vkCreateRenderPass>(
+				vkGetDeviceProcAddr(device, "vkCreateRenderPass"));
+
+		retVal.vkDestroyRenderPass =
+			reinterpret_cast<PFN_vkDestroyRenderPass>(
+				vkGetDeviceProcAddr(device, "vkDestroyRenderPass"));
+
 		retVal.vkCreatePipelineLayout =
 			reinterpret_cast<PFN_vkCreatePipelineLayout>(
 				vkGetDeviceProcAddr(device, "vkCreatePipelineLayout"));
