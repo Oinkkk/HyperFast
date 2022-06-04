@@ -30,11 +30,13 @@ namespace HyperFast
 		__pipelineFactory{ device, deviceProc }
 	{
 		__createSurface();
+		__createMainCommandPool();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
 		__reset();
+		__destroyMainCommandPool();
 		__destroySurface();
 	}
 
@@ -88,6 +90,27 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__destroySurface() noexcept
 	{
 		__instanceProc.vkDestroySurfaceKHR(__instance, __surface, nullptr);
+	}
+
+	void ScreenManager::ScreenImpl::__createMainCommandPool()
+	{
+		const VkCommandPoolCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+			.queueFamilyIndex = __graphicsQueueFamilyIndex
+		};
+
+		__deviceProc.vkCreateCommandPool(__device, &createInfo, nullptr, &__mainCommandPool);
+		if (__mainCommandPool)
+			return;
+
+		throw std::exception{ "Cannot create the main command pool." };
+	}
+
+	void ScreenManager::ScreenImpl::__destroyMainCommandPool() noexcept
+	{
+		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
+		__mainCommandPool = VK_NULL_HANDLE;
 	}
 
 	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const

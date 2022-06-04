@@ -30,7 +30,6 @@ namespace HyperFast
 		__createDevice();
 		__queryDeviceProc();
 		__queryDeviceQueue();
-		__createMainCommandPool();
 		__createScreenManager();
 	}
 
@@ -38,7 +37,6 @@ namespace HyperFast
 	{
 		__waitDeviceIdle();
 		__destroyScreenManager();
-		__destroyMainCommandPool();
 		__destroyDevice();
 
 #ifndef NDEBUG
@@ -360,27 +358,6 @@ namespace HyperFast
 			return;
 
 		throw std::exception{ "Cannot retrieve the device queue." };
-	}
-
-	void RenderingEngine::__createMainCommandPool()
-	{
-		const VkCommandPoolCreateInfo createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-			.queueFamilyIndex = __graphicsQueueFamilyIndex
-		};
-
-		__deviceProc.vkCreateCommandPool(__device, &createInfo, nullptr, &__mainCommandPool);
-		if (__mainCommandPool)
-			return;
-
-		throw std::exception{ "Cannot create the main command pool." };
-	}
-
-	void RenderingEngine::__destroyMainCommandPool() noexcept
-	{
-		__deviceProc.vkDestroyCommandPool(__device, __mainCommandPool, nullptr);
-		__mainCommandPool = VK_NULL_HANDLE;
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept

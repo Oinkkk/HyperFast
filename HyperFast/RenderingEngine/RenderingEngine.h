@@ -42,7 +42,6 @@ namespace HyperFast
 		VKL::DeviceProcedure __deviceProc;
 		
 		VkQueue __deviceQueue{};
-		VkCommandPool __mainCommandPool{};
 
 		std::unique_ptr<ScreenManager> __pScreenManager;
 
@@ -63,8 +62,6 @@ namespace HyperFast
 		void __destroyDevice() noexcept;
 		void __queryDeviceProc() noexcept;
 		void __queryDeviceQueue();
-		void __createMainCommandPool();
-		void __destroyMainCommandPool() noexcept;
 
 		void __createScreenManager() noexcept;
 		void __destroyScreenManager() noexcept;
