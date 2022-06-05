@@ -21,7 +21,7 @@ namespace HyperFast
 
 			~ScreenImpl() noexcept;
 
-			void draw() noexcept;
+			bool draw() noexcept;
 
 		private:
 			const VkInstance __instance;
@@ -61,6 +61,7 @@ namespace HyperFast
 			std::vector<VkFence> __renderCompleteFences;
 
 			std::vector<VkCommandBuffer> __mainCommandBuffers;
+			size_t __mainCommandBufferCursor{};
 
 			void __init();
 			void __reset() noexcept;

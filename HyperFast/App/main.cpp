@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include "../Infrastructure/Looper.h"
 #include "../Window/AppInstance.h"
 #include "../Window/Window.h"
@@ -42,9 +42,11 @@ int main()
 			const RenderMessageType messageType{ RenderMessageType(id) };
 			switch (messageType)
 			{
-			case RenderMessageType::INVALIDATE_SCREEN:
+			case RenderMessageType::DRAW:
 				{
 					HyperFast::Screen *const pScreen{ std::any_cast<HyperFast::Screen *>(arguments[0]) };
+
+					// TODO: draw 실패 시 재 draw 요청 방법 필요
 					pScreen->draw();
 				}
 				break;
@@ -58,10 +60,7 @@ int main()
 	{
 		Infra::EventListener<Win::Window &>::make([&] (Win::Window &window)
 		{
-			renderLooper.enqueueMessage(
-				uint64_t(RenderMessageType::INVALIDATE_SCREEN),
-				window2ScreenMap[&window]);
-
+			renderLooper.enqueueMessage(uint64_t(RenderMessageType::DRAW), window2ScreenMap[&window]);
 			window.validate();
 		})
 	};

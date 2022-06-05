@@ -41,10 +41,25 @@ namespace HyperFast
 		__destroySurface();
 	}
 
-	void ScreenManager::ScreenImpl::draw() noexcept
+	bool ScreenManager::ScreenImpl::draw() noexcept
 	{
 		if (!__swapchain)
 			__init();
+
+		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__mainCommandBufferCursor] };
+
+		uint32_t imageIdx{};
+
+		const VkResult acquirementResult
+		{
+			__deviceProc.vkAcquireNextImageKHR(
+				__device, __swapchain, 0ULL, presentCompleteSemaphore, VK_NULL_HANDLE, &imageIdx)
+		};
+
+		if (acquirementResult )
+
+		const size_t numCommandBuffers{ __mainCommandBuffers.size() };
+		__mainCommandBufferCursor = ((__mainCommandBufferCursor + 1ULL) % numCommandBuffers);
 	}
 
 	void ScreenManager::ScreenImpl::__init()
@@ -505,6 +520,7 @@ namespace HyperFast
 	{
 		const size_t numBuffers{ __swapChainImageViews.size() };
 		__pMainCommandBufferManager->getNextBuffers(numBuffers, __mainCommandBuffers);
+		__mainCommandBufferCursor = 0ULL;
 
 		const VkCommandBufferBeginInfo commandBufferBeginInfo
 		{

@@ -10,7 +10,7 @@ namespace HyperFast
 		Screen(ScreenManager &screenManager, Win::Window &window);
 		~Screen() noexcept = default;
 
-		void draw() noexcept;
+		bool draw() noexcept;
 
 	private:
 		ScreenManager &__screenManager;

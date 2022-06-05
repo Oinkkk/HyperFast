@@ -6,8 +6,8 @@ namespace HyperFast
 		__screenManager{ screenManager }, __pImpl{ screenManager.create(window) }
 	{}
 
-	void Screen::draw() noexcept
+	bool Screen::draw() noexcept
 	{
-		__pImpl->draw();
+		return __pImpl->draw();
 	}
 }
