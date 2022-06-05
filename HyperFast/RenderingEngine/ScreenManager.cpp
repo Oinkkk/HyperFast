@@ -36,6 +36,7 @@ namespace HyperFast
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
 		__reset();
+		__destroySyncObjects();
 		__destroyMainCommandBufferManager();
 		__destroySurface();
 	}
@@ -57,6 +58,7 @@ namespace HyperFast
 		__createSwapchainImageViews();
 		__createRenderPasses();
 		__createFramebuffer();
+		__initSyncObjects();
 
 		__populatePipelineBuildParam();
 		__buildPipelines();
@@ -303,7 +305,7 @@ namespace HyperFast
 		for (const VkImageView swapchainImageView : __swapChainImageViews)
 			__deviceProc.vkDestroyImageView(__device, swapchainImageView, nullptr);
 
-		__swapChainImages.clear();
+		__swapChainImageViews.clear();
 	}
 
 	void ScreenManager::ScreenImpl::__createRenderPasses()
@@ -419,6 +421,59 @@ namespace HyperFast
 	{
 		__deviceProc.vkDestroyFramebuffer(__device, __framebuffer, nullptr);
 		__framebuffer = VK_NULL_HANDLE;
+	}
+
+	void ScreenManager::ScreenImpl::__initSyncObjects()
+	{
+		const size_t numSwapchainImageViews{ __swapChainImageViews.size() };
+		const size_t currentNumSyncObjects{ __presentCompleteSemaphores.size() };
+
+		if (numSwapchainImageViews <= currentNumSyncObjects)
+			return;
+
+		const VkSemaphoreCreateInfo semaphoreCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+		};
+
+		const VkFenceCreateInfo fenceCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+		};
+
+		for (size_t imageViewIter = currentNumSyncObjects; imageViewIter < numSwapchainImageViews; imageViewIter++)
+		{
+			VkSemaphore presentCompleteSemaphore{};
+			VkSemaphore renderCompleteSemaphore{};
+			VkFence renderCompleteFence{};
+
+			__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+			__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
+			__deviceProc.vkCreateFence(__device, &fenceCreateInfo, nullptr, &renderCompleteFence);
+
+			if (!(presentCompleteSemaphore && renderCompleteSemaphore && renderCompleteFence))
+				throw std::exception{ "Error occurred while create sync objects." };
+
+			__presentCompleteSemaphores.emplace_back(presentCompleteSemaphore);
+			__renderCompleteSemaphores.emplace_back(renderCompleteSemaphore);
+			__renderCompleteFences.emplace_back(renderCompleteFence);
+		}
+	}
+
+	void ScreenManager::ScreenImpl::__destroySyncObjects() noexcept
+	{
+		for (const VkFence renderCompleteFence : __renderCompleteFences)
+			__deviceProc.vkDestroyFence(__device, renderCompleteFence, nullptr);
+
+		for (const VkSemaphore renderCompleteSemaphore : __renderCompleteSemaphores)
+			__deviceProc.vkDestroySemaphore(__device, renderCompleteSemaphore, nullptr);
+
+		for (const VkSemaphore presentCompleteSemaphore : __presentCompleteSemaphores)
+			__deviceProc.vkDestroySemaphore(__device, presentCompleteSemaphore, nullptr);
+
+		__renderCompleteFences.clear();
+		__renderCompleteSemaphores.clear();
+		__presentCompleteSemaphores.clear();
 	}
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept

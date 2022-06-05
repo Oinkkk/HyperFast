@@ -53,6 +53,7 @@ namespace VKL
 		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{};
 		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{};
 		PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR{};
+		PFN_vkAcquireNextImageKHR vkAcquireNextImageKHR{};
 		PFN_vkCreateImageView vkCreateImageView{};
 		PFN_vkDestroyImageView vkDestroyImageView{};
 		PFN_vkCreateFramebuffer vkCreateFramebuffer{};
@@ -67,6 +68,10 @@ namespace VKL
 		PFN_vkDestroyPipelineCache vkDestroyPipelineCache{};
 		PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines{};
 		PFN_vkDestroyPipeline vkDestroyPipeline{};
+		PFN_vkCreateSemaphore vkCreateSemaphore{};
+		PFN_vkDestroySemaphore vkDestroySemaphore{};
+		PFN_vkCreateFence vkCreateFence{};
+		PFN_vkDestroyFence vkDestroyFence{};
 
 		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
 		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};

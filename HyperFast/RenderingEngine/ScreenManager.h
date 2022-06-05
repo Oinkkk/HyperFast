@@ -56,6 +56,10 @@ namespace HyperFast
 			VkRenderPass __renderPass{};
 			VkFramebuffer __framebuffer{};
 
+			std::vector<VkSemaphore> __presentCompleteSemaphores;
+			std::vector<VkSemaphore> __renderCompleteSemaphores;
+			std::vector<VkFence> __renderCompleteFences;
+
 			std::vector<VkCommandBuffer> __mainCommandBuffers;
 
 			void __init();
@@ -80,6 +84,8 @@ namespace HyperFast
 			void __destroyRenderPasses() noexcept;
 			void __createFramebuffer();
 			void __destroyFramebuffer() noexcept;
+			void __initSyncObjects();
+			void __destroySyncObjects() noexcept;
 
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines();

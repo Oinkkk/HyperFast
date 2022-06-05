@@ -183,6 +183,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetSwapchainImagesKHR>(
 				vkGetDeviceProcAddr(device, "vkGetSwapchainImagesKHR"));
 
+		retVal.vkAcquireNextImageKHR =
+			reinterpret_cast<PFN_vkAcquireNextImageKHR>(
+				vkGetDeviceProcAddr(device, "vkAcquireNextImageKHR"));
+
 		retVal.vkCreateImageView =
 			reinterpret_cast<PFN_vkCreateImageView>(
 				vkGetDeviceProcAddr(device, "vkCreateImageView"));
@@ -254,6 +258,22 @@ namespace VKL
 		retVal.vkCmdDraw =
 			reinterpret_cast<PFN_vkCmdDraw>(
 				vkGetDeviceProcAddr(device, "vkCmdDraw"));
+
+		retVal.vkCreateSemaphore =
+			reinterpret_cast<PFN_vkCreateSemaphore>(
+				vkGetDeviceProcAddr(device, "vkCreateSemaphore"));
+
+		retVal.vkDestroySemaphore =
+			reinterpret_cast<PFN_vkDestroySemaphore>(
+				vkGetDeviceProcAddr(device, "vkDestroySemaphore"));
+
+		retVal.vkCreateFence =
+			reinterpret_cast<PFN_vkCreateFence>(
+				vkGetDeviceProcAddr(device, "vkCreateFence"));
+
+		retVal.vkDestroyFence =
+			reinterpret_cast<PFN_vkDestroyFence>(
+				vkGetDeviceProcAddr(device, "vkDestroyFence"));
 
 		return retVal;
 	}
