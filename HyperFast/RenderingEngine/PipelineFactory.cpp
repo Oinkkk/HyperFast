@@ -195,7 +195,14 @@ namespace HyperFast
 
 		const VkPipelineColorBlendAttachmentState colorBlendAttachmentInfo
 		{
-			.blendEnable = VK_FALSE
+			.blendEnable = VK_FALSE,
+			.colorWriteMask =
+			(
+				VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT |
+				VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT |
+				VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT |
+				VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT
+			)
 		};
 
 		const VkPipelineColorBlendStateCreateInfo colorBlendInfo

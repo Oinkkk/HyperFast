@@ -106,6 +106,7 @@ namespace Infra
 		std::unique_lock messageLock{ __messageMutex };
 		__loopFlag = false;
 		messageLock.unlock();
+
 		__loopThread.join();
 	}
 }
