@@ -13,9 +13,7 @@ namespace HyperFast
 
 	PipelineFactory::~PipelineFactory() noexcept
 	{
-		if (__pipeline)
-			__destroyPipelines();
-
+		reset();
 		__destroyPipelineCache();
 		__destroyPipelineLayouts();
 		__destroyShaderModules();
@@ -23,10 +21,13 @@ namespace HyperFast
 
 	void PipelineFactory::build(const BuildParam &param)
 	{
+		__createPipelines(param);
+	}
+
+	void PipelineFactory::reset() noexcept
+	{
 		if (__pipeline)
 			__destroyPipelines();
-
-		__createPipelines(param);
 	}
 
 	VkPipeline PipelineFactory::get() const noexcept

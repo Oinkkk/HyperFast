@@ -5,10 +5,11 @@ namespace HyperFast
 	ScreenManager::ScreenManager(
 		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
 		const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc, Infra::Logger &logger) noexcept :
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
+		Infra::Logger &logger) noexcept :
 		__instance{ instance }, __instanceProc{ instanceProc },
 		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
-		__device{ device }, __deviceProc{ deviceProc }, __logger{ logger }
+		__device{ device }, __deviceProc{ deviceProc }, __graphicsQueue{ graphicsQueue }, __logger{logger}
 	{}
 
 	std::unique_ptr<ScreenManager::ScreenImpl> ScreenManager::create(Win::Window &window) noexcept
@@ -16,18 +17,18 @@ namespace HyperFast
 		return std::make_unique<ScreenImpl>(
 			__instance, __instanceProc,
 			__physicalDevice, __graphicsQueueFamilyIndex,
-			__device, __deviceProc, window, __logger);
+			__device, __deviceProc, __graphicsQueue, window, __logger);
 	}
 
 	ScreenManager::ScreenImpl::ScreenImpl(
 		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
 		const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window,
-		Infra::Logger &logger) :
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
+		Win::Window &window, Infra::Logger &logger) :
 		__instance{ instance }, __instanceProc{ instanceProc },
 		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
-		__device{ device }, __deviceProc{ deviceProc }, __window{ window }, __logger{ logger },
-		__pipelineFactory{ device, deviceProc }
+		__device{ device }, __deviceProc{ deviceProc }, __graphicsQueue{ graphicsQueue },
+		__window{ window }, __logger{ logger }, __pipelineFactory{ device, deviceProc }
 	{
 		__createSurface();
 		__createMainCommandBufferManager();
@@ -35,58 +36,128 @@ namespace HyperFast
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
-		__reset();
+		__waitDeviceIdle();
+		__resetPipelines();
 		__destroySyncObjects();
+		__destroyFramebuffer();
+		__destroyRenderPasses();
+		__destroySwapchainImageViews();
+		__resetSwapchainImages();
+		__destroySwapchain(__swapchain);
 		__destroyMainCommandBufferManager();
 		__destroySurface();
 	}
 
-	bool ScreenManager::ScreenImpl::draw() noexcept
+	bool ScreenManager::ScreenImpl::draw()
 	{
 		if (!__swapchain)
-			__init();
+			__initSurfaceDependencies();
 
-		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__mainCommandBufferCursor] };
+		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };
 
 		uint32_t imageIdx{};
+		VkResult acquirementResult{ __acquireNextImage(presentCompleteSemaphore, imageIdx) };
 
-		const VkResult acquirementResult
+		if (acquirementResult == VkResult::VK_NOT_READY)
+			return false;
+
+		if ((acquirementResult == VkResult::VK_SUBOPTIMAL_KHR) ||
+			(acquirementResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
-			__deviceProc.vkAcquireNextImageKHR(
-				__device, __swapchain, 0ULL, presentCompleteSemaphore, VK_NULL_HANDLE, &imageIdx)
-		};
+			__updateSurfaceDependencies();
+			acquirementResult = __acquireNextImage(presentCompleteSemaphore, imageIdx);
+		}
 
-		if (acquirementResult )
+		if (acquirementResult != VkResult::VK_SUCCESS)
+			throw std::exception{ "Error occurred while drawing" };
 
 		const size_t numCommandBuffers{ __mainCommandBuffers.size() };
-		__mainCommandBufferCursor = ((__mainCommandBufferCursor + 1ULL) % numCommandBuffers);
+		__frameCursor = ((__frameCursor + 1ULL) % numCommandBuffers);
+
+		static constexpr VkPipelineStageFlags waitStageMask
+		{
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+		};
+
+		const VkCommandBuffer mainCommandBuffer{ __mainCommandBuffers[imageIdx] };
+		const VkSemaphore renderCompleteSemaphore{ __renderCompleteSemaphores[imageIdx] };
+		const VkFence renderCompleteFence{ __renderCompleteFences[imageIdx] };
+
+		const VkSubmitInfo submitInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.waitSemaphoreCount = 1U,
+			.pWaitSemaphores = &presentCompleteSemaphore,
+			.pWaitDstStageMask = &waitStageMask,
+			.commandBufferCount = 1U,
+			.pCommandBuffers = &mainCommandBuffer,
+			.signalSemaphoreCount = 1U,
+			.pSignalSemaphores = &renderCompleteSemaphore
+		};
+
+		__deviceProc.vkWaitForFences(__device, 1U, &renderCompleteFence, VK_TRUE, __maxTime);
+		__deviceProc.vkResetFences(__device, 1U, &renderCompleteFence);
+		__deviceProc.vkQueueSubmit(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
+
+		const VkPresentInfoKHR presentInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.waitSemaphoreCount = 1U,
+			.pWaitSemaphores = &renderCompleteSemaphore,
+			.swapchainCount = 1U,
+			.pSwapchains = &__swapchain,
+			.pImageIndices = &imageIdx
+		};
+
+		const VkResult presentResult{ __deviceProc.vkQueuePresentKHR(__graphicsQueue, &presentInfo) };
+		return (presentResult == VkResult::VK_SUCCESS);
 	}
 
-	void ScreenManager::ScreenImpl::__init()
+	void ScreenManager::ScreenImpl::__initSurfaceDependencies()
 	{
 		__checkSurfaceSupport();
 		__querySurfaceCapabilities();
 		__querySupportedSurfaceFormats();
 		__querySupportedSurfacePresentModes();
-		__createSwapchain();
+		__createSwapchain(VK_NULL_HANDLE);
 		__retrieveSwapchainImages();
 		__createSwapchainImageViews();
 		__createRenderPasses();
 		__createFramebuffer();
-		__initSyncObjects();
-
+		__createSyncObjects();
 		__populatePipelineBuildParam();
 		__buildPipelines();
 		__recordMainCommands();
 	}
 
-	void ScreenManager::ScreenImpl::__reset() noexcept
+	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
 	{
+		const VkSwapchainKHR oldSwapchain{ __swapchain };
+		__waitDeviceIdle();
+
+		// destroy
+		__resetPipelines();
 		__destroyFramebuffer();
 		__destroyRenderPasses();
 		__destroySwapchainImageViews();
 		__resetSwapchainImages();
-		__destroySwapchain();
+
+		// create
+		__checkSurfaceSupport();
+		__querySurfaceCapabilities();
+		__querySupportedSurfaceFormats();
+		__querySupportedSurfacePresentModes();
+		__createSwapchain(oldSwapchain);
+		__retrieveSwapchainImages();
+		__createSwapchainImageViews();
+		__createRenderPasses();
+		__createFramebuffer();
+		__createSyncObjects();
+		__populatePipelineBuildParam();
+		__buildPipelines();
+		__recordMainCommands();
+
+		__destroySwapchain(oldSwapchain);
 	}
 
 	void ScreenManager::ScreenImpl::__createSurface()
@@ -168,7 +239,7 @@ namespace HyperFast
 			__physicalDevice, __surface, &numModes, __supportedSurfacePresentModes.data());
 	}
 
-	void ScreenManager::ScreenImpl::__createSwapchain()
+	void ScreenManager::ScreenImpl::__createSwapchain(const VkSwapchainKHR oldSwapchain)
 	{
 		uint32_t numDesiredImages{ std::max(3U, __surfaceCapabilities.minImageCount) };
 		if (__surfaceCapabilities.maxImageCount)
@@ -246,7 +317,7 @@ namespace HyperFast
 			.compositeAlpha = compositeAlpha,
 			.presentMode = desiredPresentMode,
 			.clipped = VK_TRUE,
-			.oldSwapchain = __swapchain
+			.oldSwapchain = oldSwapchain
 		};
 
 		__deviceProc.vkCreateSwapchainKHR(__device, &createInfo, nullptr, &__swapchain);
@@ -257,10 +328,9 @@ namespace HyperFast
 		__swapchainExtent = createInfo.imageExtent;
 	}
 
-	void ScreenManager::ScreenImpl::__destroySwapchain() noexcept
+	void ScreenManager::ScreenImpl::__destroySwapchain(const VkSwapchainKHR swapchain) noexcept
 	{
-		__deviceProc.vkDestroySwapchainKHR(__device, __swapchain, nullptr);
-		__swapchain = VK_NULL_HANDLE;
+		__deviceProc.vkDestroySwapchainKHR(__device, swapchain, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__retrieveSwapchainImages() noexcept
@@ -438,7 +508,7 @@ namespace HyperFast
 		__framebuffer = VK_NULL_HANDLE;
 	}
 
-	void ScreenManager::ScreenImpl::__initSyncObjects()
+	void ScreenManager::ScreenImpl::__createSyncObjects()
 	{
 		const size_t numSwapchainImageViews{ __swapChainImageViews.size() };
 		const size_t currentNumSyncObjects{ __presentCompleteSemaphores.size() };
@@ -453,7 +523,8 @@ namespace HyperFast
 
 		const VkFenceCreateInfo fenceCreateInfo
 		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+			.flags = VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT
 		};
 
 		for (size_t imageViewIter = currentNumSyncObjects; imageViewIter < numSwapchainImageViews; imageViewIter++)
@@ -516,11 +587,16 @@ namespace HyperFast
 		__pipelineFactory.build(__pipelineBuildParam);
 	}
 
+	void ScreenManager::ScreenImpl::__resetPipelines() noexcept
+	{
+		__pipelineFactory.reset();
+	}
+
 	void ScreenManager::ScreenImpl::__recordMainCommands() noexcept
 	{
 		const size_t numBuffers{ __swapChainImageViews.size() };
 		__pMainCommandBufferManager->getNextBuffers(numBuffers, __mainCommandBuffers);
-		__mainCommandBufferCursor = 0ULL;
+		__frameCursor = 0ULL;
 
 		const VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
@@ -535,7 +611,7 @@ namespace HyperFast
 
 		const VkClearValue clearColor
 		{
-			.color = { .float32 = { 0.0f, 0.0f, 0.0f, 1.0f } }
+			.color = { .float32 = { 0.004f, 0.004f, 0.004f, 1.0f } }
 		};
 
 		const VkRenderPassBeginInfo renderPassBeginInfo
@@ -571,5 +647,16 @@ namespace HyperFast
 			__deviceProc.vkCmdEndRenderPass(commandBuffer);
 			__deviceProc.vkEndCommandBuffer(commandBuffer);
 		}
+	}
+
+	void ScreenManager::ScreenImpl::__waitDeviceIdle() const noexcept
+	{
+		__deviceProc.vkDeviceWaitIdle(__device);
+	}
+
+	VkResult ScreenManager::ScreenImpl::__acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept
+	{
+		return __deviceProc.vkAcquireNextImageKHR(
+			__device, __swapchain, 0ULL, semaphore, VK_NULL_HANDLE, &imageIdx);
 	}
 }

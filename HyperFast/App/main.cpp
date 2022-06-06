@@ -37,7 +37,7 @@ int main()
 
 	const Infra::MessageFunc messageFunc
 	{
-		[] (const uint64_t id, const std::vector<std::any> &arguments)
+		[&renderLooper] (const uint64_t id, const std::vector<std::any> &arguments)
 		{
 			const RenderMessageType messageType{ RenderMessageType(id) };
 			switch (messageType)
@@ -45,9 +45,10 @@ int main()
 			case RenderMessageType::DRAW:
 				{
 					HyperFast::Screen *const pScreen{ std::any_cast<HyperFast::Screen *>(arguments[0]) };
-
-					// TODO: draw 실패 시 재 draw 요청 방법 필요
-					pScreen->draw();
+					
+					const bool validDraw{ pScreen->draw() };
+					if (!validDraw)
+						renderLooper.enqueueMessage(uint64_t(RenderMessageType::DRAW), pScreen);
 				}
 				break;
 			}
@@ -81,6 +82,7 @@ int main()
 	win2.setSize(400, 300);
 
 	Win::MainLooper::start();
+	renderLooper.stop();
 
 	pScreen2 = nullptr;
 	pScreen1 = nullptr;

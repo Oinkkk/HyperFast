@@ -44,6 +44,8 @@ namespace VKL
 		PFN_vkDeviceWaitIdle vkDeviceWaitIdle{};
 		PFN_vkGetDeviceQueue vkGetDeviceQueue{};
 		PFN_vkQueueWaitIdle vkQueueWaitIdle{};
+		PFN_vkQueueSubmit vkQueueSubmit{};
+		PFN_vkQueuePresentKHR vkQueuePresentKHR{};
 		PFN_vkCreateCommandPool vkCreateCommandPool{};
 		PFN_vkDestroyCommandPool vkDestroyCommandPool{};
 		PFN_vkResetCommandPool vkResetCommandPool{};
@@ -72,6 +74,8 @@ namespace VKL
 		PFN_vkDestroySemaphore vkDestroySemaphore{};
 		PFN_vkCreateFence vkCreateFence{};
 		PFN_vkDestroyFence vkDestroyFence{};
+		PFN_vkWaitForFences vkWaitForFences{};
+		PFN_vkResetFences vkResetFences{};
 
 		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
 		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};

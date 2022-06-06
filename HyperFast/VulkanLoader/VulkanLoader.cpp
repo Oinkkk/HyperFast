@@ -147,6 +147,14 @@ namespace VKL
 			reinterpret_cast<PFN_vkQueueWaitIdle>(
 				vkGetDeviceProcAddr(device, "vkQueueWaitIdle"));
 
+		retVal.vkQueueSubmit =
+			reinterpret_cast<PFN_vkQueueSubmit>(
+				vkGetDeviceProcAddr(device, "vkQueueSubmit"));
+
+		retVal.vkQueuePresentKHR =
+			reinterpret_cast<PFN_vkQueuePresentKHR>(
+				vkGetDeviceProcAddr(device, "vkQueuePresentKHR"));
+
 		retVal.vkCreateCommandPool =
 			reinterpret_cast<PFN_vkCreateCommandPool>(
 				vkGetDeviceProcAddr(device, "vkCreateCommandPool"));
@@ -274,6 +282,14 @@ namespace VKL
 		retVal.vkDestroyFence =
 			reinterpret_cast<PFN_vkDestroyFence>(
 				vkGetDeviceProcAddr(device, "vkDestroyFence"));
+
+		retVal.vkWaitForFences =
+			reinterpret_cast<PFN_vkWaitForFences>(
+				vkGetDeviceProcAddr(device, "vkWaitForFences"));
+
+		retVal.vkResetFences =
+			reinterpret_cast<PFN_vkResetFences>(
+				vkGetDeviceProcAddr(device, "vkResetFences"));
 
 		return retVal;
 	}

@@ -20,6 +20,7 @@ namespace HyperFast
 		~PipelineFactory() noexcept;
 
 		void build(const BuildParam &param);
+		void reset() noexcept;
 
 		[[nodiscard]]
 		VkPipeline get() const noexcept;

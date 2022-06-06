@@ -17,10 +17,12 @@ namespace Infra
 		{
 			[this, messageFunc]
 			{
-				std::unique_lock emptyConditionLock{ __emptyConditionMutex };
+				std::unique_lock emptyConditionLock{ __emptyConditionMutex, std::defer_lock };
+				std::vector<Message> messagePlaceholder;
 
 				while (true)
 				{
+					emptyConditionLock.lock();
 					__emptyCondition.wait(emptyConditionLock, [this]
 					{
 						return !(__loopFlag && __messageQueue.empty());
@@ -29,10 +31,13 @@ namespace Infra
 					if (!__loopFlag)
 						break;
 
-					for (const Message &message : __messageQueue)
+					messagePlaceholder.swap(__messageQueue);
+					emptyConditionLock.unlock();
+
+					for (const Message &message : messagePlaceholder)
 						messageFunc(message.id, message.arguments);
 
-					__messageQueue.clear();
+					messagePlaceholder.clear();
 				}
 			}
 		};
@@ -46,7 +51,8 @@ namespace Infra
 		std::unique_lock emptyConditionLock{ __emptyConditionMutex };
 		__loopFlag = false;
 		emptyConditionLock.unlock();
-		__emptyCondition.notify_one();
+
+		__emptyCondition.notify_all();
 		__loopThread.join();
 	}
 
@@ -66,20 +72,21 @@ namespace Infra
 			{
 				Timer<> timer;
 				std::unique_lock messageLock{ __messageMutex, std::defer_lock };
+				std::vector<Message> messagePlaceholder;
 
 				while (__loopFlag)
 				{
 					messageLock.lock();
 
 					if (!(__messageQueue.empty()))
-					{
-						for (const Message &message : __messageQueue)
-							messageFunc(message.id, message.arguments);
-
-						__messageQueue.clear();
-					}
+						messagePlaceholder.swap(__messageQueue);
 
 					messageLock.unlock();
+
+					for (const Message &message : messagePlaceholder)
+						messageFunc(message.id, message.arguments);
+
+					messagePlaceholder.clear();
 
 					timer.end();
 					const float elaped{ timer.getElapsed() };

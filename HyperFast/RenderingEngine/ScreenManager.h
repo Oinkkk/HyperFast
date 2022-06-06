@@ -16,12 +16,12 @@ namespace HyperFast
 			ScreenImpl(
 				const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
 				const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-				const VkDevice device, const VKL::DeviceProcedure &deviceProc, Win::Window &window,
-				Infra::Logger &logger);
+				const VkDevice device, const VKL::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
+				Win::Window &window, Infra::Logger &logger);
 
 			~ScreenImpl() noexcept;
 
-			bool draw() noexcept;
+			bool draw();
 
 		private:
 			const VkInstance __instance;
@@ -32,6 +32,7 @@ namespace HyperFast
 
 			const VkDevice __device;
 			const VKL::DeviceProcedure &__deviceProc;
+			const VkQueue __graphicsQueue;
 
 			Win::Window &__window;
 			Infra::Logger &__logger;
@@ -61,10 +62,10 @@ namespace HyperFast
 			std::vector<VkFence> __renderCompleteFences;
 
 			std::vector<VkCommandBuffer> __mainCommandBuffers;
-			size_t __mainCommandBufferCursor{};
+			size_t __frameCursor{};
 
-			void __init();
-			void __reset() noexcept;
+			void __initSurfaceDependencies();
+			void __updateSurfaceDependencies();
 
 			void __createSurface();
 			void __destroySurface() noexcept;
@@ -75,8 +76,8 @@ namespace HyperFast
 			void __querySurfaceCapabilities() noexcept;
 			void __querySupportedSurfaceFormats() noexcept;
 			void __querySupportedSurfacePresentModes() noexcept;
-			void __createSwapchain();
-			void __destroySwapchain() noexcept;
+			void __createSwapchain(const VkSwapchainKHR oldSwapchain);
+			void __destroySwapchain(const VkSwapchainKHR swapchain) noexcept;
 			void __retrieveSwapchainImages() noexcept;
 			void __resetSwapchainImages() noexcept;
 			void __createSwapchainImageViews();
@@ -85,18 +86,24 @@ namespace HyperFast
 			void __destroyRenderPasses() noexcept;
 			void __createFramebuffer();
 			void __destroyFramebuffer() noexcept;
-			void __initSyncObjects();
+			void __createSyncObjects();
 			void __destroySyncObjects() noexcept;
 
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines();
+			void __resetPipelines() noexcept;
 			void __recordMainCommands() noexcept;
+
+			void __waitDeviceIdle() const noexcept;
+			VkResult __acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept;
+
+			static inline constexpr uint64_t __maxTime{ std::numeric_limits<uint64_t>::max() };
 		};
 
 		ScreenManager(
 			const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
 			const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-			const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
 			Infra::Logger &logger) noexcept;
 
 		~ScreenManager() noexcept = default;
@@ -113,6 +120,7 @@ namespace HyperFast
 
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
+		const VkQueue __graphicsQueue;
 
 		Infra::Logger &__logger;
 	};

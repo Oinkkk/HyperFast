@@ -29,7 +29,7 @@ namespace HyperFast
 		__retrieveQueueFamilies();
 		__createDevice();
 		__queryDeviceProc();
-		__queryDeviceQueue();
+		__queryGraphicsQueue();
 		__createScreenManager();
 	}
 
@@ -351,13 +351,13 @@ namespace HyperFast
 			VKL::VulkanLoader::getInstance().queryDeviceProcedure(__instanceProc.vkGetDeviceProcAddr, __device);
 	}
 
-	void RenderingEngine::__queryDeviceQueue()
+	void RenderingEngine::__queryGraphicsQueue()
 	{
-		__deviceProc.vkGetDeviceQueue(__device, __graphicsQueueFamilyIndex, 0U, &__deviceQueue);
-		if (__deviceQueue)
+		__deviceProc.vkGetDeviceQueue(__device, __graphicsQueueFamilyIndex, 0U, &__graphicsQueue);
+		if (__graphicsQueue)
 			return;
 
-		throw std::exception{ "Cannot retrieve the device queue." };
+		throw std::exception{ "Cannot retrieve the graphics queue." };
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept
@@ -365,7 +365,7 @@ namespace HyperFast
 		__pScreenManager = std::make_unique<ScreenManager>(
 			__instance, __instanceProc,
 			__physicalDevice, __graphicsQueueFamilyIndex,
-			__device, __deviceProc, __logger);
+			__device, __deviceProc, __graphicsQueue, __logger);
 	}
 
 	void RenderingEngine::__destroyScreenManager() noexcept
