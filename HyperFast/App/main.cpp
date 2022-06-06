@@ -56,8 +56,8 @@ int main()
 	win2.getDrawEvent() += pDrawEventListener;
 	win1.getDestroyEvent() += pDestroyEventListener;
 
-	win1.setSize(400, 300);
-	win2.setSize(400, 300);
+	win1.setSize(800, 600);
+	win2.setSize(800, 600);
 
 	Win::MainLooper::start();
 	renderLooper.stop();

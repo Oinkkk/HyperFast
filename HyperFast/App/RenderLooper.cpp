@@ -1,5 +1,10 @@
 #include "RenderLooper.h"
 
+enum class RenderLooperMessageType : uint64_t
+{
+	DRAW = 0ULL
+};
+
 RenderLooper::~RenderLooper() noexcept
 {
 	stop();
@@ -10,6 +15,7 @@ void RenderLooper::start() noexcept
 	__looper.start([this] (const uint64_t id, const std::vector<std::any> &arguments)
 	{
 		const RenderLooperMessageType messageType{ RenderLooperMessageType(id) };
+
 		switch (messageType)
 		{
 		case RenderLooperMessageType::DRAW:

@@ -17,13 +17,13 @@ namespace Infra
 		{
 			[this, messageFunc]
 			{
-				std::unique_lock emptyConditionLock{ __emptyConditionMutex, std::defer_lock };
+				std::unique_lock conditionLock{ __conditionMutex, std::defer_lock };
 				std::vector<Message> messagePlaceholder;
 
 				while (true)
 				{
-					emptyConditionLock.lock();
-					__emptyCondition.wait(emptyConditionLock, [this]
+					conditionLock.lock();
+					__emptyCondition.wait(conditionLock, [this]
 					{
 						return !(__loopFlag && __messageQueue.empty());
 					});
@@ -32,7 +32,7 @@ namespace Infra
 						break;
 
 					messagePlaceholder.swap(__messageQueue);
-					emptyConditionLock.unlock();
+					conditionLock.unlock();
 
 					for (const Message &message : messagePlaceholder)
 						messageFunc(message.id, message.arguments);
@@ -48,9 +48,9 @@ namespace Infra
 		if (!__loopFlag)
 			return;
 
-		std::unique_lock emptyConditionLock{ __emptyConditionMutex };
+		std::unique_lock conditionLock{ __conditionMutex };
 		__loopFlag = false;
-		emptyConditionLock.unlock();
+		conditionLock.unlock();
 
 		__emptyCondition.notify_all();
 		__loopThread.join();
@@ -71,17 +71,17 @@ namespace Infra
 			[this, messageFunc, updateFunc]
 			{
 				Timer<> timer;
-				std::unique_lock messageLock{ __messageMutex, std::defer_lock };
+				std::unique_lock conditionLock{ __conditionMutex, std::defer_lock };
 				std::vector<Message> messagePlaceholder;
 
 				while (__loopFlag)
 				{
-					messageLock.lock();
+					conditionLock.lock();
 
 					if (!(__messageQueue.empty()))
 						messagePlaceholder.swap(__messageQueue);
 
-					messageLock.unlock();
+					conditionLock.unlock();
 
 					for (const Message &message : messagePlaceholder)
 						messageFunc(message.id, message.arguments);
@@ -103,9 +103,9 @@ namespace Infra
 		if (!__loopFlag)
 			return;
 
-		std::unique_lock messageLock{ __messageMutex };
+		std::unique_lock conditionLock{ __conditionMutex };
 		__loopFlag = false;
-		messageLock.unlock();
+		conditionLock.unlock();
 
 		__loopThread.join();
 	}

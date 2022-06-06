@@ -35,10 +35,10 @@ namespace Infra
 
 	private:
 		std::vector<Message> __messageQueue;
-		std::mutex __emptyConditionMutex;
+		std::mutex __conditionMutex;
 		std::condition_variable __emptyCondition;
 
-		bool __loopFlag;
+		bool __loopFlag{};
 		std::thread __loopThread;
 	};
 
@@ -56,7 +56,7 @@ namespace Infra
 
 	private:
 		std::vector<Message> __messageQueue;
-		std::mutex __messageMutex;
+		std::mutex __conditionMutex;
 
 		bool __loopFlag;
 		std::thread __loopThread;
@@ -71,9 +71,9 @@ namespace Infra
 	template <typename ...$Args>
 	void MessageLooper::enqueueMessage(const uint64_t id, $Args &&...args)
 	{
-		std::unique_lock emptyConditionLock{ __emptyConditionMutex };
+		std::unique_lock conditionLock{ __conditionMutex };
 		__messageQueue.emplace_back(id, std::forward<$Args>(args)...);
-		emptyConditionLock.unlock();
+		conditionLock.unlock();
 
 		__emptyCondition.notify_one();
 	}
@@ -81,8 +81,8 @@ namespace Infra
 	template <typename ...$Args>
 	void UpdateLooper::enqueueMessage(const uint64_t id, $Args &&...args)
 	{
-		std::unique_lock messageLock{ __messageMutex };
+		std::unique_lock conditionLock{ __conditionMutex };
 		__messageQueue.emplace_back(id, std::forward<$Args>(args)...);
-		messageLock.unlock();
+		conditionLock.unlock();
 	}
 }

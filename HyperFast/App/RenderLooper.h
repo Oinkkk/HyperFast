@@ -3,11 +3,6 @@
 #include "../Infrastructure/Looper.h"
 #include "../RenderingEngine/Screen.h"
 
-enum class RenderLooperMessageType : uint64_t
-{
-	DRAW = 0ULL
-};
-
 class RenderLooper : public Infra::Unique
 {
 public:
