@@ -46,7 +46,8 @@ namespace Win
 
 	LRESULT Window::sendRawMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 	{
-		bool customEvent{};
+		bool customReturn{};
+		LRESULT customRetVal{};
 
 		switch (uMsg)
 		{
@@ -54,22 +55,30 @@ namespace Win
 			GetWindowRect(__handle, &__windowRect);
 			GetClientRect(__handle, &__clientRect);
 			__resizeEvent.invoke(*this, ResizingType(wParam));
-			customEvent = true;
+			customReturn = true;
+			customRetVal = 0LL;
 			break;
 
 		case WM_PAINT:
 			__drawEvent.invoke(*this);
-			customEvent = true;
+			customReturn = true;
+			customRetVal = 0LL;
+			break;
+
+		case WM_ERASEBKGND:
+			customReturn = true;
+			customRetVal = 1LL;
 			break;
 
 		case WM_CLOSE:
 			destroy();
-			customEvent = true;
+			customReturn = true;
+			customRetVal = 0LL;
 			break;
 		}
 
-		if (customEvent)
-			return 0;
+		if (customReturn)
+			return customRetVal;
 
 		return DefWindowProc(__handle, uMsg, wParam, lParam);
 	}
