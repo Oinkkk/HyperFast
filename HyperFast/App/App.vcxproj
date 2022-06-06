@@ -95,6 +95,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RenderLooper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Infrastructure\Infrastructure.vcxproj">
@@ -114,7 +115,7 @@
     <Text Include="vk_layer_settings.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RenderMessageType.h" />
+    <ClInclude Include="RenderLooper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

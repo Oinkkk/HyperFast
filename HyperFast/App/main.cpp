@@ -1,11 +1,10 @@
 ﻿#include <iostream>
-#include "../Infrastructure/Looper.h"
 #include "../Window/AppInstance.h"
 #include "../Window/Window.h"
 #include "../Window/MainLooper.h"
 #include "../RenderingEngine/RenderingEngine.h"
 #include "../RenderingEngine/Screen.h"
-#include "RenderMessageType.h"
+#include "RenderLooper.h"
 
 int main()
 {
@@ -33,35 +32,14 @@ int main()
 	window2ScreenMap.emplace(&win1, pScreen1.get());
 	window2ScreenMap.emplace(&win2, pScreen2.get());
 
-	Infra::MessageLooper renderLooper;
-
-	const Infra::MessageFunc messageFunc
-	{
-		[&renderLooper] (const uint64_t id, const std::vector<std::any> &arguments)
-		{
-			const RenderMessageType messageType{ RenderMessageType(id) };
-			switch (messageType)
-			{
-			case RenderMessageType::DRAW:
-				{
-					HyperFast::Screen *const pScreen{ std::any_cast<HyperFast::Screen *>(arguments[0]) };
-					
-					const bool validDraw{ pScreen->draw() };
-					if (!validDraw)
-						renderLooper.enqueueMessage(uint64_t(RenderMessageType::DRAW), pScreen);
-				}
-				break;
-			}
-		}
-	};
-
-	renderLooper.start(messageFunc);
+	RenderLooper renderLooper;
+	renderLooper.start();
 
 	const auto pDrawEventListener
 	{
 		Infra::EventListener<Win::Window &>::make([&] (Win::Window &window)
 		{
-			renderLooper.enqueueMessage(uint64_t(RenderMessageType::DRAW), window2ScreenMap[&window]);
+			renderLooper.requestDraw(window2ScreenMap[&window]);
 			window.validate();
 		})
 	};
