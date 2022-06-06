@@ -46,8 +46,9 @@ int main()
 
 	const auto pDestroyEventListener
 	{
-		Infra::EventListener<Win::Window &>::make([] (Win::Window &window)
+		Infra::EventListener<Win::Window &>::make([&] (Win::Window &window)
 		{
+			renderLooper.stop();
 			Win::MainLooper::postQuitMessage();
 		})
 	};
@@ -55,12 +56,12 @@ int main()
 	win1.getDrawEvent() += pDrawEventListener;
 	win2.getDrawEvent() += pDrawEventListener;
 	win1.getDestroyEvent() += pDestroyEventListener;
+	win2.getDestroyEvent() += pDestroyEventListener;
 
 	win1.setSize(800, 600);
 	win2.setSize(800, 600);
 
 	Win::MainLooper::start();
-	renderLooper.stop();
 
 	pScreen2 = nullptr;
 	pScreen1 = nullptr;
