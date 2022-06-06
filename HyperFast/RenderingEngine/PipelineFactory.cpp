@@ -39,7 +39,7 @@ namespace HyperFast
 	{
 #ifndef NDEBUG
 		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
-#elif
+#else
 		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_performance);
 #endif
 	}
