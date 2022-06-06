@@ -101,9 +101,9 @@ namespace Win
 
 	void Window::setSize(const int width, const int height) noexcept
 	{
-		const int newWidth{ __windowRect.right + (width - getWidth()) };
-		const int newHeight{ __windowRect.bottom + (height - getHeight()) };
-		__updateAppearance(getX(), getY(), newWidth, newHeight);
+		const int newWindowWidth{ __getWindowWidth() + (width - getWidth()) };
+		const int newWindowHeight{ __getWindowHeight() + (height - getHeight()) };
+		__updateAppearance(getX(), getY(), newWindowWidth, newWindowHeight);
 	}
 
 	void Window::invalidate() noexcept
@@ -138,13 +138,10 @@ namespace Win
 		}
 	}
 
-	void Window::__updateAppearance(const int x, const int y, const int width, const int height) noexcept
+	void Window::__updateAppearance(const int x, const int y, const int windowWidth, const int windowHeight) noexcept
 	{
-		MoveWindow(__handle, x, y, width, height, FALSE);
+		MoveWindow(__handle, x, y, windowWidth, windowHeight, FALSE);
 		invalidate();
-
-		GetWindowRect(__handle, &__windowRect);
-		GetClientRect(__handle, &__clientRect);
 	}
 
 	HWND Window::__create(

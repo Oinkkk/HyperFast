@@ -95,7 +95,7 @@ namespace Win
 		[[nodiscard]]
 		constexpr int __getWindowHeight() const noexcept;
 
-		void __updateAppearance(const int x, const int y, const int width, const int height) noexcept;
+		void __updateAppearance(const int x, const int y, const int windowWidth, const int windowHeight) noexcept;
 
 		static HWND __create(
 			WindowClass &windowClass, const std::string_view &title,
