@@ -151,6 +151,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkQueueSubmit>(
 				vkGetDeviceProcAddr(device, "vkQueueSubmit"));
 
+		retVal.vkQueueSubmit2 =
+			reinterpret_cast<PFN_vkQueueSubmit2>(
+				vkGetDeviceProcAddr(device, "vkQueueSubmit2"));
+
 		retVal.vkQueuePresentKHR =
 			reinterpret_cast<PFN_vkQueuePresentKHR>(
 				vkGetDeviceProcAddr(device, "vkQueuePresentKHR"));
@@ -222,6 +226,10 @@ namespace VKL
 		retVal.vkCreateRenderPass =
 			reinterpret_cast<PFN_vkCreateRenderPass>(
 				vkGetDeviceProcAddr(device, "vkCreateRenderPass"));
+
+		retVal.vkCreateRenderPass2 =
+			reinterpret_cast<PFN_vkCreateRenderPass2>(
+				vkGetDeviceProcAddr(device, "vkCreateRenderPass2"));
 
 		retVal.vkDestroyRenderPass =
 			reinterpret_cast<PFN_vkDestroyRenderPass>(

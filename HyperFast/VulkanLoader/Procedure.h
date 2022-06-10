@@ -45,6 +45,7 @@ namespace VKL
 		PFN_vkGetDeviceQueue vkGetDeviceQueue{};
 		PFN_vkQueueWaitIdle vkQueueWaitIdle{};
 		PFN_vkQueueSubmit vkQueueSubmit{};
+		PFN_vkQueueSubmit2 vkQueueSubmit2{};
 		PFN_vkQueuePresentKHR vkQueuePresentKHR{};
 		PFN_vkCreateCommandPool vkCreateCommandPool{};
 		PFN_vkDestroyCommandPool vkDestroyCommandPool{};
@@ -63,6 +64,7 @@ namespace VKL
 		PFN_vkCreateShaderModule vkCreateShaderModule{};
 		PFN_vkDestroyShaderModule vkDestroyShaderModule{};
 		PFN_vkCreateRenderPass vkCreateRenderPass{};
+		PFN_vkCreateRenderPass2 vkCreateRenderPass2{};
 		PFN_vkDestroyRenderPass vkDestroyRenderPass{};
 		PFN_vkCreatePipelineLayout vkCreatePipelineLayout{};
 		PFN_vkDestroyPipelineLayout vkDestroyPipelineLayout{};

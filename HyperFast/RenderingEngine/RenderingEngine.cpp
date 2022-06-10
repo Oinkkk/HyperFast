@@ -286,7 +286,8 @@ namespace HyperFast
 		VkPhysicalDeviceVulkan13Features device13Features
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-			.pipelineCreationCacheControl = VK_TRUE
+			.pipelineCreationCacheControl = VK_TRUE,
+			.synchronization2 = VK_TRUE
 		};
 
 		VkPhysicalDeviceVulkan12Features device12Features

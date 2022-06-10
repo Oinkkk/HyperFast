@@ -1,4 +1,4 @@
-#include "ScreenManager.h"
+ï»¿#include "ScreenManager.h"
 
 namespace HyperFast
 {
@@ -74,30 +74,44 @@ namespace HyperFast
 		const size_t numCommandBuffers{ __mainCommandBuffers.size() };
 		__frameCursor = ((__frameCursor + 1ULL) % numCommandBuffers);
 
-		static constexpr VkPipelineStageFlags waitStageMask
-		{
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-		};
-
 		const VkCommandBuffer mainCommandBuffer{ __mainCommandBuffers[imageIdx] };
 		const VkSemaphore renderCompleteSemaphore{ __renderCompleteSemaphores[imageIdx] };
 		const VkFence renderCompleteFence{ __renderCompleteFences[imageIdx] };
 
-		const VkSubmitInfo submitInfo
+		const VkSemaphoreSubmitInfo waitInfo
 		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO,
-			.waitSemaphoreCount = 1U,
-			.pWaitSemaphores = &presentCompleteSemaphore,
-			.pWaitDstStageMask = &waitStageMask,
-			.commandBufferCount = 1U,
-			.pCommandBuffers = &mainCommandBuffer,
-			.signalSemaphoreCount = 1U,
-			.pSignalSemaphores = &renderCompleteSemaphore
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			.semaphore = presentCompleteSemaphore,
+			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
+		};
+
+		const VkCommandBufferSubmitInfo commandBufferInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+			.commandBuffer = mainCommandBuffer
+		};
+
+		const VkSemaphoreSubmitInfo signalInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			.semaphore = renderCompleteSemaphore,
+			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
+		};
+
+		const VkSubmitInfo2 submitInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+			.waitSemaphoreInfoCount = 1U,
+			.pWaitSemaphoreInfos = &waitInfo,
+			.commandBufferInfoCount = 1U,
+			.pCommandBufferInfos = &commandBufferInfo,
+			.signalSemaphoreInfoCount = 1U,
+			.pSignalSemaphoreInfos = &signalInfo
 		};
 
 		__deviceProc.vkWaitForFences(__device, 1U, &renderCompleteFence, VK_TRUE, __maxTime);
 		__deviceProc.vkResetFences(__device, 1U, &renderCompleteFence);
-		__deviceProc.vkQueueSubmit(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
+		__deviceProc.vkQueueSubmit2(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
 
 		const VkPresentInfoKHR presentInfo
 		{
@@ -395,11 +409,12 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__createRenderPasses()
 	{
-		std::vector<VkAttachmentDescription> attachments;
-		std::vector<VkSubpassDescription> subpasses;
-		std::vector<VkSubpassDependency> dependencies;
+		std::vector<VkAttachmentDescription2> attachments;
+		std::vector<VkSubpassDescription2> subpasses;
+		std::vector<VkSubpassDependency2> dependencies;
 
-		VkAttachmentDescription &colorAttachment{ attachments.emplace_back() };
+		VkAttachmentDescription2 &colorAttachment{ attachments.emplace_back() };
+		colorAttachment.sType = VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2;
 		colorAttachment.format = __swapchainFormat;
 		colorAttachment.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -407,40 +422,49 @@ namespace HyperFast
 		colorAttachment.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
 		colorAttachment.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		const VkAttachmentReference colorAttachmentRef
+		const VkAttachmentReference2 colorAttachmentRef
 		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
 			.attachment = 0U,
 			.layout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 		};
 
-		VkSubpassDescription &subpass{ subpasses.emplace_back() };
+		VkSubpassDescription2 &subpass{ subpasses.emplace_back() };
+		subpass.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2;
 		subpass.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = 1U;
 		subpass.pColorAttachments = &colorAttachmentRef;
 
-		VkSubpassDependency &dependency{ dependencies.emplace_back() };
+		/*
+			ì„¸ë§ˆí¬ì–´ë‚˜ íœìŠ¤ëŠ” ì‹œê·¸ë„ì´ ë“¤ì–´ì˜¤ë©´ í•´ë‹¹ íê°€ ëª¨ë“  ì‘ì—…ì„ ì²˜ë¦¬í–ˆìŒì„ ë³´ì¥
+			ë˜í•œ ëª¨ë“  ë©”ëª¨ë¦¬ accessì— ëŒ€í•´ availableì„ ë³´ì¥ (ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ)
+			vkQueueSubmitëŠ” host visible ë©”ëª¨ë¦¬ì˜ ëª¨ë“  accessì— ëŒ€í•´ visibleí•¨ì„ ë³´ì¥ (ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ)
+			ì„¸ë§ˆí¬ì–´ ëŒ€ê¸° ìš”ì²­ì€ ëª¨ë“  ë©”ëª¨ë¦¬ accessì— ëŒ€í•´ visibleí•¨ì„ ë³´ì¥ (ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ)
+		*/
+		const VkMemoryBarrier2 subpassBarrier
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccessMask = 0ULL, // ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ
+			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
+		};
 
-		// srcSubpassÀÇ srcStageMask ÆÄÀÌÇÁ°¡ idleÀÌ µÇ°í, °Å±â¿¡ srcAccessMask°¡ ¸ğµÎ availableÇØÁú ¶§±îÁö ºí·Ï
+		VkSubpassDependency2 &dependency{ dependencies.emplace_back() };
+		dependency.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2;
+		dependency.pNext = &subpassBarrier;
+
+		// srcSubpassì˜ srcStageMask íŒŒì´í”„ê°€ idleì´ ë˜ê³ , ê±°ê¸°ì— srcAccessMaskê°€ ëª¨ë‘ availableí•´ì§ˆ ë•Œê¹Œì§€ ë¸”ë¡
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 
-		// dstSubpass ÁøÇà¿¡ ´ëÇØ À§ Á¶°Ç + dstAccessMask°¡ visible ÇØÁú ¶§ ±îÁö dstStageMask¸¦ ºí·Ï
+		// dstSubpass ì§„í–‰ì— ëŒ€í•´ ìœ„ ì¡°ê±´ + dstAccessMaskê°€ visible í•´ì§ˆ ë•Œ ê¹Œì§€ dstStageMaskë¥¼ ë¸”ë¡
 		dependency.dstSubpass = 0U;
-		dependency.srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0U;
-		dependency.dstAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		
 		dependency.dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
 
-		/*
-			¼¼¸¶Æ÷¾î³ª Ææ½º´Â ½Ã±×³ÎÀÌ µé¾î¿À¸é ÇØ´ç Å¥°¡ ¸ğµç ÀÛ¾÷À» Ã³¸®ÇßÀ½À» º¸Àå
-			¶ÇÇÑ ¸ğµç ¸Ş¸ğ¸® access¿¡ ´ëÇØ availableÀ» º¸Àå (¾Ï¹¬Àû ¸Ş¸ğ¸® µğÆæ´ø½Ã)
-			vkQueueSubmit´Â host visible ¸Ş¸ğ¸®ÀÇ ¸ğµç access¿¡ ´ëÇØ visibleÇÔÀ» º¸Àå (¾Ï¹¬Àû ¸Ş¸ğ¸® µğÆæ´ø½Ã)
-			¼¼¸¶Æ÷¾î ´ë±â ¿äÃ»Àº ¸ğµç ¸Ş¸ğ¸® access¿¡ ´ëÇØ visibleÇÔÀ» º¸Àå (¾Ï¹¬Àû ¸Ş¸ğ¸® µğÆæ´ø½Ã)
-		*/
-
-		const VkRenderPassCreateInfo createInfo
+		const VkRenderPassCreateInfo2 createInfo
 		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
 			.attachmentCount = uint32_t(attachments.size()),
 			.pAttachments = attachments.data(),
 			.subpassCount = uint32_t(subpasses.size()),
@@ -449,7 +473,7 @@ namespace HyperFast
 			.pDependencies = dependencies.data()
 		};
 
-		__deviceProc.vkCreateRenderPass(__device, &createInfo, nullptr, &__renderPass);
+		__deviceProc.vkCreateRenderPass2(__device, &createInfo, nullptr, &__renderPass);
 		if (!__renderPass)
 			throw std::exception{ "Cannot create a VkRenderPass." };
 	}
