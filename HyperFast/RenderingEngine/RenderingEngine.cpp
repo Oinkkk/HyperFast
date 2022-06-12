@@ -10,7 +10,7 @@ namespace HyperFast
 {
 	RenderingEngine::RenderingEngine(
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
-		__logger{ logger }, __appName { appName }, __engineName{engineName}
+		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
 		tf::Taskflow taskflow;
 
@@ -79,15 +79,26 @@ namespace HyperFast
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
-		__waitDeviceIdle();
-		__destroyScreenManager();
-		__destroyDevice();
+		tf::Taskflow taskflow;
 
-#ifndef NDEBUG
-		__destroyDebugMessenger();
-#endif
+		tf::Task t1
+		{
+			taskflow.emplace([this]
+			{
+				__waitDeviceIdle();
+				__destroyScreenManager();
+				__destroyDevice();
 
-		__destroyInstance();
+				#ifndef NDEBUG
+				__destroyDebugMessenger();
+				#endif
+
+				__destroyInstance();
+			})
+		};
+
+		tf::Executor &taskflowExecutor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		taskflowExecutor.run(taskflow).wait();
 	}
 
 	ScreenManager &RenderingEngine::getScreenManager() noexcept
