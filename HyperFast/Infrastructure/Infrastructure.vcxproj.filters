@@ -28,6 +28,9 @@
     <ClInclude Include="IdAllocator.h">
       <Filter>IdAllocator</Filter>
     </ClInclude>
+    <ClInclude Include="Environment.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Unique">
@@ -54,6 +57,9 @@
     <Filter Include="IdAllocator">
       <UniqueIdentifier>{4e7500cf-4b6e-46e2-a166-16e43cb233c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Environment">
+      <UniqueIdentifier>{63cd89bc-b081-4a93-bb3a-22a788cfcdf7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Looper.cpp">
@@ -64,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="IdAllocator.cpp">
       <Filter>IdAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

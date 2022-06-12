@@ -1,6 +1,7 @@
 ﻿#include "VulkanLoader.h"
 #include <exception>
 #include <cassert>
+#include "../Infrastructure/Environment.h"
 
 namespace VKL
 {
@@ -299,6 +300,18 @@ namespace VKL
 			reinterpret_cast<PFN_vkResetFences>(
 				vkGetDeviceProcAddr(device, "vkResetFences"));
 
+		retVal.vkCreateBuffer =
+			reinterpret_cast<PFN_vkCreateBuffer>(
+				vkGetDeviceProcAddr(device, "vkCreateBuffer"));
+
+		retVal.vkDestroyBuffer =
+			reinterpret_cast<PFN_vkDestroyBuffer>(
+				vkGetDeviceProcAddr(device, "vkDestroyBuffer"));
+
+		retVal.vkGetBufferMemoryRequirements =
+			reinterpret_cast<PFN_vkGetBufferMemoryRequirements>(
+				vkGetDeviceProcAddr(device, "vkGetBufferMemoryRequirements"));
+
 		return retVal;
 	}
 
@@ -313,20 +326,37 @@ namespace VKL
 		// vkGetInstanceProcAddr(instance, "vkGetInstanceProcAddr") 반환 값이 nullptr 나옴
 		__globalProc.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
 
-		__globalProc.vkEnumerateInstanceVersion =
-			reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
-				vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+		tf::Executor &taskflowExecutor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		tf::Taskflow taskflow;
 
-		__globalProc.vkEnumerateInstanceExtensionProperties =
-			reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
-				vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceExtensionProperties"));
+		taskflow.emplace([this, vkGetInstanceProcAddr]()
+		{
+			__globalProc.vkEnumerateInstanceVersion =
+				reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
+					vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+		});
 
-		__globalProc.vkEnumerateInstanceLayerProperties =
-			reinterpret_cast<PFN_vkEnumerateInstanceLayerProperties>(
-				vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceLayerProperties"));
+		taskflow.emplace([this, vkGetInstanceProcAddr]()
+		{
+			__globalProc.vkEnumerateInstanceExtensionProperties =
+				reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
+					vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceExtensionProperties"));
+		});
 
-		__globalProc.vkCreateInstance =
-			reinterpret_cast<PFN_vkCreateInstance>(
-				vkGetInstanceProcAddr(nullptr, "vkCreateInstance"));
+		taskflow.emplace([this, vkGetInstanceProcAddr]()
+		{
+			__globalProc.vkEnumerateInstanceLayerProperties =
+				reinterpret_cast<PFN_vkEnumerateInstanceLayerProperties>(
+					vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceLayerProperties"));
+		});
+
+		taskflow.emplace([this, vkGetInstanceProcAddr]()
+		{
+			__globalProc.vkCreateInstance =
+				reinterpret_cast<PFN_vkCreateInstance>(
+					vkGetInstanceProcAddr(nullptr, "vkCreateInstance"));
+		});
+
+		taskflowExecutor.run(taskflow).wait();
 	}
 }

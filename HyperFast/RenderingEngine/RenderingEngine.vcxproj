@@ -12,16 +12,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommandBufferManager.h" />
+    <ClInclude Include="Drawcall.h" />
+    <ClInclude Include="MeshManager.h" />
     <ClInclude Include="PhysicalDevicePicker.h" />
     <ClInclude Include="PipelineFactory.h" />
     <ClInclude Include="RenderingEngine.h" />
-    <ClInclude Include="RenderCommand.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="ScreenManager.h" />
     <ClInclude Include="ShaderCompiler.h" />
+    <ClInclude Include="SizeUtil.h" />
+    <ClInclude Include="VertexAttribute.h" />
+    <ClInclude Include="VertexAttributeUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CommandBufferManager.cpp" />
+    <ClCompile Include="Drawcall.cpp" />
     <ClCompile Include="PhysicalDevicePicker.cpp" />
     <ClCompile Include="PipelineFactory.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />

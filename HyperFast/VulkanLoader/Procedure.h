@@ -78,6 +78,9 @@ namespace VKL
 		PFN_vkDestroyFence vkDestroyFence{};
 		PFN_vkWaitForFences vkWaitForFences{};
 		PFN_vkResetFences vkResetFences{};
+		PFN_vkCreateBuffer vkCreateBuffer{};
+		PFN_vkDestroyBuffer vkDestroyBuffer{};
+		PFN_vkGetBufferMemoryRequirements vkGetBufferMemoryRequirements{};
 
 		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
 		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};

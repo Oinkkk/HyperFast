@@ -17,13 +17,13 @@ namespace Infra
 		{
 			[this, messageFunc]
 			{
-				std::unique_lock conditionLock{ __conditionMutex, std::defer_lock };
+				std::unique_lock conditionLock{ __mutex, std::defer_lock };
 				std::vector<Message> messagePlaceholder;
 
 				while (true)
 				{
 					conditionLock.lock();
-					__emptyCondition.wait(conditionLock, [this]
+					__condition.wait(conditionLock, [this]
 					{
 						return !(__loopFlag && __messageQueue.empty());
 					});
@@ -48,11 +48,11 @@ namespace Infra
 		if (!__loopFlag)
 			return;
 
-		std::unique_lock conditionLock{ __conditionMutex };
+		std::unique_lock lock{ __mutex };
 		__loopFlag = false;
-		conditionLock.unlock();
+		lock.unlock();
 
-		__emptyCondition.notify_all();
+		__condition.notify_all();
 		__loopThread.join();
 	}
 
@@ -71,17 +71,17 @@ namespace Infra
 			[this, messageFunc, updateFunc]
 			{
 				Timer<> timer;
-				std::unique_lock conditionLock{ __conditionMutex, std::defer_lock };
+				std::unique_lock lock{ __mutex, std::defer_lock };
 				std::vector<Message> messagePlaceholder;
 
 				while (__loopFlag)
 				{
-					conditionLock.lock();
+					lock.lock();
 
 					if (!(__messageQueue.empty()))
 						messagePlaceholder.swap(__messageQueue);
 
-					conditionLock.unlock();
+					lock.unlock();
 
 					for (const Message &message : messagePlaceholder)
 						messageFunc(message.id, message.arguments);
@@ -103,9 +103,9 @@ namespace Infra
 		if (!__loopFlag)
 			return;
 
-		std::unique_lock conditionLock{ __conditionMutex };
+		std::unique_lock lock{ __mutex };
 		__loopFlag = false;
-		conditionLock.unlock();
+		lock.unlock();
 
 		__loopThread.join();
 	}

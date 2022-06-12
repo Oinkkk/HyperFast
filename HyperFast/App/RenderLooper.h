@@ -11,7 +11,7 @@ public:
 	void start() noexcept;
 	void stop() noexcept;
 
-	void requestDraw(HyperFast::Screen *const pScreen) noexcept;
+	void requestDraw(HyperFast::Screen &screen) noexcept;
 
 private:
 	Infra::MessageLooper __looper;

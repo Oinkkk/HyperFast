@@ -39,7 +39,7 @@ int main()
 	{
 		Infra::EventListener<Win::Window &>::make([&] (Win::Window &window)
 		{
-			renderLooper.requestDraw(window2ScreenMap[&window]);
+			renderLooper.requestDraw(*window2ScreenMap[&window]);
 			window.validate();
 		})
 	};

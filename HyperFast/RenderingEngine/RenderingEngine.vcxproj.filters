@@ -7,9 +7,6 @@
     <Filter Include="Screen">
       <UniqueIdentifier>{7867949f-4add-4323-b576-dfc6f5116899}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderCommand">
-      <UniqueIdentifier>{738bc1db-4e39-4e45-8d20-cae1f91453e8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ShaderCompiler">
       <UniqueIdentifier>{4f30ba62-d715-4932-89fa-9e8813eabb3b}</UniqueIdentifier>
     </Filter>
@@ -21,6 +18,18 @@
     </Filter>
     <Filter Include="CommandBufferManager">
       <UniqueIdentifier>{2ee5a5d1-9269-4210-a936-0382e59fc916}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawcall">
+      <UniqueIdentifier>{738bc1db-4e39-4e45-8d20-cae1f91453e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mesh">
+      <UniqueIdentifier>{3fe18ef9-3338-4248-8c3b-13337d188d75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{38122770-724e-461a-bdf6-fec324e73311}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vertex">
+      <UniqueIdentifier>{e47c3674-f8fe-46a7-a79c-8da5732912fa}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -45,6 +54,9 @@
     <ClCompile Include="CommandBufferManager.cpp">
       <Filter>CommandBufferManager</Filter>
     </ClCompile>
+    <ClCompile Include="Drawcall.cpp">
+      <Filter>Drawcall</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -52,9 +64,6 @@
     </ClInclude>
     <ClInclude Include="Screen.h">
       <Filter>Screen</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderCommand.h">
-      <Filter>RenderCommand</Filter>
     </ClInclude>
     <ClInclude Include="ShaderCompiler.h">
       <Filter>ShaderCompiler</Filter>
@@ -70,6 +79,21 @@
     </ClInclude>
     <ClInclude Include="CommandBufferManager.h">
       <Filter>CommandBufferManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawcall.h">
+      <Filter>Drawcall</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshManager.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="SizeUtil.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexAttribute.h">
+      <Filter>Vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexAttributeUtil.h">
+      <Filter>Vertex</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

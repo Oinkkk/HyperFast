@@ -24,7 +24,7 @@ void RenderLooper::start() noexcept
 
 			const bool validDraw{ pScreen->draw() };
 			if (!validDraw)
-				requestDraw(pScreen);
+				requestDraw(*pScreen);
 		}
 			break;
 		}
@@ -36,7 +36,7 @@ void RenderLooper::stop() noexcept
 	__looper.stop();
 }
 
-void RenderLooper::requestDraw(HyperFast::Screen *const pScreen) noexcept
+void RenderLooper::requestDraw(HyperFast::Screen &screen) noexcept
 {
-	__looper.enqueueMessage(uint64_t(RenderLooperMessageType::DRAW), pScreen);
+	__looper.enqueueMessage(uint64_t(RenderLooperMessageType::DRAW), &screen);
 }

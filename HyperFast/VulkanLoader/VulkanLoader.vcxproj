@@ -17,6 +17,11 @@
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Infrastructure\Infrastructure.vcxproj">
+      <Project>{77d278f9-1a13-48f4-ba01-5bcccec3f143}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
