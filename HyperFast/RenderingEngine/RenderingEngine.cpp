@@ -4,6 +4,7 @@
 #include "PhysicalDevicePicker.h"
 #include <shaderc/shaderc.hpp>
 #include "../glslc/file_includer.h"
+#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -11,26 +12,69 @@ namespace HyperFast
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
 		__logger{ logger }, __appName { appName }, __engineName{engineName}
 	{
-		__getInstanceVersion();
-		__checkInstanceVersionSupport();
+		tf::Taskflow taskflow;
 
-#ifndef NDEBUG
-		__populateDebugMessengerCreateInfo();
-#endif
+		tf::Task t1
+		{
+			taskflow.emplace([this]
+			{
+				__getInstanceVersion();
+				__checkInstanceVersionSupport();
 
-		__createInstance();
-		__queryInstanceProc();
+				#ifndef NDEBUG
+				__populateDebugMessengerCreateInfo();
+				#endif
 
-#ifndef NDEBUG
-		__createDebugMessenger();
-#endif
-		__pickPhysicalDevice();
-		__queryPhysicalDeviceProps();
-		__retrieveQueueFamilies();
-		__createDevice();
-		__queryDeviceProc();
-		__queryGraphicsQueue();
-		__createScreenManager();
+				__createInstance();
+				__queryInstanceProc();
+
+				#ifndef NDEBUG
+				__createDebugMessenger();
+				#endif
+			})
+		};
+
+		tf::Task t2
+		{
+			taskflow.emplace([this]
+			{
+				__pickPhysicalDevice();
+			})
+		};
+		t2.succeed(t1);
+
+		tf::Task t3
+		{
+			taskflow.emplace([this]
+			{
+				__queryPhysicalDeviceProps();
+			})
+		};
+		t3.succeed(t2);
+
+		tf::Task t4
+		{
+			taskflow.emplace([this]
+			{
+				__retrieveQueueFamilies();
+			})
+		};
+		t4.succeed(t2);
+
+		tf::Task t5
+		{
+			taskflow.emplace([this]
+			{
+				__createDevice();
+				__queryDeviceProc();
+				__queryGraphicsQueue();
+				__createScreenManager();
+			})
+		};
+		t5.succeed(t3, t4);
+
+		tf::Executor &taskflowExecutor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		taskflowExecutor.run(taskflow).wait();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
@@ -111,30 +155,13 @@ namespace HyperFast
 
 		std::vector<const char *> enabledLayers;
 		std::vector<const char *> enabledExtensions;
+		const void *pNext{};
 
+#ifndef NDEBUG
 		/*
 			환경 변수 VK_LAYER_PATH를 통해 레이어 경로를 알려주어야 함
 			예) VK_LAYER_PATH=$(SolutionDir)ThirdParty\vulkan_layers
 		*/
-		uint32_t numFoundLayers{};
-		globalGlobalProcedure.vkEnumerateInstanceLayerProperties(&numFoundLayers, nullptr);
-
-		std::vector<VkLayerProperties> foundLayers;
-		foundLayers.resize(numFoundLayers);
-		globalGlobalProcedure.vkEnumerateInstanceLayerProperties(&numFoundLayers, foundLayers.data());
-
-		const void *pNext{};
-
-#ifndef NDEBUG
-		const auto foundIt = std::find_if(
-			foundLayers.begin(), foundLayers.end(), [](const VkLayerProperties &layer)
-		{
-			return (VK_KHRONOS_VALIDATION_LAYER_NAME == layer.layerName);
-		});
-
-		if (foundIt == foundLayers.end())
-			throw std::exception{ "Cannot find the validation layer." };
-
 		enabledLayers.emplace_back(VK_KHRONOS_VALIDATION_LAYER_NAME.data());
 		enabledExtensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
@@ -190,11 +217,8 @@ namespace HyperFast
 		};
 
 		globalGlobalProcedure.vkCreateInstance(&createInfo, nullptr, &__instance);
-
-		if (__instance)
-			return;
-
-		throw std::exception{ "Cannot create a VkInstance." };
+		if (!__instance)
+			throw std::exception{ "Cannot create a VkInstance." };
 	}
 
 	void RenderingEngine::__destroyInstance() noexcept
@@ -213,10 +237,8 @@ namespace HyperFast
 		__instanceProc.vkCreateDebugUtilsMessengerEXT(
 			__instance, &__debugMessengerCreateInfo, nullptr, &__debugMessenger);
 
-		if (__debugMessenger)
-			return;
-
-		throw std::exception{ "Cannot create a VkDebugUtilsMessengerEXT." };
+		if (!__debugMessenger)
+			throw std::exception{ "Cannot create a VkDebugUtilsMessengerEXT." };
 	}
 
 	void RenderingEngine::__destroyDebugMessenger() noexcept
@@ -334,10 +356,8 @@ namespace HyperFast
 		};
 
 		__instanceProc.vkCreateDevice(__physicalDevice, &createInfo, nullptr, &__device);
-		if (__device)
-			return;
-
-		throw std::exception{ "Cannot create a VkDevice." };
+		if (!__device)
+			throw std::exception{ "Cannot create a VkDevice." };
 	}
 
 	void RenderingEngine::__destroyDevice() noexcept
@@ -355,10 +375,8 @@ namespace HyperFast
 	void RenderingEngine::__queryGraphicsQueue()
 	{
 		__deviceProc.vkGetDeviceQueue(__device, __graphicsQueueFamilyIndex, 0U, &__graphicsQueue);
-		if (__graphicsQueue)
-			return;
-
-		throw std::exception{ "Cannot retrieve the graphics queue." };
+		if (!__graphicsQueue)
+			throw std::exception{ "Cannot retrieve the graphics queue." };
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept
