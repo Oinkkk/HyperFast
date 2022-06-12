@@ -2,11 +2,6 @@
 
 namespace Infra
 {
-	Environment::Environment() noexcept
-	{
-
-	}
-
 	Environment &Environment::getInstance() noexcept
 	{
 		static Environment instance;

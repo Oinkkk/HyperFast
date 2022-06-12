@@ -14,7 +14,7 @@ namespace Infra
 		static Environment &getInstance() noexcept;
 
 	private:
-		Environment() noexcept;
+		Environment() = default;
 		tf::Executor __executor;
 	};
 
