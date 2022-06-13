@@ -156,7 +156,7 @@ namespace HyperFast
 	{
 		tf::Task t1
 		{
-			subflow.emplace([this]
+			subflow.emplace([this](tf::Subflow &subflow)
 			{
 				__checkSurfaceSupport();
 				__querySurfaceCapabilities();
@@ -166,13 +166,7 @@ namespace HyperFast
 				__retrieveSwapchainImages();
 				__reserveSwapchainImageDependencyPlaceholers();
 				__resetFrameCursor();
-			})
-		};
 
-		tf::Task t2
-		{
-			subflow.emplace([this](tf::Subflow &subflow)
-			{
 				tf::Task t1
 				{
 					subflow.emplace([this]
@@ -201,9 +195,8 @@ namespace HyperFast
 				t3.succeed(t1);
 			})
 		};
-		t2.succeed(t1);
 
-		tf::Task t3
+		tf::Task t2
 		{
 			subflow.emplace([this](tf::Subflow &subflow)
 			{
@@ -215,11 +208,12 @@ namespace HyperFast
 						__createMainCommandBufferManager(imageIdx);
 						__createSwapchainImageView(imageIdx);
 						__createSyncObject(imageIdx);
+						__recordMainCommand(imageIdx);
 					});
 				}
 			})
 		};
-		t3.succeed(t1);
+		t2.succeed(t1);
 	}
 
 	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
@@ -715,10 +709,11 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
 		};
 
-		VkRenderPassAttachmentBeginInfo renderPassAttachmentInfo
+		const VkRenderPassAttachmentBeginInfo renderPassAttachmentInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO,
-			.attachmentCount = 1U
+			.attachmentCount = 1U,
+			.pAttachments = &(__swapChainImageViews[imageIdx])
 		};
 
 		const VkClearValue clearColor
@@ -745,9 +740,7 @@ namespace HyperFast
 		const VkCommandBuffer commandBuffer{ __mainCommandBufferManagers[imageIdx]->getNextBuffer() };
 		__mainCommandBuffers[imageIdx] = commandBuffer;
 
-		const VkImageView colorAttachment{ __swapChainImageViews[imageIdx] };
-		renderPassAttachmentInfo.pAttachments = &colorAttachment;
-
+		__deviceProc.vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 		__deviceProc.vkCmdBeginRenderPass(
 			commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
