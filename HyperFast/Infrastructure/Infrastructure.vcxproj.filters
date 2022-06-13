@@ -7,9 +7,6 @@
     <ClInclude Include="Event.h">
       <Filter>Event</Filter>
     </ClInclude>
-    <ClInclude Include="StringFormatter.h">
-      <Filter>StringFormatter</Filter>
-    </ClInclude>
     <ClInclude Include="Looper.h">
       <Filter>Looper</Filter>
     </ClInclude>
@@ -38,9 +35,6 @@
     </Filter>
     <Filter Include="Event">
       <UniqueIdentifier>{bb0518e8-d4c5-4154-b49a-888242824f6e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="StringFormatter">
-      <UniqueIdentifier>{6f32ab87-064a-49ee-b1d1-936d8ae33acf}</UniqueIdentifier>
     </Filter>
     <Filter Include="Looper">
       <UniqueIdentifier>{7b908e68-b7ad-4066-9131-dee8c1e05dfd}</UniqueIdentifier>

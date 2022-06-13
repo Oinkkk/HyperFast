@@ -1,6 +1,5 @@
 #include "Window.h"
 #include "AppInstance.h"
-#include "../Infrastructure/StringFormatter.h"
 #include <cassert>
 
 namespace Win
@@ -28,15 +27,7 @@ namespace Win
 
 		const ATOM retVal{ RegisterClass(&wndClass) };
 		if (!retVal)
-		{
-			const std::string errMsg
-			{
-				Infra::StringFormatter::format(
-					"Cannot register a window class. Error: %d", GetLastError())
-			};
-
-			throw std::exception{ errMsg.c_str()};
-		}
+			throw std::exception{ "Cannot register a window class." };
 
 		return retVal;
 	}

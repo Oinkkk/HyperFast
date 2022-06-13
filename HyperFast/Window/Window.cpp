@@ -1,6 +1,5 @@
 #include "Window.h"
 #include "AppInstance.h"
-#include "../Infrastructure/StringFormatter.h"
 #include <cassert>
 
 namespace Win
@@ -136,15 +135,7 @@ namespace Win
 		__handle = nullptr;
 
 		if (!result)
-		{
-			const std::string errMsg
-			{
-				Infra::StringFormatter::format(
-					"Error occurred while destroying the window. Error: %d", GetLastError())
-			};
-
-			throw std::exception{ errMsg.c_str() };
-		}
+			throw std::exception{ "Error occurred while destroying the window." };
 	}
 
 	void Window::__updateAppearance(const int x, const int y, const int windowWidth, const int windowHeight) noexcept
@@ -193,15 +184,7 @@ namespace Win
 		};
 
 		if (!retVal)
-		{
-			const std::string errMsg
-			{
-				Infra::StringFormatter::format(
-					"Cannot create a window. Error: %d", GetLastError())
-			};
-
-			throw std::exception{ errMsg.c_str() };
-		}
+			throw std::exception{ "Cannot create a window." };
 
 		return retVal;
 	}

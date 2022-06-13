@@ -4,7 +4,6 @@
 #include "PhysicalDevicePicker.h"
 #include <shaderc/shaderc.hpp>
 #include "../glslc/file_includer.h"
-#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -12,93 +11,40 @@ namespace HyperFast
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
-		tf::Taskflow taskflow;
+		__getInstanceVersion();
+		__checkInstanceVersionSupport();
 
-		tf::Task t1
-		{
-			taskflow.emplace([this]
-			{
-				__getInstanceVersion();
-				__checkInstanceVersionSupport();
+		#ifndef NDEBUG
+		__populateDebugMessengerCreateInfo();
+		#endif
 
-				#ifndef NDEBUG
-				__populateDebugMessengerCreateInfo();
-				#endif
+		__createInstance();
+		__queryInstanceProc();
 
-				__createInstance();
-				__queryInstanceProc();
+		#ifndef NDEBUG
+		__createDebugMessenger();
+		#endif
 
-				#ifndef NDEBUG
-				__createDebugMessenger();
-				#endif
-			})
-		};
-
-		tf::Task t2
-		{
-			taskflow.emplace([this]
-			{
-				__pickPhysicalDevice();
-			})
-		};
-		t2.succeed(t1);
-
-		tf::Task t3
-		{
-			taskflow.emplace([this]
-			{
-				__queryPhysicalDeviceProps();
-			})
-		};
-		t3.succeed(t2);
-
-		tf::Task t4
-		{
-			taskflow.emplace([this]
-			{
-				__retrieveQueueFamilies();
-			})
-		};
-		t4.succeed(t2);
-
-		tf::Task t5
-		{
-			taskflow.emplace([this]
-			{
-				__createDevice();
-				__queryDeviceProc();
-				__queryGraphicsQueue();
-				__createScreenManager();
-			})
-		};
-		t5.succeed(t3, t4);
-
-		tf::Executor &taskflowExecutor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		taskflowExecutor.run(taskflow).wait();
+		__pickPhysicalDevice();
+		__queryPhysicalDeviceProps();
+		__retrieveQueueFamilies();
+		__createDevice();
+		__queryDeviceProc();
+		__queryGraphicsQueue();
+		__createScreenManager();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
-		tf::Taskflow taskflow;
+		__waitDeviceIdle();
+		__destroyScreenManager();
+		__destroyDevice();
 
-		tf::Task t1
-		{
-			taskflow.emplace([this]
-			{
-				__waitDeviceIdle();
-				__destroyScreenManager();
-				__destroyDevice();
+		#ifndef NDEBUG
+		__destroyDebugMessenger();
+		#endif
 
-				#ifndef NDEBUG
-				__destroyDebugMessenger();
-				#endif
-
-				__destroyInstance();
-			})
-		};
-
-		tf::Executor &taskflowExecutor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		taskflowExecutor.run(taskflow).wait();
+		__destroyInstance();
 	}
 
 	ScreenManager &RenderingEngine::getScreenManager() noexcept

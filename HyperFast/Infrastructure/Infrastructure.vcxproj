@@ -18,7 +18,6 @@
     <ClInclude Include="LogSeverityType.h" />
     <ClInclude Include="Looper.h" />
     <ClInclude Include="LruCache.h" />
-    <ClInclude Include="StringFormatter.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Unique.h" />
   </ItemGroup>

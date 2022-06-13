@@ -8,6 +8,8 @@
 
 int main()
 {
+	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
+
 	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
 	vulkanLoader.load();
 
@@ -19,7 +21,6 @@ int main()
 	};
 
 	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
-	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
 
 	Win::WindowClass winClass{ appInstance.getHandle(), "DefaultWinClass" };
 	Win::Window win1{ winClass, "win1", true };
