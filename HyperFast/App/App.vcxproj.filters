@@ -2,26 +2,15 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RenderLooper.cpp">
-      <Filter>RenderLooper</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
       <UniqueIdentifier>{eae248cf-d1b7-43d3-84a8-ddf4117c47de}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="RenderLooper">
-      <UniqueIdentifier>{9fb646b8-1703-42eb-9e17-96e848d563cf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="vk_layer_settings.txt">
       <Filter>Resources</Filter>
     </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="RenderLooper.h">
-      <Filter>RenderLooper</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

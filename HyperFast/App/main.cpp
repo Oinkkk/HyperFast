@@ -4,7 +4,7 @@
 #include "../Window/MainLooper.h"
 #include "../RenderingEngine/RenderingEngine.h"
 #include "../RenderingEngine/Screen.h"
-#include "RenderLooper.h"
+#include "../Scene/RenderLooper.h"
 
 int main()
 {
@@ -33,14 +33,14 @@ int main()
 	window2ScreenMap.emplace(&win1, pScreen1.get());
 	window2ScreenMap.emplace(&win2, pScreen2.get());
 
-	RenderLooper renderLooper;
+	Jin::RenderLooper renderLooper;
 	renderLooper.start();
 
 	const auto pDrawEventListener
 	{
 		Infra::EventListener<Win::Window &>::make([&] (Win::Window &window)
 		{
-			renderLooper.requestDraw(*window2ScreenMap[&window]);
+			renderLooper.draw(*window2ScreenMap[&window]);
 			window.validate();
 		})
 	};

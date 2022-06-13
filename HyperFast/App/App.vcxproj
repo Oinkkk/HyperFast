@@ -95,7 +95,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RenderLooper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Infrastructure\Infrastructure.vcxproj">
@@ -103,6 +102,9 @@
     </ProjectReference>
     <ProjectReference Include="..\RenderingEngine\RenderingEngine.vcxproj">
       <Project>{9dd430d9-d58c-4e9b-a29e-0c5881b5f2f0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Scene\Scene.vcxproj">
+      <Project>{0b068852-8eef-4877-953e-f39fc503994a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\VulkanLoader\VulkanLoader.vcxproj">
       <Project>{022e6446-daf0-45d3-a57f-c041a461d5e0}</Project>
@@ -113,9 +115,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="vk_layer_settings.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="RenderLooper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -18,45 +18,23 @@ namespace Infra
 		Message(const uint64_t id, $Args &&...args);
 	};
 
-	using MessageFunc = std::function<void(const uint64_t, const std::vector<std::any> &)>;
-	using UpdateFunc = std::function<void(const float)>;
+	using LoopFunc = std::function<void(const std::vector<Message> &, const float)>;
 
-	class MessageLooper final : public Unique
+	class Looper final : public Unique
 	{
 	public:
-		MessageLooper() = default;
-		~MessageLooper() noexcept;
+		Looper() = default;
+		~Looper() noexcept;
 
 		template <typename ...$Args>
 		void enqueueMessage(const uint64_t id, $Args &&...args);
 
-		void start(const MessageFunc &messageFunc);
+		void start(const LoopFunc &loopFunc);
 		void stop() noexcept;
 
 	private:
 		std::vector<Message> __messageQueue;
-		std::mutex __mutex;
-		std::condition_variable __condition;
-
-		bool __loopFlag{};
-		std::thread __loopThread;
-	};
-
-	class UpdateLooper final : public Unique
-	{
-	public:
-		UpdateLooper() = default;
-		~UpdateLooper() noexcept;
-
-		template <typename ...$Args>
-		void enqueueMessage(const uint64_t id, $Args &&...args);
-
-		void start(const MessageFunc &messageFunc, const UpdateFunc &updateFunc);
-		void stop() noexcept;
-
-	private:
-		std::vector<Message> __messageQueue;
-		std::mutex __mutex;
+		std::mutex __messageMutex;
 
 		bool __loopFlag;
 		std::thread __loopThread;
@@ -69,19 +47,9 @@ namespace Infra
 	}
 
 	template <typename ...$Args>
-	void MessageLooper::enqueueMessage(const uint64_t id, $Args &&...args)
+	void Looper::enqueueMessage(const uint64_t id, $Args &&...args)
 	{
-		std::unique_lock lock{ __mutex };
-		__messageQueue.emplace_back(id, std::forward<$Args>(args)...);
-		lock.unlock();
-
-		__condition.notify_one();
-	}
-
-	template <typename ...$Args>
-	void UpdateLooper::enqueueMessage(const uint64_t id, $Args &&...args)
-	{
-		std::lock_guard lock{ __mutex };
+		std::lock_guard lock{ __messageMutex };
 		__messageQueue.emplace_back(id, std::forward<$Args>(args)...);
 	}
 }

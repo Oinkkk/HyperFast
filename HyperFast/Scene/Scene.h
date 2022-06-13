@@ -2,7 +2,7 @@
 
 #include "../RenderingEngine/RenderingEngine.h"
 
-namespace Framework
+namespace Jin
 {
 	class Scene : public Infra::Unique
 	{
