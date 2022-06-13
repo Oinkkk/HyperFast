@@ -347,7 +347,7 @@ namespace HyperFast
 		__pScreenManager = std::make_unique<ScreenManager>(
 			__instance, __instanceProc,
 			__physicalDevice, __graphicsQueueFamilyIndex,
-			__device, __deviceProc, __graphicsQueue, __logger);
+			__device, __deviceProc, __graphicsQueue);
 	}
 
 	void RenderingEngine::__destroyScreenManager() noexcept

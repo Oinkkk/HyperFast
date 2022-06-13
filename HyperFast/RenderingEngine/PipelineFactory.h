@@ -2,6 +2,7 @@
 
 #include "ShaderCompiler.h"
 #include "../VulkanLoader/Procedure.h"
+#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -19,7 +20,7 @@ namespace HyperFast
 		PipelineFactory(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
 		~PipelineFactory() noexcept;
 
-		void build(const BuildParam &param);
+		void build(const BuildParam &param, tf::Subflow &subflow);
 		void reset() noexcept;
 
 		[[nodiscard]]
@@ -44,7 +45,7 @@ namespace HyperFast
 		void __createPipelineCache();
 		void __destroyPipelineCache() noexcept;
 
-		void __createPipelines(const BuildParam &buildParam);
+		void __createPipelines(const BuildParam &buildParam, tf::Subflow &subflow);
 		void __destroyPipelines() noexcept;
 	};
 }

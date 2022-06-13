@@ -74,6 +74,10 @@ namespace Win
 			customReturn = true;
 			customRetVal = 0LL;
 			break;
+
+		case WM_DESTROY:
+			__destroyEvent.invoke(*this);
+			break;
 		}
 
 		if (customReturn)
@@ -128,8 +132,6 @@ namespace Win
 	{
 		if (!__handle)
 			return;
-
-		__destroyEvent.invoke(*this);
 
 		const BOOL result{ DestroyWindow(__handle) };
 		__handle = nullptr;

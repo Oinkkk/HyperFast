@@ -4,24 +4,15 @@
     <Filter Include="Scene">
       <UniqueIdentifier>{00ef01e0-cadc-406d-87e9-688287b52110}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderLooper">
-      <UniqueIdentifier>{bba8a91c-4a8b-4387-b6fc-ec96f29e4d95}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="RenderLooper.h">
-      <Filter>RenderLooper</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Scene.cpp">
       <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderLooper.cpp">
-      <Filter>RenderLooper</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -63,9 +63,6 @@
     <ClCompile Include="ScreenManager_ScreenImpl.cpp">
       <Filter>Screen\ScreenManager</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenManager_ScreenImpl_Resource.cpp">
-      <Filter>Screen\ScreenManager</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">

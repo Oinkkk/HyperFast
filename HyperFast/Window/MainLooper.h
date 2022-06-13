@@ -1,16 +1,31 @@
 #pragma once
 
-#include <Windows.h>
 #include "../Infrastructure/Event.h"
+#include "../Infrastructure/Timer.h"
 
 namespace Win
 {
 	class MainLooper
 	{
 	public:
-		MainLooper() = delete;
+		void start() noexcept;
+		void stop() noexcept;
 
-		static void start() noexcept;
-		static void postQuitMessage() noexcept;
+		[[nodiscard]]
+		constexpr Infra::EventView<float> &getIdleEvent() noexcept;
+
+		[[nodiscard]]
+		static MainLooper &getInstance() noexcept;
+
+	private:
+		MainLooper() = default;
+
+		Infra::Timer<> __timer;
+		Infra::Event<float> __idleEvent;
 	};
+
+	constexpr Infra::EventView<float> &MainLooper::getIdleEvent() noexcept
+	{
+		return __idleEvent;
+	}
 }

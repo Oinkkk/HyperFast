@@ -7,9 +7,6 @@
     <ClInclude Include="Event.h">
       <Filter>Event</Filter>
     </ClInclude>
-    <ClInclude Include="Looper.h">
-      <Filter>Looper</Filter>
-    </ClInclude>
     <ClInclude Include="Timer.h">
       <Filter>Timer</Filter>
     </ClInclude>
@@ -36,9 +33,6 @@
     <Filter Include="Event">
       <UniqueIdentifier>{bb0518e8-d4c5-4154-b49a-888242824f6e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Looper">
-      <UniqueIdentifier>{7b908e68-b7ad-4066-9131-dee8c1e05dfd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Timer">
       <UniqueIdentifier>{7c061f05-291c-4d1b-9622-6b18503b3ee5}</UniqueIdentifier>
     </Filter>
@@ -56,9 +50,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Looper.cpp">
-      <Filter>Looper</Filter>
-    </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Logger</Filter>
     </ClCompile>

@@ -19,9 +19,9 @@ namespace HyperFast
 		__destroyShaderModules();
 	}
 
-	void PipelineFactory::build(const BuildParam &param)
+	void PipelineFactory::build(const BuildParam &param, tf::Subflow &subflow)
 	{
-		__createPipelines(param);
+		__createPipelines(param, subflow);
 	}
 
 	void PipelineFactory::reset() noexcept
@@ -128,7 +128,7 @@ namespace HyperFast
 		__pipelineCache = VK_NULL_HANDLE;
 	}
 
-	void PipelineFactory::__createPipelines(const BuildParam &buildParam)
+	void PipelineFactory::__createPipelines(const BuildParam &buildParam, tf::Subflow &subflow)
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
 

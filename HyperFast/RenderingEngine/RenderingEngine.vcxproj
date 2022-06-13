@@ -33,7 +33,6 @@
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="ScreenManager.cpp" />
     <ClCompile Include="ScreenManager_ScreenImpl.cpp" />
-    <ClCompile Include="ScreenManager_ScreenImpl_Resource.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
   </ItemGroup>
   <ItemGroup>
