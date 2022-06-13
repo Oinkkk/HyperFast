@@ -4,6 +4,7 @@
 #include "PhysicalDevicePicker.h"
 #include <shaderc/shaderc.hpp>
 #include "../glslc/file_includer.h"
+#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -11,31 +12,36 @@ namespace HyperFast
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
-		__getInstanceVersion();
-		__checkInstanceVersionSupport();
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		__created = executor.async([this]
+		{
+			__getInstanceVersion();
+			__checkInstanceVersionSupport();
 
-		#ifndef NDEBUG
-		__populateDebugMessengerCreateInfo();
-		#endif
+#ifndef NDEBUG
+			__populateDebugMessengerCreateInfo();
+#endif
 
-		__createInstance();
-		__queryInstanceProc();
+			__createInstance();
+			__queryInstanceProc();
 
-		#ifndef NDEBUG
-		__createDebugMessenger();
-		#endif
+#ifndef NDEBUG
+			__createDebugMessenger();
+#endif
 
-		__pickPhysicalDevice();
-		__queryPhysicalDeviceProps();
-		__retrieveQueueFamilies();
-		__createDevice();
-		__queryDeviceProc();
-		__queryGraphicsQueue();
-		__createScreenManager();
+			__pickPhysicalDevice();
+			__queryPhysicalDeviceProps();
+			__retrieveQueueFamilies();
+			__createDevice();
+			__queryDeviceProc();
+			__queryGraphicsQueue();
+			__createScreenManager();
+		});
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__created.wait();
 		__waitDeviceIdle();
 		__destroyScreenManager();
 		__destroyDevice();
@@ -49,6 +55,7 @@ namespace HyperFast
 
 	ScreenManager &RenderingEngine::getScreenManager() noexcept
 	{
+		__created.wait();
 		return *__pScreenManager;
 	}
 

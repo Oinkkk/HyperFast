@@ -4,6 +4,7 @@
 #include "PipelineFactory.h"
 #include "../Infrastructure/Logger.h"
 #include "CommandBufferManager.h"
+#include <future>
 
 namespace HyperFast
 {
@@ -37,6 +38,10 @@ namespace HyperFast
 			Win::Window &__window;
 			Infra::Logger &__logger;
 
+			// 생성 완료 여부
+			std::future<void> __created;
+
+			// 상태 변수들
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			PipelineFactory __pipelineFactory;
 
@@ -80,8 +85,9 @@ namespace HyperFast
 			void __destroySwapchain(const VkSwapchainKHR swapchain) noexcept;
 			void __retrieveSwapchainImages() noexcept;
 			void __resetSwapchainImages() noexcept;
-			void __createSwapchainImageViews();
-			void __destroySwapchainImageViews() noexcept;
+			void __reserveSwapchainImageDependencyPlaceholers() noexcept;
+			void __createSwapchainImageView(const size_t imageIdx);
+			void __destroySwapchainImageView(const size_t imageIdx) noexcept;
 			void __createRenderPasses();
 			void __destroyRenderPasses() noexcept;
 			void __createFramebuffer();

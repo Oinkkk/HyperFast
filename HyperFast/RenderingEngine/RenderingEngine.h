@@ -5,6 +5,7 @@
 #include "../Infrastructure/Logger.h"
 #include "ScreenManager.h"
 #include "ShaderCompiler.h"
+#include <future>
 
 namespace HyperFast
 {
@@ -22,6 +23,10 @@ namespace HyperFast
 		const std::string __appName;
 		const std::string __engineName;
 
+		// 생성 완료 여부
+		std::future<void> __created;
+
+		// 상태 변수들
 		uint32_t __instanceVersion{};
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{};
 

@@ -52,7 +52,10 @@ namespace Jin
 			return;
 
 		for (HyperFast::Screen *const pScreen : __drawRequested)
-			pScreen->draw();
+		{
+			if (!(pScreen->draw()))
+				draw(*pScreen);
+		}
 
 		__drawRequested.clear();
 	}

@@ -1,4 +1,5 @@
 ﻿#include "ScreenManager.h"
+#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -30,18 +31,30 @@ namespace HyperFast
 		__device{ device }, __deviceProc{ deviceProc }, __graphicsQueue{ graphicsQueue },
 		__window{ window }, __logger{ logger }, __pipelineFactory{ device, deviceProc }
 	{
-		__createSurface();
-		__createMainCommandBufferManager();
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		__created = executor.async([this]
+		{
+			__createSurface();
+			__createMainCommandBufferManager();
+			__initSurfaceDependencies();
+		});
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
+		__created.wait();
 		__waitDeviceIdle();
 		__resetPipelines();
 		__destroySyncObjects();
 		__destroyFramebuffer();
 		__destroyRenderPasses();
-		__destroySwapchainImageViews();
+
+		const size_t numSwapchainImages{ __swapChainImages.size() };
+		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+		{
+			__destroySwapchainImageView(swapchainImageIter);
+		}
+
 		__resetSwapchainImages();
 		__destroySwapchain(__swapchain);
 		__destroyMainCommandBufferManager();
@@ -50,9 +63,7 @@ namespace HyperFast
 
 	bool ScreenManager::ScreenImpl::draw()
 	{
-		if (!__swapchain)
-			__initSurfaceDependencies();
-
+		__created.wait();
 		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };
 
 		uint32_t imageIdx{};
@@ -135,7 +146,14 @@ namespace HyperFast
 		__querySupportedSurfacePresentModes();
 		__createSwapchain(VK_NULL_HANDLE);
 		__retrieveSwapchainImages();
-		__createSwapchainImageViews();
+		__reserveSwapchainImageDependencyPlaceholers();
+
+		const size_t numSwapchainImages{ __swapChainImages.size() };
+		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+		{
+			__createSwapchainImageView(swapchainImageIter);
+		}
+
 		__createRenderPasses();
 		__createFramebuffer();
 		__createSyncObjects();
@@ -153,7 +171,13 @@ namespace HyperFast
 		__resetPipelines();
 		__destroyFramebuffer();
 		__destroyRenderPasses();
-		__destroySwapchainImageViews();
+
+		const size_t oldNumSwapchainImages{ __swapChainImages.size() };
+		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < oldNumSwapchainImages; swapchainImageIter++)
+		{
+			__destroySwapchainImageView(swapchainImageIter);
+		}
+
 		__resetSwapchainImages();
 
 		// create
@@ -163,7 +187,14 @@ namespace HyperFast
 		__querySupportedSurfacePresentModes();
 		__createSwapchain(oldSwapchain);
 		__retrieveSwapchainImages();
-		__createSwapchainImageViews();
+		__reserveSwapchainImageDependencyPlaceholers();
+
+		const size_t newNumSwapchainImages{ __swapChainImages.size() };
+		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < newNumSwapchainImages; swapchainImageIter++)
+		{
+			__createSwapchainImageView(swapchainImageIter);
+		}
+
 		__createRenderPasses();
 		__createFramebuffer();
 		__createSyncObjects();
@@ -361,11 +392,18 @@ namespace HyperFast
 		__swapChainImages.clear();
 	}
 
-	void ScreenManager::ScreenImpl::__createSwapchainImageViews()
+	void ScreenManager::ScreenImpl::__reserveSwapchainImageDependencyPlaceholers() noexcept
+	{
+		const size_t numSwapchainImages{ __swapChainImages.size() };
+		__swapChainImageViews.resize(numSwapchainImages);
+	}
+
+	void ScreenManager::ScreenImpl::__createSwapchainImageView(const size_t imageIdx)
 	{
 		VkImageViewCreateInfo createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			.image = __swapChainImages[imageIdx],
 			.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
 			.format = __swapchainFormat,
 			.components =
@@ -385,26 +423,19 @@ namespace HyperFast
 			}
 		};
 
-		for (const VkImage swapchainImage : __swapChainImages)
-		{
-			createInfo.image = swapchainImage;
+		VkImageView swapchainImageView{};
+		__deviceProc.vkCreateImageView(__device, &createInfo, nullptr, &swapchainImageView);
 
-			VkImageView swapchainImageView{};
-			__deviceProc.vkCreateImageView(__device, &createInfo, nullptr, &swapchainImageView);
+		if (!swapchainImageView)
+			throw std::exception{ "Cannot create a VkImageView for the swapchain." };
 
-			if (!swapchainImageView)
-				throw std::exception{ "Cannot create a VkImageView for the swapchain." };
-
-			__swapChainImageViews.emplace_back(swapchainImageView);
-		}
+		__swapChainImageViews[imageIdx] = swapchainImageView;
 	}
 
-	void ScreenManager::ScreenImpl::__destroySwapchainImageViews() noexcept
+	void ScreenManager::ScreenImpl::__destroySwapchainImageView(const size_t imageIdx) noexcept
 	{
-		for (const VkImageView swapchainImageView : __swapChainImageViews)
-			__deviceProc.vkDestroyImageView(__device, swapchainImageView, nullptr);
-
-		__swapChainImageViews.clear();
+		const VkImageView swapchainImageView{ __swapChainImageViews[imageIdx] };
+		__deviceProc.vkDestroyImageView(__device, swapchainImageView, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__createRenderPasses()
