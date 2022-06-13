@@ -92,8 +92,8 @@ namespace HyperFast
 			void __destroyRenderPasses() noexcept;
 			void __createFramebuffer();
 			void __destroyFramebuffer() noexcept;
-			void __createSyncObjects();
-			void __destroySyncObjects() noexcept;
+			void __createSyncObject(const size_t imageIdx);
+			void __destroySyncObject(const size_t imageIdx) noexcept;
 
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines();

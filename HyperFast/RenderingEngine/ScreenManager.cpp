@@ -45,13 +45,13 @@ namespace HyperFast
 		__created.wait();
 		__waitDeviceIdle();
 		__resetPipelines();
-		__destroySyncObjects();
 		__destroyFramebuffer();
 		__destroyRenderPasses();
 
 		const size_t numSwapchainImages{ __swapChainImages.size() };
 		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
 		{
+			__destroySyncObject(swapchainImageIter);
 			__destroySwapchainImageView(swapchainImageIter);
 		}
 
@@ -152,13 +152,18 @@ namespace HyperFast
 		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
 		{
 			__createSwapchainImageView(swapchainImageIter);
+			__createSyncObject(swapchainImageIter);
 		}
 
+		// 스왑체인과 디펜던시
 		__createRenderPasses();
 		__createFramebuffer();
-		__createSyncObjects();
 		__populatePipelineBuildParam();
 		__buildPipelines();
+
+		// 스왑체인과 디펜던시
+
+		// 모든것과 디펜던시
 		__recordMainCommands();
 	}
 
@@ -193,11 +198,11 @@ namespace HyperFast
 		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < newNumSwapchainImages; swapchainImageIter++)
 		{
 			__createSwapchainImageView(swapchainImageIter);
+			__createSyncObject(swapchainImageIter);
 		}
 
 		__createRenderPasses();
 		__createFramebuffer();
-		__createSyncObjects();
 		__populatePipelineBuildParam();
 		__buildPipelines();
 		__recordMainCommands();
@@ -395,7 +400,11 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__reserveSwapchainImageDependencyPlaceholers() noexcept
 	{
 		const size_t numSwapchainImages{ __swapChainImages.size() };
+
 		__swapChainImageViews.resize(numSwapchainImages);
+		__presentCompleteSemaphores.resize(numSwapchainImages, VK_NULL_HANDLE);
+		__renderCompleteSemaphores.resize(numSwapchainImages, VK_NULL_HANDLE);
+		__renderCompleteFences.resize(numSwapchainImages, VK_NULL_HANDLE);
 	}
 
 	void ScreenManager::ScreenImpl::__createSwapchainImageView(const size_t imageIdx)
@@ -563,12 +572,9 @@ namespace HyperFast
 		__framebuffer = VK_NULL_HANDLE;
 	}
 
-	void ScreenManager::ScreenImpl::__createSyncObjects()
+	void ScreenManager::ScreenImpl::__createSyncObject(const size_t imageIdx)
 	{
-		const size_t numSwapchainImageViews{ __swapChainImageViews.size() };
-		const size_t currentNumSyncObjects{ __presentCompleteSemaphores.size() };
-
-		if (numSwapchainImageViews <= currentNumSyncObjects)
+		if (__presentCompleteSemaphores[imageIdx] != VK_NULL_HANDLE)
 			return;
 
 		const VkSemaphoreCreateInfo semaphoreCreateInfo
@@ -582,39 +588,32 @@ namespace HyperFast
 			.flags = VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT
 		};
 
-		for (size_t imageViewIter = currentNumSyncObjects; imageViewIter < numSwapchainImageViews; imageViewIter++)
-		{
-			VkSemaphore presentCompleteSemaphore{};
-			VkSemaphore renderCompleteSemaphore{};
-			VkFence renderCompleteFence{};
+		VkSemaphore presentCompleteSemaphore{};
+		VkSemaphore renderCompleteSemaphore{};
+		VkFence renderCompleteFence{};
 
-			__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
-			__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
-			__deviceProc.vkCreateFence(__device, &fenceCreateInfo, nullptr, &renderCompleteFence);
+		__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+		__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
+		__deviceProc.vkCreateFence(__device, &fenceCreateInfo, nullptr, &renderCompleteFence);
 
-			if (!(presentCompleteSemaphore && renderCompleteSemaphore && renderCompleteFence))
-				throw std::exception{ "Error occurred while create sync objects." };
+		if (!(presentCompleteSemaphore && renderCompleteSemaphore && renderCompleteFence))
+			throw std::exception{ "Error occurred while create sync objects." };
 
-			__presentCompleteSemaphores.emplace_back(presentCompleteSemaphore);
-			__renderCompleteSemaphores.emplace_back(renderCompleteSemaphore);
-			__renderCompleteFences.emplace_back(renderCompleteFence);
-		}
+		__presentCompleteSemaphores[imageIdx] = presentCompleteSemaphore;
+		__renderCompleteSemaphores[imageIdx] = renderCompleteSemaphore;
+		__renderCompleteFences[imageIdx] = renderCompleteFence;
 	}
 
-	void ScreenManager::ScreenImpl::__destroySyncObjects() noexcept
+	void ScreenManager::ScreenImpl::__destroySyncObject(const size_t imageIdx) noexcept
 	{
-		for (const VkFence renderCompleteFence : __renderCompleteFences)
-			__deviceProc.vkDestroyFence(__device, renderCompleteFence, nullptr);
+		const VkFence renderCompleteFence{ __renderCompleteFences[imageIdx] };
+		__deviceProc.vkDestroyFence(__device, renderCompleteFence, nullptr);
 
-		for (const VkSemaphore renderCompleteSemaphore : __renderCompleteSemaphores)
-			__deviceProc.vkDestroySemaphore(__device, renderCompleteSemaphore, nullptr);
+		const VkSemaphore renderCompleteSemaphore{ __renderCompleteSemaphores[imageIdx] };
+		__deviceProc.vkDestroySemaphore(__device, renderCompleteSemaphore, nullptr);
 
-		for (const VkSemaphore presentCompleteSemaphore : __presentCompleteSemaphores)
-			__deviceProc.vkDestroySemaphore(__device, presentCompleteSemaphore, nullptr);
-
-		__renderCompleteFences.clear();
-		__renderCompleteSemaphores.clear();
-		__presentCompleteSemaphores.clear();
+		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[imageIdx] };
+		__deviceProc.vkDestroySemaphore(__device, presentCompleteSemaphore, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept

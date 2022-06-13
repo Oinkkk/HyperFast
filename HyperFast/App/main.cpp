@@ -8,24 +8,22 @@
 
 int main()
 {
-	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
+	Infra::Logger logger;
 
 	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
 	vulkanLoader.load();
-
-	Infra::Logger logger;
 
 	std::unique_ptr<HyperFast::RenderingEngine> pRenderingEngine
 	{
 		std::make_unique<HyperFast::RenderingEngine>(logger, "HyperFastDemo", "HyperFast")
 	};
 
-	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
-
+	Win::AppInstance &appInstance{ Win::AppInstance::getInstance() };
 	Win::WindowClass winClass{ appInstance.getHandle(), "DefaultWinClass" };
 	Win::Window win1{ winClass, "win1", true };
 	Win::Window win2{ winClass, "win2", true };
 
+	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
 	std::shared_ptr<HyperFast::Screen> pScreen1{ std::make_shared<HyperFast::Screen>(screenManager, win1) };
 	std::shared_ptr<HyperFast::Screen> pScreen2{ std::make_shared<HyperFast::Screen>(screenManager, win2) };
 

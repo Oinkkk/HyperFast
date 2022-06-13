@@ -46,9 +46,9 @@ namespace HyperFast
 		__destroyScreenManager();
 		__destroyDevice();
 
-		#ifndef NDEBUG
+#ifndef NDEBUG
 		__destroyDebugMessenger();
-		#endif
+#endif
 
 		__destroyInstance();
 	}
