@@ -692,9 +692,15 @@ namespace HyperFast
 		__deviceProc.vkEndCommandBuffer(commandBuffer);
 	}
 
-	void ScreenManager::ScreenImpl::__waitDeviceIdle() const noexcept
+	void ScreenManager::ScreenImpl::__waitDeviceIdle() noexcept
 	{
 		__deviceProc.vkDeviceWaitIdle(__device);
+		__onDeviceIdle();
+	}
+
+	void ScreenManager::ScreenImpl::__onDeviceIdle() noexcept
+	{
+		// TODO: process pending tasks
 	}
 
 	VkResult ScreenManager::ScreenImpl::__acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept

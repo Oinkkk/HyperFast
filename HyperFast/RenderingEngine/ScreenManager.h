@@ -99,6 +99,7 @@ namespace HyperFast
 			constexpr void __resetFrameCursor() noexcept;
 
 			void __waitDeviceIdle() const noexcept;
+			void __onDeviceIdle() noexcept;
 			VkResult __acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept;
 
 			static inline constexpr uint64_t __maxTime{ std::numeric_limits<uint64_t>::max() };

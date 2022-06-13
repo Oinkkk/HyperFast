@@ -34,7 +34,16 @@ int main()
 		})
 	};
 
+	std::shared_ptr<Infra::EventListener<float>> pIdleEventListener
+	{
+		Infra::EventListener<float>::make([&](const float deltaTime)
+		{
+			
+		})
+	};
+
 	win1.getDestroyEvent() += pDestroyEventListener;
+	// mainLooper.getIdleEvent() += pIdleEventListener;
 
 	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
 	std::shared_ptr<HyperFast::Screen> pScreen1{ std::make_shared<HyperFast::Screen>(screenManager, win1) };
