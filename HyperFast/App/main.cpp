@@ -23,12 +23,22 @@ int main()
 	Win::Window win1{ winClass, "win1", true };
 	Win::Window win2{ winClass, "win2", true };
 
+	win1.setSize(800, 600);
+	win2.setSize(800, 600);
+
+	std::shared_ptr<Infra::EventListener<Win::Window &>> pDestroyEventListener
+	{
+		Infra::EventListener<Win::Window &>::make([&](Win::Window &window)
+		{
+			mainLooper.stop();
+		})
+	};
+
+	win1.getDestroyEvent() += pDestroyEventListener;
+
 	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
 	std::shared_ptr<HyperFast::Screen> pScreen1{ std::make_shared<HyperFast::Screen>(screenManager, win1) };
 	std::shared_ptr<HyperFast::Screen> pScreen2{ std::make_shared<HyperFast::Screen>(screenManager, win2) };
-
-	win1.setSize(800, 600);
-	win2.setSize(800, 600);
 
 	mainLooper.start();
 
