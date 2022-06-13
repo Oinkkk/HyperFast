@@ -1,5 +1,4 @@
 ﻿#include "ScreenManager.h"
-#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -31,18 +30,33 @@ namespace HyperFast
 		__device{ device }, __deviceProc{ deviceProc }, __graphicsQueue{ graphicsQueue },
 		__window{ window }, __logger{ logger }, __pipelineFactory{ device, deviceProc }
 	{
-		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__created = executor.async([this]
+		tf::Taskflow taskflow;
+
+		tf::Task t1
 		{
-			__createSurface();
-			__createMainCommandBufferManager();
-			__initSurfaceDependencies();
-		});
+			taskflow.emplace([this]
+			{
+				__createSurface();
+			})
+		};
+
+		tf::Task t2
+		{
+			taskflow.emplace([this] (tf::Subflow &subflow)
+			{
+				__initSurfaceDependencies(subflow);
+			})
+		};
+		t2.succeed(t1);
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		__available = executor.run(std::move(taskflow));
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
 	{
-		__created.wait();
+		__available.wait();
+
 		__waitDeviceIdle();
 		__resetPipelines();
 		__destroyFramebuffer();
@@ -53,17 +67,17 @@ namespace HyperFast
 		{
 			__destroySyncObject(swapchainImageIter);
 			__destroySwapchainImageView(swapchainImageIter);
+			__destroyMainCommandBufferManager(swapchainImageIter);
 		}
 
 		__resetSwapchainImages();
 		__destroySwapchain(__swapchain);
-		__destroyMainCommandBufferManager();
 		__destroySurface();
 	}
 
 	bool ScreenManager::ScreenImpl::draw()
 	{
-		__created.wait();
+		__available.wait();
 		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };
 
 		uint32_t imageIdx{};
@@ -138,33 +152,74 @@ namespace HyperFast
 		return (presentResult == VkResult::VK_SUCCESS);
 	}
 
-	void ScreenManager::ScreenImpl::__initSurfaceDependencies()
+	void ScreenManager::ScreenImpl::__initSurfaceDependencies(tf::Subflow &subflow)
 	{
-		__checkSurfaceSupport();
-		__querySurfaceCapabilities();
-		__querySupportedSurfaceFormats();
-		__querySupportedSurfacePresentModes();
-		__createSwapchain(VK_NULL_HANDLE);
-		__retrieveSwapchainImages();
-		__reserveSwapchainImageDependencyPlaceholers();
-
-		const size_t numSwapchainImages{ __swapChainImages.size() };
-		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+		tf::Task t1
 		{
-			__createSwapchainImageView(swapchainImageIter);
-			__createSyncObject(swapchainImageIter);
-		}
+			subflow.emplace([this]
+			{
+				__checkSurfaceSupport();
+				__querySurfaceCapabilities();
+				__querySupportedSurfaceFormats();
+				__querySupportedSurfacePresentModes();
+				__createSwapchain(VK_NULL_HANDLE);
+				__retrieveSwapchainImages();
+				__reserveSwapchainImageDependencyPlaceholers();
+				__resetFrameCursor();
+			})
+		};
 
-		// 스왑체인과 디펜던시
-		__createRenderPasses();
-		__createFramebuffer();
-		__populatePipelineBuildParam();
-		__buildPipelines();
+		tf::Task t2
+		{
+			subflow.emplace([this](tf::Subflow &subflow)
+			{
+				tf::Task t1
+				{
+					subflow.emplace([this]
+					{
+						__createRenderPasses();
+					})
+				};
 
-		// 스왑체인과 디펜던시
+				tf::Task t2
+				{
+					subflow.emplace([this]
+					{
+						__createFramebuffer();
+					})
+				};
+				t2.succeed(t1);
 
-		// 모든것과 디펜던시
-		__recordMainCommands();
+				tf::Task t3
+				{
+					subflow.emplace([this]
+					{
+						__populatePipelineBuildParam();
+						__buildPipelines();
+					})
+				};
+				t3.succeed(t1);
+			})
+		};
+		t2.succeed(t1);
+
+		tf::Task t3
+		{
+			subflow.emplace([this](tf::Subflow &subflow)
+			{
+				const size_t numSwapchainImages{ __swapChainImages.size() };
+				for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+				{
+					subflow.emplace([this, imageIdx = swapchainImageIter]
+					{
+						__createMainCommandBufferManager(imageIdx);
+						__createSwapchainImageView(imageIdx);
+						__createSyncObject(imageIdx);
+					});
+				}
+			})
+		};
+		t3.succeed(t1);
 	}
 
 	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
@@ -191,23 +246,25 @@ namespace HyperFast
 		__querySupportedSurfaceFormats();
 		__querySupportedSurfacePresentModes();
 		__createSwapchain(oldSwapchain);
+		__destroySwapchain(oldSwapchain);
+
 		__retrieveSwapchainImages();
 		__reserveSwapchainImageDependencyPlaceholers();
-
-		const size_t newNumSwapchainImages{ __swapChainImages.size() };
-		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < newNumSwapchainImages; swapchainImageIter++)
-		{
-			__createSwapchainImageView(swapchainImageIter);
-			__createSyncObject(swapchainImageIter);
-		}
+		__resetFrameCursor();
 
 		__createRenderPasses();
 		__createFramebuffer();
 		__populatePipelineBuildParam();
 		__buildPipelines();
-		__recordMainCommands();
 
-		__destroySwapchain(oldSwapchain);
+		const size_t newNumSwapchainImages{ __swapChainImages.size() };
+		for (size_t swapchainImageIter = 0ULL; swapchainImageIter < newNumSwapchainImages; swapchainImageIter++)
+		{
+			__createMainCommandBufferManager(swapchainImageIter);
+			__createSwapchainImageView(swapchainImageIter);
+			__createSyncObject(swapchainImageIter);
+			__recordMainCommand(swapchainImageIter);
+		}
 	}
 
 	void ScreenManager::ScreenImpl::__createSurface()
@@ -229,17 +286,6 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__destroySurface() noexcept
 	{
 		__instanceProc.vkDestroySurfaceKHR(__instance, __surface, nullptr);
-	}
-
-	void ScreenManager::ScreenImpl::__createMainCommandBufferManager()
-	{
-		__pMainCommandBufferManager = std::make_unique<CommandBufferManager>(
-			__device, __deviceProc, __graphicsQueueFamilyIndex, 20ULL);
-	}
-
-	void ScreenManager::ScreenImpl::__destroyMainCommandBufferManager() noexcept
-	{
-		__pMainCommandBufferManager = nullptr;
 	}
 
 	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const
@@ -401,10 +447,26 @@ namespace HyperFast
 	{
 		const size_t numSwapchainImages{ __swapChainImages.size() };
 
+		__mainCommandBufferManagers.resize(numSwapchainImages, nullptr);
+		__mainCommandBuffers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
 		__presentCompleteSemaphores.resize(numSwapchainImages, VK_NULL_HANDLE);
 		__renderCompleteSemaphores.resize(numSwapchainImages, VK_NULL_HANDLE);
 		__renderCompleteFences.resize(numSwapchainImages, VK_NULL_HANDLE);
+	}
+
+	void ScreenManager::ScreenImpl::__createMainCommandBufferManager(const size_t imageIdx)
+	{
+		CommandBufferManager *&pManager{ __mainCommandBufferManagers[imageIdx] };
+		if (pManager)
+			return;
+
+		pManager = new CommandBufferManager{ __device, __deviceProc, __graphicsQueueFamilyIndex, 8ULL };
+	}
+
+	void ScreenManager::ScreenImpl::__destroyMainCommandBufferManager(const size_t imageIdx) noexcept
+	{
+		delete __mainCommandBufferManagers[imageIdx];
 	}
 
 	void ScreenManager::ScreenImpl::__createSwapchainImageView(const size_t imageIdx)
@@ -646,12 +708,8 @@ namespace HyperFast
 		__pipelineFactory.reset();
 	}
 
-	void ScreenManager::ScreenImpl::__recordMainCommands() noexcept
+	void ScreenManager::ScreenImpl::__recordMainCommand(const size_t imageIdx) noexcept
 	{
-		const size_t numBuffers{ __swapChainImageViews.size() };
-		__pMainCommandBufferManager->getNextBuffers(numBuffers, __mainCommandBuffers);
-		__frameCursor = 0ULL;
-
 		const VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
@@ -683,24 +741,22 @@ namespace HyperFast
 			.pClearValues = &clearColor
 		};
 
-		for (size_t bufferIter = 0ULL; bufferIter < numBuffers; bufferIter++)
-		{
-			const VkCommandBuffer commandBuffer{ __mainCommandBuffers[bufferIter] };
-			__deviceProc.vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+		// TODO: buffer manager 리셋 타임 확인 필요
+		const VkCommandBuffer commandBuffer{ __mainCommandBufferManagers[imageIdx]->getNextBuffer() };
+		__mainCommandBuffers[imageIdx] = commandBuffer;
 
-			const VkImageView colorAttachment{ __swapChainImageViews[bufferIter] };
-			renderPassAttachmentInfo.pAttachments = &colorAttachment;
+		const VkImageView colorAttachment{ __swapChainImageViews[imageIdx] };
+		renderPassAttachmentInfo.pAttachments = &colorAttachment;
 
-			__deviceProc.vkCmdBeginRenderPass(
-				commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+		__deviceProc.vkCmdBeginRenderPass(
+			commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-			__deviceProc.vkCmdBindPipeline(
-				commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
+		__deviceProc.vkCmdBindPipeline(
+			commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
 
-			__deviceProc.vkCmdDraw(commandBuffer, 3U, 1U, 0U, 0U);
-			__deviceProc.vkCmdEndRenderPass(commandBuffer);
-			__deviceProc.vkEndCommandBuffer(commandBuffer);
-		}
+		__deviceProc.vkCmdDraw(commandBuffer, 3U, 1U, 0U, 0U);
+		__deviceProc.vkCmdEndRenderPass(commandBuffer);
+		__deviceProc.vkEndCommandBuffer(commandBuffer);
 	}
 
 	void ScreenManager::ScreenImpl::__waitDeviceIdle() const noexcept

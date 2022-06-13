@@ -4,7 +4,6 @@
 #include "PhysicalDevicePicker.h"
 #include <shaderc/shaderc.hpp>
 #include "../glslc/file_includer.h"
-#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -13,7 +12,7 @@ namespace HyperFast
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__created = executor.async([this]
+		__available = executor.async([this]
 		{
 			__getInstanceVersion();
 			__checkInstanceVersionSupport();
@@ -41,7 +40,7 @@ namespace HyperFast
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
-		__created.wait();
+		__available.wait();
 		__waitDeviceIdle();
 		__destroyScreenManager();
 		__destroyDevice();
@@ -55,7 +54,7 @@ namespace HyperFast
 
 	ScreenManager &RenderingEngine::getScreenManager() noexcept
 	{
-		__created.wait();
+		__available.wait();
 		return *__pScreenManager;
 	}
 

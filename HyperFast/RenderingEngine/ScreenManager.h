@@ -4,7 +4,7 @@
 #include "PipelineFactory.h"
 #include "../Infrastructure/Logger.h"
 #include "CommandBufferManager.h"
-#include <future>
+#include "../Infrastructure/Environment.h"
 
 namespace HyperFast
 {
@@ -39,14 +39,15 @@ namespace HyperFast
 			Infra::Logger &__logger;
 
 			// 생성 완료 여부
-			std::future<void> __created;
+			tf::Future<void> __available;
 
 			// 상태 변수들
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			PipelineFactory __pipelineFactory;
 
 			VkSurfaceKHR __surface{};
-			std::unique_ptr<CommandBufferManager> __pMainCommandBufferManager;
+			std::vector<CommandBufferManager *> __mainCommandBufferManagers;
+			std::vector<VkCommandBuffer> __mainCommandBuffers;
 
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
@@ -66,16 +67,13 @@ namespace HyperFast
 			std::vector<VkSemaphore> __renderCompleteSemaphores;
 			std::vector<VkFence> __renderCompleteFences;
 
-			std::vector<VkCommandBuffer> __mainCommandBuffers;
 			size_t __frameCursor{};
 
-			void __initSurfaceDependencies();
+			void __initSurfaceDependencies(tf::Subflow &subflow);
 			void __updateSurfaceDependencies();
 
 			void __createSurface();
 			void __destroySurface() noexcept;
-			void __createMainCommandBufferManager();
-			void __destroyMainCommandBufferManager() noexcept;
 
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
@@ -86,6 +84,8 @@ namespace HyperFast
 			void __retrieveSwapchainImages() noexcept;
 			void __resetSwapchainImages() noexcept;
 			void __reserveSwapchainImageDependencyPlaceholers() noexcept;
+			void __createMainCommandBufferManager(const size_t imageIdx);
+			void __destroyMainCommandBufferManager(const size_t imageIdx) noexcept;
 			void __createSwapchainImageView(const size_t imageIdx);
 			void __destroySwapchainImageView(const size_t imageIdx) noexcept;
 			void __createRenderPasses();
@@ -98,7 +98,8 @@ namespace HyperFast
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines();
 			void __resetPipelines() noexcept;
-			void __recordMainCommands() noexcept;
+			void __recordMainCommand(const size_t imageIdx) noexcept;
+			constexpr void __resetFrameCursor() noexcept;
 
 			void __waitDeviceIdle() const noexcept;
 			VkResult __acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept;
@@ -130,4 +131,9 @@ namespace HyperFast
 
 		Infra::Logger &__logger;
 	};
+
+	constexpr void ScreenManager::ScreenImpl::__resetFrameCursor() noexcept
+	{
+		__frameCursor = 0ULL;
+	}
 }

@@ -15,7 +15,8 @@ namespace HyperFast
 		
 		~CommandBufferManager() noexcept;
 
-		void getNextBuffers(const size_t numBuffers, std::vector<VkCommandBuffer> &retVal);
+		[[nodiscard]]
+		VkCommandBuffer getNextBuffer();
 
 	private:
 		const VkDevice __device;
@@ -30,5 +31,6 @@ namespace HyperFast
 
 		void __createCommandPool();
 		void __destroyCommandPool() noexcept;
+		void __allocateCommandBuffers();
 	};
 }

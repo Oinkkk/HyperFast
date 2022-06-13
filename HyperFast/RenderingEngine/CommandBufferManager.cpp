@@ -9,6 +9,7 @@ namespace HyperFast
 		__queueFamilyIndex{ queueFamilyIndex }, __numMaxBuffers{ numMaxBuffers }
 	{
 		__createCommandPool();
+		__allocateCommandBuffers();
 	}
 
 	CommandBufferManager::~CommandBufferManager() noexcept
@@ -16,43 +17,18 @@ namespace HyperFast
 		__destroyCommandPool();
 	}
 
-	void CommandBufferManager::getNextBuffers(const size_t numBuffers, std::vector<VkCommandBuffer> &retVal)
+	VkCommandBuffer CommandBufferManager::getNextBuffer()
 	{
-		VkCommandBufferAllocateInfo allocInfo
+		if (__cursor >= __numMaxBuffers)
 		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.commandPool = __commandPool,
-			.level = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY
-		};
-
-		const size_t numCreated{ __commandBuffers.size() };
-		if ((numCreated + numBuffers) <= __numMaxBuffers)
-		{
-			allocInfo.commandBufferCount = uint32_t(numBuffers);
-			retVal.resize(numBuffers);
-
-			const VkResult result{ __deviceProc.vkAllocateCommandBuffers(__device, &allocInfo, retVal.data()) };
-			if (result != VK_SUCCESS)
-				throw std::exception{ "Cannot allocate command buffers." };
-
-			__commandBuffers.insert(__commandBuffers.end(), retVal.begin(), retVal.end());
-		}
-		else
-		{
-			if ((__cursor + numBuffers) > __numMaxBuffers)
-			{
-				__deviceProc.vkResetCommandPool(__device, __commandPool, 0U);
-				__cursor = 0ULL;
-			}
-
-			const auto from{ __commandBuffers.begin() + __cursor };
-			const auto to{ from + numBuffers };
-
-			retVal.clear();
-			retVal.insert(retVal.begin(), from, to);
+			__deviceProc.vkResetCommandPool(__device, __commandPool, 0U);
+			__cursor = 0ULL;
 		}
 
-		__cursor += numBuffers;
+		const VkCommandBuffer retVal{ __commandBuffers[__cursor] };
+		__cursor++;
+
+		return retVal;
 	}
 
 	void CommandBufferManager::__createCommandPool()
@@ -64,15 +40,29 @@ namespace HyperFast
 		};
 
 		__deviceProc.vkCreateCommandPool(__device, &createInfo, nullptr, &__commandPool);
-		if (__commandPool)
-			return;
-
-		throw std::exception{ "Cannot create the main command pool." };
+		if (!__commandPool)
+			throw std::exception{ "Cannot create the main command pool." };
 	}
 
 	void CommandBufferManager::__destroyCommandPool() noexcept
 	{
 		__deviceProc.vkDestroyCommandPool(__device, __commandPool, nullptr);
-		__commandPool = VK_NULL_HANDLE;
+	}
+
+	void CommandBufferManager::__allocateCommandBuffers()
+	{
+		const VkCommandBufferAllocateInfo allocInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.commandPool = __commandPool,
+			.level = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			.commandBufferCount = uint32_t(__numMaxBuffers)
+		};
+
+		__commandBuffers.resize(__numMaxBuffers);
+
+		const VkResult result{ __deviceProc.vkAllocateCommandBuffers(__device, &allocInfo, __commandBuffers.data()) };
+		if (result != VK_SUCCESS)
+			throw std::exception{ "Cannot allocate command buffers." };
 	}
 }
