@@ -31,6 +31,9 @@
     <Filter Include="Vertex">
       <UniqueIdentifier>{e47c3674-f8fe-46a7-a79c-8da5732912fa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Screen\ScreenManager">
+      <UniqueIdentifier>{d3063ed4-d584-47cb-811b-f270372cc5bf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -45,9 +48,6 @@
     <ClCompile Include="PipelineFactory.cpp">
       <Filter>PipelineFactory</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenManager.cpp">
-      <Filter>Screen</Filter>
-    </ClCompile>
     <ClCompile Include="PhysicalDevicePicker.cpp">
       <Filter>PhysicalDevicePicker</Filter>
     </ClCompile>
@@ -56,6 +56,15 @@
     </ClCompile>
     <ClCompile Include="Drawcall.cpp">
       <Filter>Drawcall</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenManager.cpp">
+      <Filter>Screen\ScreenManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenManager_ScreenImpl.cpp">
+      <Filter>Screen\ScreenManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenManager_ScreenImpl_Resource.cpp">
+      <Filter>Screen\ScreenManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -70,9 +79,6 @@
     </ClInclude>
     <ClInclude Include="PipelineFactory.h">
       <Filter>PipelineFactory</Filter>
-    </ClInclude>
-    <ClInclude Include="ScreenManager.h">
-      <Filter>Screen</Filter>
     </ClInclude>
     <ClInclude Include="PhysicalDevicePicker.h">
       <Filter>PhysicalDevicePicker</Filter>
@@ -94,6 +100,9 @@
     </ClInclude>
     <ClInclude Include="VertexAttributeUtil.h">
       <Filter>Vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenManager.h">
+      <Filter>Screen\ScreenManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
