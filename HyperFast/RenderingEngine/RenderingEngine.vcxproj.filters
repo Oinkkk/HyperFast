@@ -34,6 +34,9 @@
     <Filter Include="Screen\ScreenManager">
       <UniqueIdentifier>{d3063ed4-d584-47cb-811b-f270372cc5bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Buffer">
+      <UniqueIdentifier>{9c84abb3-382b-4a0c-9acc-1d3c7eb4c416}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -62,6 +65,15 @@
     </ClCompile>
     <ClCompile Include="ScreenManager_ScreenImpl.cpp">
       <Filter>Screen\ScreenManager</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferManager.cpp">
+      <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="Buffer.cpp">
+      <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferManager_BufferImpl.cpp">
+      <Filter>Buffer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +112,12 @@
     </ClInclude>
     <ClInclude Include="ScreenManager.h">
       <Filter>Screen\ScreenManager</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferManager.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffer.h">
+      <Filter>Buffer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

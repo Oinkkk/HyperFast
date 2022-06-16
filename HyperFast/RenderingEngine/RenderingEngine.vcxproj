@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Buffer.h" />
+    <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="MeshManager.h" />
@@ -25,6 +27,9 @@
     <ClInclude Include="VertexAttributeUtil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="BufferManager_BufferImpl.cpp" />
+    <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="CommandBufferManager.cpp" />
     <ClCompile Include="Drawcall.cpp" />
     <ClCompile Include="PhysicalDevicePicker.cpp" />

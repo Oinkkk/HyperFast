@@ -4,6 +4,7 @@
 #include "../Window/MainLooper.h"
 #include "../RenderingEngine/RenderingEngine.h"
 #include "../RenderingEngine/Screen.h"
+#include "BufferTestScene.h"
 
 int main()
 {
@@ -46,11 +47,17 @@ int main()
 	// mainLooper.getIdleEvent() += pIdleEventListener;
 
 	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
-	std::shared_ptr<HyperFast::Screen> pScreen1{ std::make_shared<HyperFast::Screen>(screenManager, win1) };
-	std::shared_ptr<HyperFast::Screen> pScreen2{ std::make_shared<HyperFast::Screen>(screenManager, win2) };
+	std::unique_ptr<HyperFast::Screen> pScreen1{ std::make_unique<HyperFast::Screen>(screenManager, win1) };
+	std::unique_ptr<HyperFast::Screen> pScreen2{ std::make_unique<HyperFast::Screen>(screenManager, win2) };
+
+	std::unique_ptr<BufferTestScene> pBufferTestScene
+	{
+		std::make_unique<BufferTestScene>(*pRenderingEngine, std::move(pScreen1), std::move(pScreen2))
+	};
 
 	mainLooper.start();
 
+	pBufferTestScene = nullptr;
 	pScreen2 = nullptr;
 	pScreen1 = nullptr;
 	pRenderingEngine = nullptr;
