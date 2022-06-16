@@ -13,7 +13,12 @@ public:
 
 	virtual ~BufferTestScene() noexcept;
 
+	void __createVertexBuffers();
+
 private:
 	std::unique_ptr<HyperFast::Screen> __pScreen1;
 	std::unique_ptr<HyperFast::Screen> __pScreen2;
+
+	std::shared_ptr<HyperFast::Buffer> __positionBuffer;
+	std::shared_ptr<HyperFast::Buffer> __colorBuffer;
 };

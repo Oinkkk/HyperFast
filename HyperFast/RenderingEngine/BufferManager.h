@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Infrastructure/Unique.h"
-#include "../VulkanLoader/VulkanLoader.h"
+#include "Memory.h"
+#include <memory>
 
 namespace HyperFast
 {
@@ -12,8 +12,8 @@ namespace HyperFast
 		{
 		public:
 			BufferImpl(
-				const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-				const VkDeviceSize memSize, const VkBufferUsageFlags usage);
+				const VkDevice device, const VKL::DeviceProcedure &deviceProc, MemoryManager &memoryManager,
+				const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 
 			~BufferImpl() noexcept;
 
@@ -21,20 +21,30 @@ namespace HyperFast
 			const VkDevice __device;
 			const VKL::DeviceProcedure &__deviceProc;
 
-			VkBuffer __buffer{};
+			MemoryManager &__memoryManager;
 
-			void __createBuffer(const VkDeviceSize memSize, const VkBufferUsageFlags usage);
+			VkBuffer __buffer{};
+			VkMemoryRequirements __memRequirements{};
+			std::unique_ptr<Memory> __pMemory;
+
+			void __createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 			void __destroyBuffer() noexcept;
+			void __queryMemoryRequirements() noexcept;
+			void __allocMemory();
+			void __freeMemory() noexcept;
 		};
 
-		BufferManager(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
+		BufferManager(
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc, MemoryManager &memoryManager) noexcept;
 
 		[[nodiscard]]
-		BufferImpl *create(const VkDeviceSize memSize, const VkBufferUsageFlags usage);
+		BufferImpl *create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 		void destroy(BufferImpl *const pImpl) noexcept;
 
 	private:
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
+
+		MemoryManager &__memoryManager;
 	};
 }

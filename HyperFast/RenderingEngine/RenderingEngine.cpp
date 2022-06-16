@@ -35,6 +35,7 @@ namespace HyperFast
 			__queryDeviceProc();
 			__queryGraphicsQueue();
 			__createScreenManager();
+			__createBufferManager();
 		});
 	}
 
@@ -42,6 +43,7 @@ namespace HyperFast
 	{
 		__available.wait();
 		__waitDeviceIdle();
+		__destroyBufferManager();
 		__destroyScreenManager();
 		__destroyDevice();
 
@@ -56,6 +58,12 @@ namespace HyperFast
 	{
 		__available.wait();
 		return *__pScreenManager;
+	}
+
+	BufferManager &RenderingEngine::getBufferManager() noexcept
+	{
+		__available.wait();
+		return *__pBufferManager;
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -307,6 +315,7 @@ namespace HyperFast
 
 		std::vector<const char *> enabledExtensions;
 		enabledExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		//enabledExtensions.emplace_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
 
 		const VkDeviceCreateInfo createInfo
 		{
@@ -353,6 +362,16 @@ namespace HyperFast
 	void RenderingEngine::__destroyScreenManager() noexcept
 	{
 		__pScreenManager = nullptr;
+	}
+
+	void RenderingEngine::__createBufferManager() noexcept
+	{
+		__pBufferManager = std::make_unique<BufferManager>(__device, __deviceProc);
+	}
+
+	void RenderingEngine::__destroyBufferManager() noexcept
+	{
+		__pBufferManager = nullptr;
 	}
 
 	void RenderingEngine::__waitDeviceIdle() const noexcept

@@ -86,6 +86,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceQueueFamilyProperties2"));
 
+		retVal.vkGetPhysicalDeviceMemoryProperties2 =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties2>(
+				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceMemoryProperties2"));
+
 		retVal.vkGetPhysicalDeviceWin32PresentationSupportKHR =
 			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(
 				__globalProc.vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));

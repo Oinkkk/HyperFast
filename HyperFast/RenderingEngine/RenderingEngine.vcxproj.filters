@@ -37,6 +37,9 @@
     <Filter Include="Buffer">
       <UniqueIdentifier>{9c84abb3-382b-4a0c-9acc-1d3c7eb4c416}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{55e8d6e0-095e-492e-97a6-c88f654cc0b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -74,6 +77,18 @@
     </ClCompile>
     <ClCompile Include="BufferManager_BufferImpl.cpp">
       <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryManager.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryManager_MemoryImpl.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryManager_MemoryBank.cpp">
+      <Filter>Memory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -118,6 +133,12 @@
     </ClInclude>
     <ClInclude Include="Buffer.h">
       <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryManager.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory.h">
+      <Filter>Memory</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

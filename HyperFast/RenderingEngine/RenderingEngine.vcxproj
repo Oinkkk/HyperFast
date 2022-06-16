@@ -15,6 +15,8 @@
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
     <ClInclude Include="Drawcall.h" />
+    <ClInclude Include="Memory.h" />
+    <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="MeshManager.h" />
     <ClInclude Include="PhysicalDevicePicker.h" />
     <ClInclude Include="PipelineFactory.h" />
@@ -32,6 +34,10 @@
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="CommandBufferManager.cpp" />
     <ClCompile Include="Drawcall.cpp" />
+    <ClCompile Include="Memory.cpp" />
+    <ClCompile Include="MemoryManager_MemoryBank.cpp" />
+    <ClCompile Include="MemoryManager_MemoryImpl.cpp" />
+    <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="PhysicalDevicePicker.cpp" />
     <ClCompile Include="PipelineFactory.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
@@ -108,6 +114,7 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableModules>true</EnableModules>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -130,6 +137,7 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnableModules>true</EnableModules>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
