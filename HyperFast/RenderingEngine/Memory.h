@@ -8,8 +8,9 @@ namespace HyperFast
 	{
 	public:
 		Memory(
-			MemoryManager &manager, const VkDeviceSize memSize,
-			const VkDeviceSize alignment, const uint32_t memoryTypeBits);
+			MemoryManager &manager,
+			const VkMemoryRequirements &memRequirements,
+			const VkMemoryPropertyFlags requiredProps, const bool linearity);
 		
 		~Memory() noexcept;
 

@@ -3,9 +3,8 @@
 namespace HyperFast
 {
 	MemoryManager::MemoryImpl::MemoryImpl(
-		MemoryBank &bank, const VkDeviceSize size,
-		const VkDeviceSize alignment, const bool linearity) noexcept :
-		__bank{ bank }, __size{ size }, __offset{ bank.allocate(size, alignment, linearity) }
+		MemoryBank &bank, const MemoryBank::MemorySegment &segment) noexcept :
+		__bank{ bank }, __size{ segment.size }, __offset{ bank.allocate(segment) }
 	{}
 
 	MemoryManager::MemoryImpl::~MemoryImpl() noexcept

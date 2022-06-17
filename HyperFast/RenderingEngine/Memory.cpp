@@ -3,9 +3,10 @@
 namespace HyperFast
 {
 	Memory::Memory(
-		MemoryManager &manager, const VkDeviceSize memSize,
-		const VkDeviceSize alignment, const uint32_t memoryTypeBits) :
-		__manager{ manager }, __pImpl{ manager.create(memSize, alignment, memoryTypeBits) }
+		MemoryManager &manager,
+		const VkMemoryRequirements &memRequirements,
+		const VkMemoryPropertyFlags requiredProps, const bool linearity) :
+		__manager{ manager }, __pImpl{ manager.create(memRequirements, requiredProps, linearity) }
 	{}
 
 	Memory::~Memory() noexcept

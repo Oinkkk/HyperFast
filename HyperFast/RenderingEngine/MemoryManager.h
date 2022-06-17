@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include <optional>
+#include <map>
 
 namespace HyperFast
 {
@@ -14,6 +15,15 @@ namespace HyperFast
 		class MemoryBank
 		{
 		public:
+			class MemorySegment
+			{
+			public:
+				const VkDeviceAddress offset;
+				const VkDeviceSize size;
+
+				constexpr MemorySegment(const VkDeviceAddress offset, const VkDeviceSize size) noexcept;
+			};
+
 			MemoryBank(
 				const VkDevice device, const VKL::DeviceProcedure &deviceProc,
 				const uint32_t memoryTypeIndex, const VkDeviceSize size);
@@ -24,23 +34,24 @@ namespace HyperFast
 			constexpr VkDeviceMemory getHandle() const noexcept;
 
 			[[nodiscard]]
-			bool isAllocatable(
-				const VkDeviceSize memSize, const VkDeviceSize alignment, const bool linearity) const noexcept;
+			std::optional<MemorySegment> findSegment(
+				const VkDeviceSize memSize, const VkDeviceSize alignment) const noexcept;
 
 			// offset
 			[[nodiscard]]
-			VkDeviceAddress allocate(
-				const VkDeviceSize memSize, const VkDeviceSize alignment, const bool linearity);
-
+			VkDeviceAddress allocate(const MemorySegment &segment) noexcept;
 			void free(const VkDeviceAddress offset) noexcept;
 
 		private:
 			const VkDevice __device;
 			const VKL::DeviceProcedure &__deviceProc;
+
 			const uint32_t __memoryTypeIndex;
 			const VkDeviceSize __size;
 
 			VkDeviceMemory __handle{};
+
+			std::map<VkDeviceAddress, VkDeviceSize> __segmentMap;
 
 			void __allocateBank();
 			void __freeBank() noexcept;
@@ -49,10 +60,7 @@ namespace HyperFast
 		class MemoryImpl final : public Infra::Unique
 		{
 		public:
-			MemoryImpl(
-				MemoryBank &bank, const VkDeviceSize size,
-				const VkDeviceSize alignment, const bool linearity) noexcept;
-			
+			MemoryImpl(MemoryBank &bank, const MemoryBank::MemorySegment &segment) noexcept;
 			~MemoryImpl() noexcept;
 
 			[[nodiscard]]
@@ -72,14 +80,12 @@ namespace HyperFast
 
 		MemoryManager(
 			const VkPhysicalDevice physicalDevice, const VKL::InstanceProcedure &instanceProc,
-			const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-			const VkDeviceSize bufferImageGranularity) noexcept;
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
 
 		[[nodiscard]]
 		MemoryImpl *create(
-			const VkDeviceSize memSize, const VkDeviceSize alignment,
-			const uint32_t memoryTypeBits, const VkMemoryPropertyFlags requiredProps,
-			const bool linearity);
+			const VkMemoryRequirements &memRequirements,
+			const VkMemoryPropertyFlags requiredProps, const bool linearity);
 		
 		void destroy(MemoryImpl *const pImpl) noexcept;
 
@@ -90,25 +96,24 @@ namespace HyperFast
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
 
-		const VkDeviceSize __bufferImageGranularity;
-
 		VkPhysicalDeviceMemoryProperties2 __deviceMemProps2{};
 		VkPhysicalDeviceMemoryBudgetPropertiesEXT __deviceMemBudget{};
 
 		// key: memoryTypeIndex
-		std::unordered_map<uint32_t, std::vector<std::unique_ptr<MemoryBank>>> __memoryBankListMap;
+		std::unordered_map<uint32_t, std::vector<std::unique_ptr<MemoryBank>>> __linearBankListMap;
+		std::unordered_map<uint32_t, std::vector<std::unique_ptr<MemoryBank>>> __tilingBankListMap;
 
-		static constexpr inline VkDeviceSize __defaultBankSize{ 64ULL << 20ULL };
+		static constexpr inline VkDeviceSize __linearBankSize{ 16ULL << 20ULL };
+		static constexpr inline VkDeviceSize __tilingBankSize{ 64ULL << 20ULL };
 
 		constexpr void __setupDeviceMemProps() noexcept;
 		void __updateDeviceMemProps() noexcept;
-
-		[[nodiscard]]
-		MemoryBank *__getBank(
-			const VkDeviceSize memSize, const VkDeviceSize alignment,
-			const uint32_t memoryTypeBits, const VkMemoryPropertyFlags requiredProps,
-			const bool linearity);
 	};
+
+	constexpr MemoryManager::MemoryBank::MemorySegment::MemorySegment(
+		const VkDeviceAddress offset, const VkDeviceSize size) noexcept :
+		offset{ offset }, size{ size }
+	{}
 
 	constexpr void MemoryManager::__setupDeviceMemProps() noexcept
 	{

@@ -1,4 +1,5 @@
 #include "MemoryManager.h"
+#include "../Infrastructure/Math.h"
 
 namespace HyperFast
 {
@@ -16,28 +17,38 @@ namespace HyperFast
 		__freeBank();
 	}
 
-	bool MemoryManager::MemoryBank::isAllocatable(
-		const VkDeviceSize memSize, const VkDeviceSize alignment, const bool linearity) const noexcept
+	std::optional<MemoryManager::MemoryBank::MemorySegment> MemoryManager::MemoryBank::findSegment(
+		const VkDeviceSize memSize, const VkDeviceSize alignment) const noexcept
 	{
+		for (auto segmentIter = __segmentMap.begin(); segmentIter != __segmentMap.end(); )
+		{
+			auto nextSegmentIter{ segmentIter };
+			nextSegmentIter++;
 
+			const VkDeviceAddress curOffset{ segmentIter->first };
+			const VkDeviceSize curSize{ segmentIter->second };
+
+			const bool endOfSegment{ nextSegmentIter != __segmentMap.end() };
+			const VkDeviceAddress nextOffset{ endOfSegment ? nextSegmentIter->first : __size };
+
+			const VkDeviceAddress targetOffset{ Infra::Math::ceilAlign(curOffset + curSize, alignment) };
+
+			if ((targetOffset + memSize) <= nextOffset)
+				return MemorySegment{ targetOffset, memSize };
+		}
+
+		return std::nullopt;
 	}
 
-	VkDeviceAddress MemoryManager::MemoryBank::allocate(
-		const VkDeviceSize memSize, const VkDeviceSize alignment, const bool linearity)
+	VkDeviceAddress MemoryManager::MemoryBank::allocate(const MemorySegment &segment)
 	{
-		/*
-			1. memoryTypeBits가 가리키는 타입 중 이미 할당된 뱅크가 있는 경우 거기서 쪼개서 반환
-			2. 뱅크는 용량으로 정렬된 메모리 세그먼트를 제공해야 함
-			3. 뱅크가 없다면 memoryTypeBits가 가리키는 모든 memory type 순회
-			4. 해당 memory type의 heap index를 기반으로 budget 조사 (메모리 할당 가능한지)
-			5. 할당 가능하다면 새로 할당. 메모리 용량이 기본 뱅크 크기보다 큰 경우 해당 크기에 맞추어 온전히 할당(3을 만족하는지 확인)
-			6. 1부터 반복
-		*/
+		__segmentMap.emplace(segment.offset, segment.size);
+		return segment.offset;
 	}
 
 	void MemoryManager::MemoryBank::free(const VkDeviceAddress offset) noexcept
 	{
-		
+		__segmentMap.erase(offset);
 	}
 
 	void MemoryManager::MemoryBank::__allocateBank()
