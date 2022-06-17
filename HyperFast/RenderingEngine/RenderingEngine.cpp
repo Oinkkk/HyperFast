@@ -35,6 +35,7 @@ namespace HyperFast
 			__queryDeviceProc();
 			__queryGraphicsQueue();
 			__createScreenManager();
+			__createMemoryManager();
 			__createBufferManager();
 		});
 	}
@@ -44,6 +45,7 @@ namespace HyperFast
 		__available.wait();
 		__waitDeviceIdle();
 		__destroyBufferManager();
+		__destroyMemoryManager();
 		__destroyScreenManager();
 		__destroyDevice();
 
@@ -58,6 +60,12 @@ namespace HyperFast
 	{
 		__available.wait();
 		return *__pScreenManager;
+	}
+
+	MemoryManager &RenderingEngine::getMemoryManager() noexcept
+	{
+		__available.wait();
+		return *__pMemoryManager;
 	}
 
 	BufferManager &RenderingEngine::getBufferManager() noexcept
@@ -362,6 +370,17 @@ namespace HyperFast
 	void RenderingEngine::__destroyScreenManager() noexcept
 	{
 		__pScreenManager = nullptr;
+	}
+
+	void RenderingEngine::__createMemoryManager() noexcept
+	{
+		__pMemoryManager = std::make_unique<MemoryManager>
+			(__physicalDevice, __instanceProc, __device, __deviceProc);
+	}
+
+	void RenderingEngine::__destroyMemoryManager() noexcept
+	{
+		__pMemoryManager = nullptr;
 	}
 
 	void RenderingEngine::__createBufferManager() noexcept

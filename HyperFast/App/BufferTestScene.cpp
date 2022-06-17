@@ -13,7 +13,13 @@ BufferTestScene::BufferTestScene(
 }
 
 BufferTestScene::~BufferTestScene() noexcept
-{}
+{
+	__pColorMemory = nullptr;
+	__pPositionMemory = nullptr;
+
+	__pColorBuffer = nullptr;
+	__pPositionBuffer = nullptr;
+}
 
 void BufferTestScene::__createVertexBuffers()
 {
@@ -27,6 +33,12 @@ void BufferTestScene::__createVertexBuffers()
 	colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
 	colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 
-	__positionBuffer = _createVertexBuffer(sizeof(glm::vec3) * positions.size(), positions.data());
-	__colorBuffer = _createVertexBuffer(sizeof(glm::vec4) * colors.size(), colors.data());
+	__pPositionBuffer = _createVertexBuffer(sizeof(glm::vec3) * positions.size());
+	__pColorBuffer = _createVertexBuffer(sizeof(glm::vec4) * colors.size());
+
+	__pPositionMemory = _createVertexMemory(__pPositionBuffer->getMemoryRequirements());
+	__pColorMemory = _createVertexMemory(__pColorBuffer->getMemoryRequirements());
+
+	__pPositionBuffer->bindMemory(*__pPositionMemory, 0ULL);
+	__pColorBuffer->bindMemory(*__pColorMemory, 0ULL);
 }

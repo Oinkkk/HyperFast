@@ -17,9 +17,9 @@ namespace HyperFast
 		__destroyBuffer();
 	}
 
-	void BufferManager::BufferImpl::bindMemory(Memory *const pMemory, const VkDeviceAddress offset) noexcept
+	void BufferManager::BufferImpl::bindMemory(Memory &memory, const VkDeviceAddress offset) noexcept
 	{
-		__deviceProc.vkBindBufferMemory(__device, __buffer, pMemory->getBank(), pMemory->getOffset() + offset);
+		__deviceProc.vkBindBufferMemory(__device, __buffer, memory.getBank(), memory.getOffset() + offset);
 	}
 
 	void BufferManager::BufferImpl::__createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage)

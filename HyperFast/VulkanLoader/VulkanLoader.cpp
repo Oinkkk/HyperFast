@@ -300,6 +300,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkGetBufferMemoryRequirements>(
 				vkGetDeviceProcAddr(device, "vkGetBufferMemoryRequirements"));
 
+		retVal.vkBindBufferMemory =
+			reinterpret_cast<PFN_vkBindBufferMemory>(
+				vkGetDeviceProcAddr(device, "vkBindBufferMemory"));
+
 		retVal.vkAllocateMemory =
 			reinterpret_cast<PFN_vkAllocateMemory>(
 				vkGetDeviceProcAddr(device, "vkAllocateMemory"));
@@ -308,9 +312,17 @@ namespace VKL
 			reinterpret_cast<PFN_vkFreeMemory>(
 				vkGetDeviceProcAddr(device, "vkFreeMemory"));
 
-		retVal.vkBindBufferMemory =
-			reinterpret_cast<PFN_vkBindBufferMemory>(
-				vkGetDeviceProcAddr(device, "vkBindBufferMemory"));
+		retVal.vkMapMemory =
+			reinterpret_cast<PFN_vkMapMemory>(
+				vkGetDeviceProcAddr(device, "vkMapMemory"));
+
+		retVal.vkUnmapMemory =
+			reinterpret_cast<PFN_vkUnmapMemory>(
+				vkGetDeviceProcAddr(device, "vkUnmapMemory"));
+
+		retVal.vkFlushMappedMemoryRanges =
+			reinterpret_cast<PFN_vkFlushMappedMemoryRanges>(
+				vkGetDeviceProcAddr(device, "vkFlushMappedMemoryRanges"));
 
 		// commands
 

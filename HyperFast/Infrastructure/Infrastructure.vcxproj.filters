@@ -25,6 +25,9 @@
     <ClInclude Include="Environment.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Unique">
@@ -47,6 +50,9 @@
     </Filter>
     <Filter Include="Environment">
       <UniqueIdentifier>{63cd89bc-b081-4a93-bb3a-22a788cfcdf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{65971f57-f77e-43e3-ac76-528287f65e67}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

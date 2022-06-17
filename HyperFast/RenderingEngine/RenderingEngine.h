@@ -4,6 +4,7 @@
 #include "../VulkanLoader/VulkanLoader.h"
 #include "../Infrastructure/Logger.h"
 #include "ScreenManager.h"
+#include "MemoryManager.h"
 #include "BufferManager.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
@@ -18,6 +19,9 @@ namespace HyperFast
 
 		[[nodiscard]]
 		ScreenManager &getScreenManager() noexcept;
+
+		[[nodiscard]]
+		MemoryManager &getMemoryManager() noexcept;
 
 		[[nodiscard]]
 		BufferManager &getBufferManager() noexcept;
@@ -51,6 +55,7 @@ namespace HyperFast
 		VkQueue __graphicsQueue{};
 
 		std::unique_ptr<ScreenManager> __pScreenManager;
+		std::unique_ptr<MemoryManager> __pMemoryManager;
 		std::unique_ptr<BufferManager> __pBufferManager;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
@@ -73,6 +78,9 @@ namespace HyperFast
 
 		void __createScreenManager() noexcept;
 		void __destroyScreenManager() noexcept;
+
+		void __createMemoryManager() noexcept;
+		void __destroyMemoryManager() noexcept;
 
 		void __createBufferManager() noexcept;
 		void __destroyBufferManager() noexcept;

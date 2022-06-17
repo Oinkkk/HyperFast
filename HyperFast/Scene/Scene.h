@@ -13,7 +13,10 @@ namespace Jin
 
 	protected:
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Buffer> _createVertexBuffer(const VkDeviceSize memSize, const void *const pData);
+		std::shared_ptr<HyperFast::Buffer> _createVertexBuffer(const VkDeviceSize dataSize);
+
+		[[nodiscard]]
+		std::shared_ptr<HyperFast::Memory> _createVertexMemory(const VkMemoryRequirements &memRequirements);
 
 	private:
 		HyperFast::RenderingEngine &__renderingEngine;

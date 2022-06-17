@@ -19,7 +19,7 @@ namespace HyperFast
 
 			[[nodiscard]]
 			constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
-			void bindMemory(Memory *const pMemory, const VkDeviceAddress offset) noexcept;
+			void bindMemory(Memory &memory, const VkDeviceAddress offset) noexcept;
 
 		private:
 			const VkDevice __device;

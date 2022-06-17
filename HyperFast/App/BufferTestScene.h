@@ -19,6 +19,9 @@ private:
 	std::unique_ptr<HyperFast::Screen> __pScreen1;
 	std::unique_ptr<HyperFast::Screen> __pScreen2;
 
-	std::shared_ptr<HyperFast::Buffer> __positionBuffer;
-	std::shared_ptr<HyperFast::Buffer> __colorBuffer;
+	std::shared_ptr<HyperFast::Buffer> __pPositionBuffer;
+	std::shared_ptr<HyperFast::Buffer> __pColorBuffer;
+
+	std::shared_ptr<HyperFast::Memory> __pPositionMemory;
+	std::shared_ptr<HyperFast::Memory> __pColorMemory;
 };

@@ -26,7 +26,8 @@ namespace HyperFast
 
 			MemoryBank(
 				const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-				const uint32_t memoryTypeIndex, const VkDeviceSize size);
+				const uint32_t memoryTypeIndex, const VkMemoryPropertyFlags props,
+				const VkDeviceSize nonCoherentAtomSize, const VkDeviceSize size);
 
 			~MemoryBank() noexcept;
 
@@ -42,16 +43,31 @@ namespace HyperFast
 			VkDeviceAddress allocate(const MemorySegment &segment) noexcept;
 			void free(const VkDeviceAddress offset) noexcept;
 
+			[[nodiscard]]
+			constexpr bool isHostCoherent() const noexcept;
+
+			[[nodiscard]]
+			void map(const VkDeviceAddress offset, const VkDeviceSize size) noexcept;
+			void unmap() noexcept;
+
+			void write(const VkDeviceSize srcOffset, const VkDeviceSize size, const void *pData) noexcept;
+			void read(const VkDeviceAddress srcOffset, const VkDeviceSize size, void *const pBuffer) noexcept;
+
 		private:
 			const VkDevice __device;
 			const VKL::DeviceProcedure &__deviceProc;
 
 			const uint32_t __memoryTypeIndex;
+			const VkMemoryPropertyFlags __props;
+			const VkDeviceSize __nonCoherentAtomSize;
+
 			const VkDeviceSize __size;
 
 			VkDeviceMemory __handle{};
 
 			std::map<VkDeviceAddress, VkDeviceSize> __segmentMap;
+
+			std::byte *__mapped{};
 
 			void __allocateBank();
 			void __freeBank() noexcept;
@@ -71,6 +87,9 @@ namespace HyperFast
 
 			[[nodiscard]]
 			constexpr VkDeviceAddress getOffset() const noexcept;
+
+			[[nodiscard]]
+			void *map(const VkDeviceSize size, const VkDeviceAddress offset) noexcept;
 
 		private:
 			MemoryBank &__bank;
@@ -141,5 +160,10 @@ namespace HyperFast
 	constexpr VkDeviceMemory MemoryManager::MemoryBank::getHandle() const noexcept
 	{
 		return __handle;
+	}
+
+	constexpr bool MemoryManager::MemoryBank::isHostCoherent() const noexcept
+	{
+		return (__props & VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	}
 }

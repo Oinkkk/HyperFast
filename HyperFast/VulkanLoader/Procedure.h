@@ -82,9 +82,12 @@ namespace VKL
 		PFN_vkCreateBuffer vkCreateBuffer{};
 		PFN_vkDestroyBuffer vkDestroyBuffer{};
 		PFN_vkGetBufferMemoryRequirements vkGetBufferMemoryRequirements{};
+		PFN_vkBindBufferMemory vkBindBufferMemory{};
 		PFN_vkAllocateMemory vkAllocateMemory{};
 		PFN_vkFreeMemory vkFreeMemory{};
-		PFN_vkBindBufferMemory vkBindBufferMemory{};
+		PFN_vkMapMemory vkMapMemory{};
+		PFN_vkUnmapMemory vkUnmapMemory{};
+		PFN_vkFlushMappedMemoryRanges vkFlushMappedMemoryRanges{};
 
 		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
 		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};
