@@ -13,15 +13,21 @@ namespace HyperFast
 	}
 
 	MemoryManager::MemoryImpl *MemoryManager::create(
-		const VkDeviceSize memSize, const VkDeviceSize alignment, const uint32_t memoryTypeBits)
+		const VkDeviceSize memSize, const VkDeviceSize alignment,
+		const uint32_t memoryTypeBits, const VkMemoryPropertyFlags requiredProps,
+		const bool linearity)
 	{
 		__updateDeviceMemProps();
 
-		MemoryBank *const pMemoryBank{ __getMemoryBank(memSize, alignment, memoryTypeBits) };
-		if (!pMemoryBank)
+		MemoryManager::MemoryBank *const pBank
+		{
+			__getBank(memSize, alignment, memoryTypeBits, requiredProps, linearity)
+		};
+
+		if (!pBank)
 			throw std::exception{ "Cannot retrieve a MemoryBank." };
 
-		return new MemoryImpl{ *pMemoryBank, memSize, alignment };
+		return new MemoryImpl{ *pBank, memSize, alignment, linearity };
 	}
 
 	void MemoryManager::destroy(MemoryImpl *const pImpl) noexcept
@@ -34,26 +40,55 @@ namespace HyperFast
 		__instanceProc.vkGetPhysicalDeviceMemoryProperties2(__physicalDevice, &__deviceMemProps2);
 	}
 
-	MemoryManager::MemoryBank *MemoryManager::__getMemoryBank(
-		const VkDeviceSize memSize, const VkDeviceSize alignment, const uint32_t memoryTypeBits)
+	MemoryManager::MemoryBank *MemoryManager::__getBank(
+		const VkDeviceSize memSize, const VkDeviceSize alignment,
+		const uint32_t memoryTypeBits, const VkMemoryPropertyFlags requiredProps,
+		const bool linearity)
 	{
+		MemoryBank *pRetVal{};
+
 		for (
-			uint32_t memoryTypeIter = 0U;
-			memoryTypeIter < __deviceMemProps2.memoryProperties.memoryTypeCount;
-			memoryTypeIter++)
+			uint32_t memoryTypeIndex = 0U;
+			memoryTypeIndex < __deviceMemProps2.memoryProperties.memoryTypeCount;
+			memoryTypeIndex++)
 		{
-			if (memoryTypeBits & (1U << memoryTypeIter));
+			if (!(memoryTypeBits & (1U << memoryTypeIndex)))
+				continue;
+
+			const VkMemoryType &memoryType
+			{
+				__deviceMemProps2.memoryProperties.memoryTypes[memoryTypeIndex]
+			};
+
+			if ((memoryType.propertyFlags & requiredProps) != requiredProps)
+				continue;
+
+			std::vector<std::unique_ptr<MemoryBank>> &memoryBankList{ __memoryBankListMap[memoryTypeIndex] };
+			if (memoryBankList.empty())
+			{
+				if (__deviceMemBudget.heapBudget[memoryType.heapIndex] < memSize)
+					continue;
+
+				std::unique_ptr<MemoryBank> pNewBank
+				{
+					std::make_unique<MemoryBank>(
+						__device, __deviceProc, memoryTypeIndex,
+						std::max(__defaultBankSize, memSize))
+				};
+
+				pRetVal = pNewBank.get();
+				memoryBankList.emplace_back(std::move(pNewBank));
+				break;
+			}
+
+			MemoryBank *const pBank{ memoryBankList.back().get() };
+			if (pBank->isAllocatable(memSize, alignment, linearity))
+			{
+				pRetVal = pBank;
+				break;
+			}
 		}
 
-		/*
-			1. memoryTypeBits가 가리키는 타입 중 이미 할당된 뱅크가 있는 경우 거기서 쪼개서 반환
-			2. 뱅크는 용량으로 정렬된 메모리 세그먼트를 제공해야 함
-			3. 뱅크가 없다면 memoryTypeBits가 가리키는 모든 memory type 순회
-			4. 해당 memory type의 heap index를 기반으로 budget 조사 (메모리 할당 가능한지)
-			5. 할당 가능하다면 새로 할당. 메모리 용량이 기본 뱅크 크기보다 큰 경우 해당 크기에 맞추어 온전히 할당(3을 만족하는지 확인)
-			6. 1부터 반복
-		*/
-
-		return nullptr;
+		return pRetVal;
 	}
 }

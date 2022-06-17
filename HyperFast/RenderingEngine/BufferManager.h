@@ -12,30 +12,29 @@ namespace HyperFast
 		{
 		public:
 			BufferImpl(
-				const VkDevice device, const VKL::DeviceProcedure &deviceProc, MemoryManager &memoryManager,
+				const VkDevice device, const VKL::DeviceProcedure &deviceProc,
 				const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 
 			~BufferImpl() noexcept;
+
+			[[nodiscard]]
+			constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
+			void bindMemory(Memory *const pMemory, const VkDeviceAddress offset) noexcept;
 
 		private:
 			const VkDevice __device;
 			const VKL::DeviceProcedure &__deviceProc;
 
-			MemoryManager &__memoryManager;
-
 			VkBuffer __buffer{};
 			VkMemoryRequirements __memRequirements{};
-			std::unique_ptr<Memory> __pMemory;
 
 			void __createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 			void __destroyBuffer() noexcept;
 			void __queryMemoryRequirements() noexcept;
-			void __allocMemory();
-			void __freeMemory() noexcept;
 		};
 
 		BufferManager(
-			const VkDevice device, const VKL::DeviceProcedure &deviceProc, MemoryManager &memoryManager) noexcept;
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
 
 		[[nodiscard]]
 		BufferImpl *create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
@@ -44,7 +43,10 @@ namespace HyperFast
 	private:
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
-
-		MemoryManager &__memoryManager;
 	};
+
+	constexpr const VkMemoryRequirements &BufferManager::BufferImpl::getMemoryRequirements() const noexcept
+	{
+		return __memRequirements;
+	}
 }

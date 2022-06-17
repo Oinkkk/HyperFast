@@ -4,19 +4,22 @@
 namespace HyperFast
 {
 	BufferManager::BufferImpl::BufferImpl(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc, MemoryManager &memoryManager,
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
 		const VkDeviceSize dataSize, const VkBufferUsageFlags usage) :
-		__device{ device }, __deviceProc{ deviceProc }, __memoryManager{ memoryManager }
+		__device{ device }, __deviceProc{ deviceProc }
 	{
 		__createBuffer(dataSize, usage);
 		__queryMemoryRequirements();
-		__allocMemory();
 	}
 
 	BufferManager::BufferImpl::~BufferImpl() noexcept
 	{
-		__freeMemory();
 		__destroyBuffer();
+	}
+
+	void BufferManager::BufferImpl::bindMemory(Memory *const pMemory, const VkDeviceAddress offset) noexcept
+	{
+		__deviceProc.vkBindBufferMemory(__device, __buffer, pMemory->getBank(), pMemory->getOffset() + offset);
 	}
 
 	void BufferManager::BufferImpl::__createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage)
@@ -43,16 +46,4 @@ namespace HyperFast
 	{
 		__deviceProc.vkGetBufferMemoryRequirements(__device, __buffer, &__memRequirements);
  	}
-
-	void BufferManager::BufferImpl::__allocMemory()
-	{
-		__pMemory = std::make_unique<Memory>(
-			__memoryManager, __memRequirements.size,
-			__memRequirements.alignment, __memRequirements.memoryTypeBits);
-	}
-
-	void BufferManager::BufferImpl::__freeMemory() noexcept
-	{
-		__pMemory = nullptr;
-	}
 }

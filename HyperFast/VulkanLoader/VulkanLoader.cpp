@@ -264,22 +264,6 @@ namespace VKL
 			reinterpret_cast<PFN_vkDestroyPipeline>(
 				vkGetDeviceProcAddr(device, "vkDestroyPipeline"));
 
-		retVal.vkCmdBeginRenderPass =
-			reinterpret_cast<PFN_vkCmdBeginRenderPass>(
-				vkGetDeviceProcAddr(device, "vkCmdBeginRenderPass"));
-
-		retVal.vkCmdEndRenderPass =
-			reinterpret_cast<PFN_vkCmdEndRenderPass>(
-				vkGetDeviceProcAddr(device, "vkCmdEndRenderPass"));
-
-		retVal.vkCmdBindPipeline =
-			reinterpret_cast<PFN_vkCmdBindPipeline>(
-				vkGetDeviceProcAddr(device, "vkCmdBindPipeline"));
-
-		retVal.vkCmdDraw =
-			reinterpret_cast<PFN_vkCmdDraw>(
-				vkGetDeviceProcAddr(device, "vkCmdDraw"));
-
 		retVal.vkCreateSemaphore =
 			reinterpret_cast<PFN_vkCreateSemaphore>(
 				vkGetDeviceProcAddr(device, "vkCreateSemaphore"));
@@ -315,6 +299,36 @@ namespace VKL
 		retVal.vkGetBufferMemoryRequirements =
 			reinterpret_cast<PFN_vkGetBufferMemoryRequirements>(
 				vkGetDeviceProcAddr(device, "vkGetBufferMemoryRequirements"));
+
+		retVal.vkAllocateMemory =
+			reinterpret_cast<PFN_vkAllocateMemory>(
+				vkGetDeviceProcAddr(device, "vkAllocateMemory"));
+
+		retVal.vkFreeMemory =
+			reinterpret_cast<PFN_vkFreeMemory>(
+				vkGetDeviceProcAddr(device, "vkFreeMemory"));
+
+		retVal.vkBindBufferMemory =
+			reinterpret_cast<PFN_vkBindBufferMemory>(
+				vkGetDeviceProcAddr(device, "vkBindBufferMemory"));
+
+		// commands
+
+		retVal.vkCmdBeginRenderPass =
+			reinterpret_cast<PFN_vkCmdBeginRenderPass>(
+				vkGetDeviceProcAddr(device, "vkCmdBeginRenderPass"));
+
+		retVal.vkCmdEndRenderPass =
+			reinterpret_cast<PFN_vkCmdEndRenderPass>(
+				vkGetDeviceProcAddr(device, "vkCmdEndRenderPass"));
+
+		retVal.vkCmdBindPipeline =
+			reinterpret_cast<PFN_vkCmdBindPipeline>(
+				vkGetDeviceProcAddr(device, "vkCmdBindPipeline"));
+
+		retVal.vkCmdDraw =
+			reinterpret_cast<PFN_vkCmdDraw>(
+				vkGetDeviceProcAddr(device, "vkCmdDraw"));
 
 		return retVal;
 	}
