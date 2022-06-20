@@ -92,6 +92,7 @@ namespace VKL
 		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
 		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};
 		PFN_vkCmdBindPipeline vkCmdBindPipeline{};
+		PFN_vkCmdBindVertexBuffers vkCmdBindVertexBuffers{};
 		PFN_vkCmdDraw vkCmdDraw{};
 	};
 }

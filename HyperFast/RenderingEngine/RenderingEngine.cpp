@@ -74,6 +74,11 @@ namespace HyperFast
 		return *__pBufferManager;
 	}
 
+	std::shared_ptr<Mesh> RenderingEngine::createMesh() noexcept
+	{
+		return std::make_shared<Mesh>(__deviceProc);
+	}
+
 	void RenderingEngine::__getInstanceVersion() noexcept
 	{
 		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
@@ -284,9 +289,16 @@ namespace HyperFast
 	{
 		const void *pNext{};
 
+		VkPhysicalDeviceRobustness2FeaturesEXT deviceRobustness2Features
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
+			.nullDescriptor = VK_TRUE
+		};
+
 		VkPhysicalDeviceVulkan13Features device13Features
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+			.pNext = &deviceRobustness2Features,
 			.pipelineCreationCacheControl = VK_TRUE,
 			.synchronization2 = VK_TRUE
 		};
@@ -323,7 +335,7 @@ namespace HyperFast
 
 		std::vector<const char *> enabledExtensions;
 		enabledExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-		//enabledExtensions.emplace_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
+		enabledExtensions.emplace_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
 
 		const VkDeviceCreateInfo createInfo
 		{

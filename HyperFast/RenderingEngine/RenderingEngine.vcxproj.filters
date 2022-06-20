@@ -90,6 +90,9 @@
     <ClCompile Include="MemoryManager_MemoryBank.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -112,9 +115,6 @@
     </ClInclude>
     <ClInclude Include="Drawcall.h">
       <Filter>Drawcall</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshManager.h">
-      <Filter>Mesh</Filter>
     </ClInclude>
     <ClInclude Include="SizeUtil.h">
       <Filter>Common</Filter>
@@ -139,6 +139,12 @@
     </ClInclude>
     <ClInclude Include="Memory.h">
       <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Constant.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

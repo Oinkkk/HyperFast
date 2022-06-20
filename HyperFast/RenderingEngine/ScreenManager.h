@@ -5,6 +5,7 @@
 #include "../Infrastructure/Logger.h"
 #include "CommandBufferManager.h"
 #include "../Infrastructure/Environment.h"
+#include "Drawcall.h"
 
 namespace HyperFast
 {
@@ -22,6 +23,8 @@ namespace HyperFast
 
 			~ScreenImpl() noexcept;
 
+			void setDrawcall(Drawcall *const pDrawcall) noexcept;
+
 		private:
 			const VkInstance __instance;
 			const VKL::InstanceProcedure &__instanceProc;
@@ -37,6 +40,8 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Win::Window &, Win::Window::ResizingType>> __pResizeEventListener;
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDrawEventListener;
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDestroyEventListener;
+
+			Drawcall *__pDrawcall{};
 
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			PipelineFactory __pipelineFactory;

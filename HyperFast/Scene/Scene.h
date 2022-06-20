@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../RenderingEngine/RenderingEngine.h"
-#include "../RenderingEngine/Buffer.h"
+#include "../RenderingEngine/Drawcall.h"
 
 namespace Jin
 {
@@ -13,12 +13,16 @@ namespace Jin
 
 	protected:
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Buffer> _createVertexBuffer(const VkDeviceSize dataSize);
+		std::shared_ptr<HyperFast::Buffer> _createVertexBuffer(const VkDeviceSize dataSize) const;
 
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Memory> _createVertexMemory(const VkMemoryRequirements &memRequirements);
+		std::shared_ptr<HyperFast::Memory> _createVertexMemory(const VkMemoryRequirements &memRequirements) const;
+
+		[[nodiscard]]
+		std::shared_ptr<HyperFast::Mesh> _createMesh() noexcept;
 
 	private:
 		HyperFast::RenderingEngine &__renderingEngine;
+		HyperFast::Drawcall __drawcall;
 	};
 }

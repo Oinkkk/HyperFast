@@ -4,10 +4,9 @@
 #include "../VulkanLoader/VulkanLoader.h"
 #include "../Infrastructure/Logger.h"
 #include "ScreenManager.h"
-#include "MemoryManager.h"
-#include "BufferManager.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
+#include "Mesh.h"
 
 namespace HyperFast
 {
@@ -25,6 +24,9 @@ namespace HyperFast
 
 		[[nodiscard]]
 		BufferManager &getBufferManager() noexcept;
+
+		[[nodiscard]]
+		std::shared_ptr<Mesh> createMesh() noexcept;
 
 	private:
 		Infra::Logger &__logger;

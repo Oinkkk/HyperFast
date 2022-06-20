@@ -22,6 +22,11 @@ namespace HyperFast
 		__destroy();
 	}
 
+	void ScreenManager::ScreenImpl::setDrawcall(Drawcall *const pDrawcall) noexcept
+	{
+		__pDrawcall = pDrawcall;
+	}
+
 	bool ScreenManager::ScreenImpl::__draw()
 	{
 		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };

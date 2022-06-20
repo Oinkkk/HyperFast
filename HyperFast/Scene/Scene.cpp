@@ -13,14 +13,14 @@ namespace Jin
 
 	}
 
-	std::shared_ptr<HyperFast::Buffer> Scene::_createVertexBuffer(const VkDeviceSize dataSize)
+	std::shared_ptr<HyperFast::Buffer> Scene::_createVertexBuffer(const VkDeviceSize dataSize) const
 	{
 		HyperFast::BufferManager &bufferManager{ __renderingEngine.getBufferManager() };
 		return std::make_shared<HyperFast::Buffer>(
 			bufferManager, dataSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 	}
 
-	std::shared_ptr<HyperFast::Memory> Scene::_createVertexMemory(const VkMemoryRequirements &memRequirements)
+	std::shared_ptr<HyperFast::Memory> Scene::_createVertexMemory(const VkMemoryRequirements &memRequirements) const
 	{
 		HyperFast::MemoryManager &memoryManager{ __renderingEngine.getMemoryManager() };
 
@@ -31,5 +31,13 @@ namespace Jin
 		};
 		
 		return std::make_shared<HyperFast::Memory>(memoryManager, memRequirements, requiredProps, true);
+	}
+
+	std::shared_ptr<HyperFast::Mesh> Scene::_createMesh() noexcept
+	{
+		std::shared_ptr<HyperFast::Mesh> pRetVal{ __renderingEngine.createMesh() };
+		__drawcall.addMesh(pRetVal);
+
+		return pRetVal;
 	}
 }

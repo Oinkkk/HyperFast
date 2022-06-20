@@ -21,11 +21,11 @@ namespace HyperFast
 
 		switch (attributeType)
 		{
-		case VertexAttributeFlagBit::POS:
+		case VertexAttributeFlagBit::POS3:
 			retVal = VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
 			break;
 
-		case VertexAttributeFlagBit::COLOR:
+		case VertexAttributeFlagBit::COLOR4:
 			retVal = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 			break;
 		}

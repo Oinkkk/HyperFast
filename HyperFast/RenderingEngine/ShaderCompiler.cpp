@@ -18,10 +18,10 @@ namespace HyperFast
 	void ShaderCompiler::setVertexAttributeFlag(const VertexAttributeFlag flag) noexcept
 	{
 		__setVertexAttributeFlagMacro(
-			"VERTEX_ATTRIB_POS", flag & VertexAttributeFlagBit::POS);
+			"VERTEX_ATTRIB_POS", flag & VertexAttributeFlagBit::POS3);
 
 		__setVertexAttributeFlagMacro(
-			"VERTEX_ATTRIB_COLOR", flag & VertexAttributeFlagBit::COLOR);
+			"VERTEX_ATTRIB_COLOR", flag & VertexAttributeFlagBit::COLOR4);
 	}
 
 	std::vector<uint32_t> ShaderCompiler::compile(const std::string_view &shaderPath, const shaderc_shader_kind shaderKind)

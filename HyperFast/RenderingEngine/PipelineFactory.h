@@ -3,6 +3,7 @@
 #include "ShaderCompiler.h"
 #include "../VulkanLoader/Procedure.h"
 #include "../Infrastructure/Environment.h"
+#include "VertexAttribute.h"
 
 namespace HyperFast
 {
@@ -12,6 +13,7 @@ namespace HyperFast
 		class BuildParam
 		{
 		public:
+			const std::unordered_set<VertexAttributeFlag> *pUsedAttribFlags{};
 			VkRenderPass renderPass{};
 			VkViewport viewport{};
 			VkRect2D scissor{};

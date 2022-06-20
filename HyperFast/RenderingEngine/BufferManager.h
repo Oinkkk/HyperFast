@@ -18,8 +18,11 @@ namespace HyperFast
 			~BufferImpl() noexcept;
 
 			[[nodiscard]]
+			constexpr VkBuffer getHandle() const noexcept;
+
+			[[nodiscard]]
 			constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
-			void bindMemory(Memory &memory, const VkDeviceAddress offset) noexcept;
+			void bindMemory(const std::shared_ptr<Memory> &pMemory, const VkDeviceAddress offset) noexcept;
 
 		private:
 			const VkDevice __device;
@@ -27,6 +30,8 @@ namespace HyperFast
 
 			VkBuffer __buffer{};
 			VkMemoryRequirements __memRequirements{};
+
+			std::shared_ptr<Memory> __pMemory;
 
 			void __createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 			void __destroyBuffer() noexcept;
@@ -44,6 +49,11 @@ namespace HyperFast
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
 	};
+
+	constexpr VkBuffer BufferManager::BufferImpl::getHandle() const noexcept
+	{
+		return __buffer;
+	}
 
 	constexpr const VkMemoryRequirements &BufferManager::BufferImpl::getMemoryRequirements() const noexcept
 	{

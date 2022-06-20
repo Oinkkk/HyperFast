@@ -9,19 +9,13 @@ BufferTestScene::BufferTestScene(
 	Scene{ renderingEngine },
 	__pScreen1{ std::move(pScreen1) }, __pScreen2{ std::move(pScreen2) }
 {
-	__createVertexBuffers();
+	__createMesh();
 }
 
 BufferTestScene::~BufferTestScene() noexcept
-{
-	__pColorMemory = nullptr;
-	__pPositionMemory = nullptr;
+{}
 
-	__pColorBuffer = nullptr;
-	__pPositionBuffer = nullptr;
-}
-
-void BufferTestScene::__createVertexBuffers()
+void BufferTestScene::__createMesh()
 {
 	std::vector<glm::vec3> positions;
 	positions.emplace_back(0.0f, -0.5f, 0.0f);
@@ -36,18 +30,22 @@ void BufferTestScene::__createVertexBuffers()
 	const size_t positionDataSize{ sizeof(glm::vec3) * positions.size() };
 	const size_t colorDataSize{ sizeof(glm::vec3) * positions.size() };
 
-	__pPositionBuffer = _createVertexBuffer(positionDataSize);
-	__pColorBuffer = _createVertexBuffer(colorDataSize);
+	std::shared_ptr<HyperFast::Buffer> pPositionBuffer{ _createVertexBuffer(positionDataSize) };
+	std::shared_ptr<HyperFast::Buffer> pColorBuffer{ _createVertexBuffer(colorDataSize) };
 
-	__pPositionMemory = _createVertexMemory(__pPositionBuffer->getMemoryRequirements());
-	__pColorMemory = _createVertexMemory(__pColorBuffer->getMemoryRequirements());
+	std::shared_ptr<HyperFast::Memory> pPositionMemory{ _createVertexMemory(pPositionBuffer->getMemoryRequirements()) };
+	std::shared_ptr<HyperFast::Memory> pColorMemory{ _createVertexMemory(pColorBuffer->getMemoryRequirements()) };
 
-	std::memcpy(__pPositionMemory->map(), positions.data(), positionDataSize);
-	std::memcpy(__pColorMemory->map(), colors.data(), colorDataSize);
+	std::memcpy(pPositionMemory->map(), positions.data(), positionDataSize);
+	std::memcpy(pColorMemory->map(), colors.data(), colorDataSize);
 
-	__pPositionMemory->unmap();
-	__pColorMemory->unmap();
+	pPositionMemory->unmap();
+	pColorMemory->unmap();
 
-	__pPositionBuffer->bindMemory(*__pPositionMemory, 0ULL);
-	__pColorBuffer->bindMemory(*__pColorMemory, 0ULL);
+	pPositionBuffer->bindMemory(pPositionMemory, 0ULL);
+	pColorBuffer->bindMemory(pColorMemory, 0ULL);
+
+	__pMesh = _createMesh();
+	__pMesh->setPositionBuffer(pPositionBuffer);
+	__pMesh->setPositionBuffer(pColorBuffer);
 }

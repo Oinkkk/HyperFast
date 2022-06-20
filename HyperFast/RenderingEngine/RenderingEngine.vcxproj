@@ -14,10 +14,11 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
+    <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="MemoryManager.h" />
-    <ClInclude Include="MeshManager.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="PhysicalDevicePicker.h" />
     <ClInclude Include="PipelineFactory.h" />
     <ClInclude Include="RenderingEngine.h" />
@@ -38,6 +39,7 @@
     <ClCompile Include="MemoryManager_MemoryBank.cpp" />
     <ClCompile Include="MemoryManager_MemoryImpl.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PhysicalDevicePicker.cpp" />
     <ClCompile Include="PipelineFactory.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
