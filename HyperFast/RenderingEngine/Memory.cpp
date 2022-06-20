@@ -13,4 +13,14 @@ namespace HyperFast
 	{
 		__manager.destroy(__pImpl);
 	}
+
+	void *Memory::map()
+	{
+		return __pImpl->map();
+	}
+
+	void Memory::unmap() noexcept
+	{
+		__pImpl->unmap();
+	}
 }

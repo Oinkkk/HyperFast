@@ -23,6 +23,10 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr VkDeviceAddress getOffset() const noexcept;
 
+		[[nodiscard]]
+		void *map();
+		void unmap() noexcept;
+
 	private:
 		MemoryManager &__manager;
 		MemoryManager::MemoryImpl *const __pImpl;

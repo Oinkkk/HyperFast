@@ -33,11 +33,20 @@ void BufferTestScene::__createVertexBuffers()
 	colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
 	colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 
-	__pPositionBuffer = _createVertexBuffer(sizeof(glm::vec3) * positions.size());
-	__pColorBuffer = _createVertexBuffer(sizeof(glm::vec4) * colors.size());
+	const size_t positionDataSize{ sizeof(glm::vec3) * positions.size() };
+	const size_t colorDataSize{ sizeof(glm::vec3) * positions.size() };
+
+	__pPositionBuffer = _createVertexBuffer(positionDataSize);
+	__pColorBuffer = _createVertexBuffer(colorDataSize);
 
 	__pPositionMemory = _createVertexMemory(__pPositionBuffer->getMemoryRequirements());
 	__pColorMemory = _createVertexMemory(__pColorBuffer->getMemoryRequirements());
+
+	std::memcpy(__pPositionMemory->map(), positions.data(), positionDataSize);
+	std::memcpy(__pColorMemory->map(), colors.data(), colorDataSize);
+
+	__pPositionMemory->unmap();
+	__pColorMemory->unmap();
 
 	__pPositionBuffer->bindMemory(*__pPositionMemory, 0ULL);
 	__pColorBuffer->bindMemory(*__pColorMemory, 0ULL);

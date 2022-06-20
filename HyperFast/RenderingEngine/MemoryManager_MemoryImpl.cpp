@@ -12,9 +12,14 @@ namespace HyperFast
 		__bank.free(__offset);
 	}
 
-	void *MemoryManager::MemoryImpl::map(const VkDeviceSize size, const VkDeviceAddress offset) noexcept
+	void *MemoryManager::MemoryImpl::map()
 	{
+		return (reinterpret_cast<std::byte *>(__bank.map()) + __offset);
+	}
 
+	void MemoryManager::MemoryImpl::unmap() noexcept
+	{
+		return __bank.unmap();
 	}
 }
 

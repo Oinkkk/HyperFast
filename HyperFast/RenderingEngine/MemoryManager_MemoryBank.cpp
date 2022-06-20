@@ -5,11 +5,9 @@ namespace HyperFast
 {
 	MemoryManager::MemoryBank::MemoryBank(
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-		const uint32_t memoryTypeIndex, const VkMemoryPropertyFlags props,
-		const VkDeviceSize nonCoherentAtomSize, const VkDeviceSize size) :
+		const uint32_t memoryTypeIndex, const VkDeviceSize size) :
 		__device{ device }, __deviceProc{ deviceProc },
-		__memoryTypeIndex{ memoryTypeIndex }, __props{ props },
-		__nonCoherentAtomSize{ nonCoherentAtomSize }, __size{ size }
+		__memoryTypeIndex{ memoryTypeIndex }, __size{ size }
 	{
 		__allocateBank();
 	}
@@ -56,55 +54,27 @@ namespace HyperFast
 		__segmentMap.erase(offset);
 	}
 
-	void MemoryManager::MemoryBank::map(const VkDeviceAddress offset, const VkDeviceSize size) noexcept
+	void *MemoryManager::MemoryBank::map()
 	{
-		/*
-			If the device memory was allocated without the VK_MEMORY_PROPERTY_HOST_COHERENT_BIT set,
-			these guarantees must be made for an extended range:
-			the application must round down the start of the range to the
-			nearest multiple of VkPhysicalDeviceLimits::nonCoherentAtomSize,
-			and round the end of the range up to the
-			nearest multiple of VkPhysicalDeviceLimits::nonCoherentAtomSize
-		*/
-		VkDeviceAddress rangeStart{ offset };
-		VkDeviceAddress rangeEnd{ offset + size };
-
-		const bool hostCoherent{ isHostCoherent() };
-		if (!hostCoherent)
+		if (!__mappingRequested)
 		{
-			rangeStart = Infra::Math::floorAlign(rangeStart, __nonCoherentAtomSize);
-			rangeEnd = Infra::Math::ceilAlign(rangeEnd, __nonCoherentAtomSize);
+			__deviceProc.vkMapMemory(__device, __handle, 0ULL, VK_WHOLE_SIZE, 0U, &__mapped);
+			if (!__mapped)
+				throw std::exception{ "Cannot map a memory." };
 		}
 
-		__deviceProc.vkMapMemory(
-			__device, __handle, rangeStart, rangeEnd - rangeStart,
-			0U, &(reinterpret_cast<void *&>(__mapped)));
-
-		if (!hostCoherent)
-			__mapped += (offset - rangeStart);
+		__mappingRequested++;
+		return __mapped;
 	}
 
 	void MemoryManager::MemoryBank::unmap() noexcept
 	{
-		__deviceProc.vkUnmapMemory(__device, __handle);
-	}
-
-	void MemoryManager::MemoryBank::write(
-		const VkDeviceSize srcOffset, const VkDeviceSize size, const void *pData) noexcept
-	{
-		std::memcpy(__mapped + srcOffset, pData, size);
-
-		const bool hostCoherent{ isHostCoherent() };
-		if (!hostCoherent)
+		__mappingRequested--;
+		if (!__mappingRequested)
 		{
-			//__deviceProc.vkFlushMappedMemoryRanges(__device, );
+			__mapped = nullptr;
+			__deviceProc.vkUnmapMemory(__device, __handle);
 		}
-	}
-
-	void MemoryManager::MemoryBank::read(
-		const VkDeviceAddress srcOffset, const VkDeviceSize size, void *const pBuffer) noexcept
-	{
-
 	}
 
 	void MemoryManager::MemoryBank::__allocateBank()
