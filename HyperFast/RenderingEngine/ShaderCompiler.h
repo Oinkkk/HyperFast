@@ -22,7 +22,5 @@ namespace HyperFast
 		shaderc::CompileOptions __options;
 		shaderc_util::FileFinder __fileFinder;
 		shaderc::Compiler __compiler;
-
-		void __setVertexAttributeFlagMacro(const std::string_view &macroName, const bool value) noexcept;
 	};
 }

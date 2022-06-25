@@ -23,7 +23,7 @@ namespace HyperFast
 
 		void build(
 			const std::vector<VertexAttributeFlag> &usedAttribFlags,
-			const BuildParam &param, tf::Subflow &subflow);
+			const BuildParam &buildParam, tf::Subflow &subflow);
 		
 		void reset() noexcept;
 
@@ -34,10 +34,13 @@ namespace HyperFast
 		class PipelineResource final
 		{
 		public:
-			PipelineResource(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
+			PipelineResource(
+				const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+				const VkPipelineLayout pipelineLayout, const VertexAttributeFlag attribFlag) noexcept;
+			
 			~PipelineResource() noexcept;
 
-			void build(const VertexAttributeFlag attribFlag, const BuildParam &param);
+			void build(const BuildParam &buildParam);
 			void reset() noexcept;
 
 			[[nodiscard]]
@@ -46,11 +49,22 @@ namespace HyperFast
 		private:
 			const VkDevice __device;
 			const VKL::DeviceProcedure &__deviceProc;
+			const VkPipelineLayout __pipelineLayout;
+			const VertexAttributeFlag __attribFlag;
 
 			VkShaderModule __vertexShader{};
 			VkShaderModule __fragShader{};
 			VkPipelineCache __pipelineCache{};
 			VkPipeline __pipeline{};
+
+			void __createShaderModules();
+			void __destroyShaderModules() noexcept;
+
+			void __createPipelineCache();
+			void __destroyPipelineCache() noexcept;
+
+			void __createPipeline(const BuildParam &buildParam);
+			void __destroyPipeline() noexcept;
 		};
 
 		const VkDevice __device;
@@ -61,15 +75,6 @@ namespace HyperFast
 
 		void __createPipelineLayouts();
 		void __destroyPipelineLayouts() noexcept;
-
-		void __setupShaderCompiler() noexcept;
-		void __createShaderModules();
-		void __destroyShaderModules() noexcept;
-		void __createPipelineCache();
-		void __destroyPipelineCache() noexcept;
-
-		void __createPipelines(const BuildParam &buildParam, tf::Subflow &subflow);
-		void __destroyPipelines() noexcept;
 	};
 
 	constexpr VkPipeline PipelineFactory::PipelineResource::getPipeline() noexcept

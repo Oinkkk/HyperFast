@@ -1,4 +1,5 @@
 ﻿#include "PipelineFactory.h"
+#include <glm/glm.hpp>
 
 namespace HyperFast
 {
@@ -16,19 +17,19 @@ namespace HyperFast
 
 	void PipelineFactory::build(
 		const std::vector<VertexAttributeFlag> &usedAttribFlags,
-		const BuildParam &param, tf::Subflow &subflow)
+		const BuildParam &buildParam, tf::Subflow &subflow)
 	{
 		for (const VertexAttributeFlag attribFlag : usedAttribFlags)
 		{
 			PipelineResource &pipelineResource
 			{
 				__attribFlag2ResourceMap.try_emplace(
-					attribFlag, param).first->second
+					attribFlag, __device, __deviceProc, __pipelineLayout, attribFlag).first->second
 			};
 
-			subflow.emplace([&pipelineResource, attribFlag, &param]
+			subflow.emplace([&pipelineResource, &buildParam]
 			{
-				pipelineResource.build(attribFlag, param);
+				pipelineResource.build(buildParam);
 			});
 		}
 	}
@@ -59,30 +60,57 @@ namespace HyperFast
 	void PipelineFactory::__destroyPipelineLayouts() noexcept
 	{
 		__deviceProc.vkDestroyPipelineLayout(__device, __pipelineLayout, nullptr);
-		__pipelineLayout = VK_NULL_HANDLE;
 	}
 
-	void PipelineFactory::__setupShaderCompiler() noexcept
+	PipelineFactory::PipelineResource::PipelineResource(
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		const VkPipelineLayout pipelineLayout, const VertexAttributeFlag attribFlag) noexcept :
+		__device{ device }, __deviceProc{ deviceProc },
+		__pipelineLayout{ pipelineLayout }, __attribFlag{ attribFlag }
 	{
+		__createShaderModules();
+		__createPipelineCache();
+	}
+
+	PipelineFactory::PipelineResource::~PipelineResource() noexcept
+	{
+		reset();
+		__destroyPipelineCache();
+		__destroyShaderModules();
+	}
+
+	void PipelineFactory::PipelineResource::build(const BuildParam &buildParam)
+	{
+		__createPipeline(buildParam);
+	}
+
+	void PipelineFactory::PipelineResource::reset() noexcept
+	{
+		if (!__pipeline)
+			return;
+
+		__destroyPipeline();
+	}
+
+	void PipelineFactory::PipelineResource::__createShaderModules()
+	{
+		ShaderCompiler shaderCompiler;
+		shaderCompiler.setVertexAttributeFlag(__attribFlag);
+
 #ifndef NDEBUG
-		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
+		shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
 #else
-		__shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_performance);
+		shaderCompiler.setOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_performance);
 #endif
-	}
 
-	void PipelineFactory::__createShaderModules()
-	{
 		const std::vector<uint32_t> &vertexShader
 		{
-			__shaderCompiler.compile(
-				"shader/triangle.vert", shaderc_shader_kind::shaderc_vertex_shader)
+			shaderCompiler.compile("shader/triangle.vert", shaderc_shader_kind::shaderc_vertex_shader)
 		};
 
 		const std::vector<uint32_t> &fragShader
 		{
-			__shaderCompiler.compile(
-				"shader/triangle.frag", shaderc_shader_kind::shaderc_fragment_shader)
+			shaderCompiler.compile("shader/triangle.frag", shaderc_shader_kind::shaderc_fragment_shader)
 		};
 
 		const VkShaderModuleCreateInfo vertexShaderCreateInfo
@@ -109,16 +137,13 @@ namespace HyperFast
 			throw std::exception{ "Cannot create the fragment shader." };
 	}
 
-	void PipelineFactory::__destroyShaderModules() noexcept
+	void PipelineFactory::PipelineResource::__destroyShaderModules() noexcept
 	{
 		__deviceProc.vkDestroyShaderModule(__device, __fragShader, nullptr);
 		__deviceProc.vkDestroyShaderModule(__device, __vertexShader, nullptr);
-
-		__vertexShader = VK_NULL_HANDLE;
-		__fragShader = VK_NULL_HANDLE;
 	}
 
-	void PipelineFactory::__createPipelineCache()
+	void PipelineFactory::PipelineResource::__createPipelineCache()
 	{
 		const VkPipelineCacheCreateInfo createInfo
 		{
@@ -131,13 +156,12 @@ namespace HyperFast
 			throw std::exception{ "Cannot create a VkPipelineCache." };
 	}
 
-	void PipelineFactory::__destroyPipelineCache() noexcept
+	void PipelineFactory::PipelineResource::__destroyPipelineCache() noexcept
 	{
 		__deviceProc.vkDestroyPipelineCache(__device, __pipelineCache, nullptr);
-		__pipelineCache = VK_NULL_HANDLE;
 	}
 
-	void PipelineFactory::__createPipelines(const BuildParam &buildParam, tf::Subflow &subflow)
+	void PipelineFactory::PipelineResource::__createPipeline(const BuildParam &buildParam)
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
 
@@ -153,9 +177,44 @@ namespace HyperFast
 		fsStageInfo.module = __fragShader;
 		fsStageInfo.pName = "main";
 
+		std::vector<VkVertexInputBindingDescription> vertexBindingDescs;
+		std::vector<VkVertexInputAttributeDescription> vertexAttribDescs;
+
+		if (__attribFlag & VertexAttributeFlagBit::POS3)
+		{
+			VkVertexInputBindingDescription &posBindingDesc{ vertexBindingDescs.emplace_back() };
+			posBindingDesc.binding = VERTEX_ATTRIB_LOCATION_POS;
+			posBindingDesc.stride = sizeof(glm::vec3);
+			posBindingDesc.inputRate = VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+
+			VkVertexInputAttributeDescription &posAttribDesc{ vertexAttribDescs.emplace_back() };
+			posAttribDesc.location = VERTEX_ATTRIB_LOCATION_POS;
+			posAttribDesc.binding = VERTEX_ATTRIB_LOCATION_POS;
+			posAttribDesc.format = VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+			posAttribDesc.offset = 0U;
+		}
+
+		if (__attribFlag & VertexAttributeFlagBit::COLOR4)
+		{
+			VkVertexInputBindingDescription &colorBindingDesc{ vertexBindingDescs.emplace_back() };
+			colorBindingDesc.binding = VERTEX_ATTRIB_LOCATION_COLOR;
+			colorBindingDesc.stride = sizeof(glm::vec4);
+			colorBindingDesc.inputRate = VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+
+			VkVertexInputAttributeDescription &colorAttribDesc{ vertexAttribDescs.emplace_back() };
+			colorAttribDesc.location = VERTEX_ATTRIB_LOCATION_COLOR;
+			colorAttribDesc.binding = VERTEX_ATTRIB_LOCATION_COLOR;
+			colorAttribDesc.format = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+			colorAttribDesc.offset = 0U;
+		}
+
 		const VkPipelineVertexInputStateCreateInfo vertexInputInfo
 		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+			.vertexBindingDescriptionCount = uint32_t(vertexBindingDescs.size()),
+			.pVertexBindingDescriptions = vertexBindingDescs.data(),
+			.vertexAttributeDescriptionCount = uint32_t(vertexAttribDescs.size()),
+			.pVertexAttributeDescriptions = vertexAttribDescs.data()
 		};
 
 		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
@@ -255,7 +314,7 @@ namespace HyperFast
 			throw std::exception{ "Cannot create a graphics pipeline." };
 	}
 
-	void PipelineFactory::__destroyPipelines() noexcept
+	void PipelineFactory::PipelineResource::__destroyPipeline() noexcept
 	{
 		__deviceProc.vkDestroyPipeline(__device, __pipeline, nullptr);
 		__pipeline = VK_NULL_HANDLE;

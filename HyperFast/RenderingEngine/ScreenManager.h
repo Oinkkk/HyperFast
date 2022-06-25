@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../Window/Window.h"
 #include "PipelineFactory.h"
@@ -23,6 +23,7 @@ namespace HyperFast
 
 			~ScreenImpl() noexcept;
 
+			// TODO: drawcall과 연동
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
 		private:
