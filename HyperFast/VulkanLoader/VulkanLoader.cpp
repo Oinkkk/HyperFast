@@ -341,10 +341,18 @@ namespace VKL
 		retVal.vkCmdBindVertexBuffers =
 			reinterpret_cast<PFN_vkCmdBindVertexBuffers>(
 				vkGetDeviceProcAddr(device, "vkCmdBindVertexBuffers"));
+
+		retVal.vkCmdBindIndexBuffer =
+			reinterpret_cast<PFN_vkCmdBindIndexBuffer>(
+				vkGetDeviceProcAddr(device, "vkCmdBindIndexBuffer"));
 		
 		retVal.vkCmdDraw =
 			reinterpret_cast<PFN_vkCmdDraw>(
 				vkGetDeviceProcAddr(device, "vkCmdDraw"));
+
+		retVal.vkCmdDrawIndexed =
+			reinterpret_cast<PFN_vkCmdDrawIndexed>(
+				vkGetDeviceProcAddr(device, "vkCmdDrawIndexed"));
 
 		return retVal;
 	}

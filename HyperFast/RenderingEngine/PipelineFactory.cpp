@@ -5,34 +5,61 @@ namespace HyperFast
 	PipelineFactory::PipelineFactory(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept :
 		__device{ device }, __deviceProc{ deviceProc }
 	{
-		__setupShaderCompiler();
-		__createShaderModules();
 		__createPipelineLayouts();
-		__createPipelineCache();
 	}
 
 	PipelineFactory::~PipelineFactory() noexcept
 	{
-		reset();
-		__destroyPipelineCache();
+		__attribFlag2ResourceMap.clear();
 		__destroyPipelineLayouts();
-		__destroyShaderModules();
 	}
 
-	void PipelineFactory::build(const BuildParam &param, tf::Subflow &subflow)
+	void PipelineFactory::build(
+		const std::vector<VertexAttributeFlag> &usedAttribFlags,
+		const BuildParam &param, tf::Subflow &subflow)
 	{
-		__createPipelines(param, subflow);
+		for (const VertexAttributeFlag attribFlag : usedAttribFlags)
+		{
+			PipelineResource &pipelineResource
+			{
+				__attribFlag2ResourceMap.try_emplace(
+					attribFlag, param).first->second
+			};
+
+			subflow.emplace([&pipelineResource, attribFlag, &param]
+			{
+				pipelineResource.build(attribFlag, param);
+			});
+		}
 	}
 
 	void PipelineFactory::reset() noexcept
 	{
-		if (__pipeline)
-			__destroyPipelines();
+		for (auto &[attribFlag, pipelineResource] : __attribFlag2ResourceMap)
+			pipelineResource.reset();
 	}
 
-	VkPipeline PipelineFactory::get() const noexcept
+	VkPipeline PipelineFactory::get(const VertexAttributeFlag attribFlag) noexcept
 	{
-		return __pipeline;
+		return __attribFlag2ResourceMap[attribFlag].getPipeline();
+	}
+
+	void PipelineFactory::__createPipelineLayouts()
+	{
+		const VkPipelineLayoutCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
+		};
+
+		__deviceProc.vkCreatePipelineLayout(__device, &createInfo, nullptr, &__pipelineLayout);
+		if (!__pipelineLayout)
+			throw std::exception{ "Cannot create a VkPipelineLayout." };
+	}
+
+	void PipelineFactory::__destroyPipelineLayouts() noexcept
+	{
+		__deviceProc.vkDestroyPipelineLayout(__device, __pipelineLayout, nullptr);
+		__pipelineLayout = VK_NULL_HANDLE;
 	}
 
 	void PipelineFactory::__setupShaderCompiler() noexcept
@@ -89,24 +116,6 @@ namespace HyperFast
 
 		__vertexShader = VK_NULL_HANDLE;
 		__fragShader = VK_NULL_HANDLE;
-	}
-
-	void PipelineFactory::__createPipelineLayouts()
-	{
-		const VkPipelineLayoutCreateInfo createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
-		};
-
-		__deviceProc.vkCreatePipelineLayout(__device, &createInfo, nullptr, &__pipelineLayout);
-		if (!__pipelineLayout)
-			throw std::exception{ "Cannot create a VkPipelineLayout." };
-	}
-
-	void PipelineFactory::__destroyPipelineLayouts() noexcept
-	{
-		__deviceProc.vkDestroyPipelineLayout(__device, __pipelineLayout, nullptr);
-		__pipelineLayout = VK_NULL_HANDLE;
 	}
 
 	void PipelineFactory::__createPipelineCache()

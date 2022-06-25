@@ -26,6 +26,7 @@
     <ClInclude Include="ScreenManager.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="SizeUtil.h" />
+    <ClInclude Include="Submesh.h" />
     <ClInclude Include="VertexAttribute.h" />
     <ClInclude Include="VertexAttributeUtil.h" />
   </ItemGroup>
@@ -47,6 +48,7 @@
     <ClCompile Include="ScreenManager.cpp" />
     <ClCompile Include="ScreenManager_ScreenImpl.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
+    <ClCompile Include="Submesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\glslc\glslc.vcxproj">

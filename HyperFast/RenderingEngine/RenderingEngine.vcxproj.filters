@@ -93,6 +93,9 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Mesh</Filter>
     </ClCompile>
+    <ClCompile Include="Submesh.cpp">
+      <Filter>Mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -145,6 +148,9 @@
     </ClInclude>
     <ClInclude Include="Constant.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Submesh.h">
+      <Filter>Mesh</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

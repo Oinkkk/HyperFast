@@ -2,44 +2,77 @@
 
 namespace HyperFast
 {
-	void Drawcall::addMesh(const std::shared_ptr<Mesh> &pMesh) noexcept
+	Drawcall::Drawcall() noexcept :
+		__pAttributeFlagChangeEventListener{ std::make_shared<AttributeFlagChangeEventListener>() }
 	{
-		const VertexAttributeFlag attribFlag{ pMesh->getVertexAttributeFlag() };
-
-		__usedAttribFlags.emplace(attribFlag);
-		__attribFlag2MeshesMap[attribFlag].emplace(pMesh);
+		__pAttributeFlagChangeEventListener->setCallback(
+			std::bind(
+				&Drawcall::__onAttributeFlagChange, this,
+				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	}
 
-	void Drawcall::validate() noexcept
+	void Drawcall::addSubmesh(Submesh &submesh) noexcept
 	{
-		for (auto mapIter = __attribFlag2MeshesMap.begin(); mapIter != __attribFlag2MeshesMap.end();)
+		Mesh &mesh{ submesh.getMesh() };
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
+		if (submeshGroup.empty())
+			__needToUpdate = true;
+
+		submeshGroup[&mesh].emplace(&submesh);
+	}
+
+	void Drawcall::removeSubmesh(Submesh &submesh) noexcept
+	{
+		Mesh &mesh{ submesh.getMesh() };
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
+		submeshGroup[&mesh].erase(&submesh);
+
+		if (submeshGroup.empty())
+			__needToUpdate = true;
+	}
+
+	void Drawcall::update() noexcept
+	{
+		if (!__needToUpdate)
+			return;
+
+		__usedAttribFlags.clear();
+		for (const auto &[attribFlag, submeshGroup] : __attribFlag2SubmeshGroup)
 		{
-			auto &[attribFlag, meshes] { *mapIter };
-			for (auto meshIter = meshes.begin(); meshIter != meshes.end();)
-			{
-				if (meshIter->expired())
-				{
-					meshIter = meshes.erase(meshIter);
-					continue;
-				}
-
-				meshIter++;
-			}
-
-			if (meshes.empty())
-			{
-				__usedAttribFlags.erase(attribFlag);
-				mapIter = __attribFlag2MeshesMap.erase(mapIter);
+			if (submeshGroup.empty())
 				continue;
-			}
 
-			mapIter++;
+			__usedAttribFlags.emplace_back(attribFlag);
+		}
+
+		__needToUpdate = false;
+		__usedAttributeFlagsChangeEvent.invoke(*this);
+	}
+
+	void Drawcall::draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept
+	{
+		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
+		for (const auto &[pMesh, submeshes] : submeshGroup)
+		{
+			if (submeshes.empty())
+				continue;
+
+			pMesh->bind(commandBuffer);
+			for (Submesh *const pSubmesh : submeshes)
+				pSubmesh->draw(commandBuffer);
 		}
 	}
 
-	void Drawcall::bind(const VertexAttributeFlag attribFlag, const VkCommandBuffer commandBuffer) noexcept
+	void Drawcall::__onAttributeFlagChange(
+		Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept
 	{
-		for (const std::weak_ptr<Mesh> &pMesh : __attribFlag2MeshesMap[attribFlag])
-			pMesh.lock()->bind(commandBuffer);
+		SubmeshGroup &oldSubmeshGroup{ __attribFlag2SubmeshGroup[oldFlag] };
+		SubmeshGroup &newSubmeshGroup{ __attribFlag2SubmeshGroup[newFlag] };
+
+		newSubmeshGroup.insert(oldSubmeshGroup.extract(&mesh));
 	}
 }

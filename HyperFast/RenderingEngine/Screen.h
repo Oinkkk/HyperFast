@@ -10,6 +10,8 @@ namespace HyperFast
 		Screen(ScreenManager &screenManager, Win::Window &window);
 		~Screen() noexcept = default;
 
+		void setDrawcall(Drawcall *const pDrawcall) noexcept;
+
 	private:
 		ScreenManager &__screenManager;
 		std::unique_ptr<ScreenManager::ScreenImpl> __pImpl;
