@@ -23,7 +23,6 @@ namespace HyperFast
 
 			~ScreenImpl() noexcept;
 
-			// TODO: drawcall과 연동
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
 		private:
@@ -43,6 +42,8 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDestroyEventListener;
 
 			Drawcall *__pDrawcall{};
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pUsedAttributeFlagsChangeEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallChangeEventListener;
 
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			PipelineFactory __pipelineFactory;
@@ -71,6 +72,11 @@ namespace HyperFast
 
 			size_t __frameCursor{};
 
+			bool __needToUpdateSurfaceDependencies{};
+			bool __needToUpdatePipelineDependencies{};
+			bool __needToUpdateMainCommands{};
+
+			void __update();
 			bool __draw();
 			void __destroy() noexcept;
 
@@ -78,6 +84,8 @@ namespace HyperFast
 			void __createSurface();
 			void __destroySurface() noexcept;
 			void __updateSurfaceDependencies();
+			void __updatePipelineDependencies();
+			void __updateMainCommands() noexcept;
 
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;

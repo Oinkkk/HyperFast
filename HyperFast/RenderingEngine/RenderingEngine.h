@@ -6,7 +6,7 @@
 #include "ScreenManager.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
-#include "Mesh.h"
+#include "Submesh.h"
 
 namespace HyperFast
 {
@@ -27,6 +27,9 @@ namespace HyperFast
 
 		[[nodiscard]]
 		std::shared_ptr<Mesh> createMesh() noexcept;
+
+		[[nodiscard]]
+		std::shared_ptr<Submesh> createSubmesh(const std::shared_ptr<Mesh> &pMesh) noexcept;
 
 	private:
 		Infra::Logger &__logger;

@@ -18,9 +18,13 @@ namespace HyperFast
 
 		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
 		if (submeshGroup.empty())
-			__needToUpdate = true;
+		{
+			mesh.getAttributeFlagChangeEvent() += __pAttributeFlagChangeEventListener;
+			__attribFlagsChanged = true;
+		}
 
 		submeshGroup[&mesh].emplace(&submesh);
+		__drawcallChanged = true;
 	}
 
 	void Drawcall::removeSubmesh(Submesh &submesh) noexcept
@@ -30,27 +34,37 @@ namespace HyperFast
 
 		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
 		submeshGroup[&mesh].erase(&submesh);
+		__drawcallChanged = true;
 
 		if (submeshGroup.empty())
-			__needToUpdate = true;
+		{
+			mesh.getAttributeFlagChangeEvent() -= __pAttributeFlagChangeEventListener;
+			__attribFlagsChanged = true;
+		}
 	}
 
 	void Drawcall::update() noexcept
 	{
-		if (!__needToUpdate)
-			return;
-
-		__usedAttribFlags.clear();
-		for (const auto &[attribFlag, submeshGroup] : __attribFlag2SubmeshGroup)
+		if (__attribFlagsChanged)
 		{
-			if (submeshGroup.empty())
-				continue;
+			__usedAttribFlags.clear();
+			for (const auto &[attribFlag, submeshGroup] : __attribFlag2SubmeshGroup)
+			{
+				if (submeshGroup.empty())
+					continue;
 
-			__usedAttribFlags.emplace_back(attribFlag);
+				__usedAttribFlags.emplace_back(attribFlag);
+			}
+
+			__usedAttributeFlagsChangeEvent.invoke(*this);
+			__attribFlagsChanged = false;
 		}
 
-		__needToUpdate = false;
-		__usedAttributeFlagsChangeEvent.invoke(*this);
+		if (__drawcallChanged)
+		{
+			__drawcallChangeEvent.invoke(*this);
+			__drawcallChanged = false;
+		}
 	}
 
 	void Drawcall::draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept

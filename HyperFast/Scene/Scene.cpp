@@ -35,8 +35,14 @@ namespace Jin
 
 	std::shared_ptr<HyperFast::Mesh> Scene::_createMesh() noexcept
 	{
-		std::shared_ptr<HyperFast::Mesh> pRetVal{ __renderingEngine.createMesh() };
-		__drawcall.addMesh(pRetVal);
+		return __renderingEngine.createMesh();
+	}
+
+	std::shared_ptr<HyperFast::Submesh>
+		Scene::_createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept
+	{
+		std::shared_ptr<HyperFast::Submesh> pRetVal{ __renderingEngine.createSubmesh(pMesh) };
+		__drawcall.addSubmesh(*pRetVal);
 
 		return pRetVal;
 	}

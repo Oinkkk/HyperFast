@@ -21,6 +21,9 @@ namespace Jin
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Mesh> _createMesh() noexcept;
 
+		[[nodiscard]]
+		std::shared_ptr<HyperFast::Submesh> _createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept;
+
 	private:
 		HyperFast::RenderingEngine &__renderingEngine;
 		HyperFast::Drawcall __drawcall;

@@ -27,6 +27,11 @@ void BufferTestScene::__createMesh()
 	colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
 	colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 
+	std::vector<glm::uint16_t> indices;
+	indices.emplace_back(0U);
+	indices.emplace_back(1U);
+	indices.emplace_back(2U);
+
 	const size_t positionDataSize{ sizeof(glm::vec3) * positions.size() };
 	const size_t colorDataSize{ sizeof(glm::vec3) * positions.size() };
 
@@ -47,5 +52,8 @@ void BufferTestScene::__createMesh()
 
 	__pMesh = _createMesh();
 	__pMesh->setPositionBuffer(pPositionBuffer);
-	__pMesh->setPositionBuffer(pColorBuffer);
+	__pMesh->setColorBuffer(pColorBuffer);
+
+	__pSubmesh = _createSubmesh(__pMesh);
+	__pSubmesh->setDrawCommand();
 }

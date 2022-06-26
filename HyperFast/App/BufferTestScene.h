@@ -20,4 +20,5 @@ private:
 	std::unique_ptr<HyperFast::Screen> __pScreen2;
 
 	std::shared_ptr<HyperFast::Mesh> __pMesh;
+	std::shared_ptr<HyperFast::Submesh> __pSubmesh;
 };

@@ -51,6 +51,46 @@ namespace HyperFast
 		__drawCommandChangeEvent.invoke(*this);
 	}
 
+	void Submesh::setDrawCommand(
+		const uint32_t indexCount, const uint32_t instanceCount, const uint32_t firstIndex,
+		const int32_t vertexOffset, const uint32_t firstInstance) noexcept
+	{
+		bool changed{};
+
+		if (__drawCommand.indexCount != indexCount)
+		{
+			__drawCommand.indexCount = indexCount;
+			changed = true;
+		}
+
+		if (__drawCommand.instanceCount != instanceCount)
+		{
+			__drawCommand.instanceCount = instanceCount;
+			changed = true;
+		}
+
+		if (__drawCommand.firstIndex != firstIndex)
+		{
+			__drawCommand.firstIndex = firstIndex;
+			changed = true;
+		}
+
+		if (__drawCommand.vertexOffset != vertexOffset)
+		{
+			__drawCommand.vertexOffset = vertexOffset;
+			changed = true;
+		}
+
+		if (__drawCommand.firstInstance != firstInstance)
+		{
+			__drawCommand.firstInstance = firstInstance;
+			changed = true;
+		}
+
+		if (changed)
+			__drawCommandChangeEvent.invoke(*this);
+	}
+
 	Mesh &Submesh::getMesh() const noexcept
 	{
 		return *__pMesh;

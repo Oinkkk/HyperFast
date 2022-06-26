@@ -15,6 +15,9 @@ namespace HyperFast
 		void setFirstIndex(const uint32_t firstIndex) noexcept;
 		void setVertexOffset(const int32_t vertexOffset) noexcept;
 		void setFirstInstance(const uint32_t firstInstance) noexcept;
+		void setDrawCommand(
+			const uint32_t indexCount, const uint32_t instanceCount, const uint32_t firstIndex,
+			const int32_t vertexOffset, const uint32_t firstInstance) noexcept;
 
 		[[nodiscard]]
 		Mesh &getMesh() const noexcept;

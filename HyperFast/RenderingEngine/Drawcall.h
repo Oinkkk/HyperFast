@@ -27,16 +27,22 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr Infra::EventView<Drawcall &> &getUsedAttributeFlagsChangeEvent() noexcept;
 
+		[[nodiscard]]
+		constexpr Infra::EventView<Drawcall &> &getDrawcallChangeEvent() noexcept;
+
 	private:
 		using SubmeshGroup = std::unordered_map<Mesh *, std::unordered_set<Submesh *>>;
 		using AttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
 
-		bool __needToUpdate{};
+		bool __attribFlagsChanged{};
+		bool __drawcallChanged{};
+
 		std::unordered_map<VertexAttributeFlag, SubmeshGroup> __attribFlag2SubmeshGroup;
 		std::vector<VertexAttributeFlag> __usedAttribFlags;
 
 		std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
 		Infra::Event<Drawcall &> __usedAttributeFlagsChangeEvent;
+		Infra::Event<Drawcall &> __drawcallChangeEvent;
 
 		void __onAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;
@@ -50,5 +56,10 @@ namespace HyperFast
 	constexpr Infra::EventView<Drawcall &> &Drawcall::getUsedAttributeFlagsChangeEvent() noexcept
 	{
 		return __usedAttributeFlagsChangeEvent;
+	}
+
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getDrawcallChangeEvent() noexcept
+	{
+		return __drawcallChangeEvent;
 	}
 }

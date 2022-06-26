@@ -24,15 +24,58 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::setDrawcall(Drawcall *const pDrawcall) noexcept
 	{
+		if (__pDrawcall == pDrawcall)
+			return;
+
+		if (__pDrawcall)
+		{
+			__pDrawcall->getUsedAttributeFlagsChangeEvent() -= __pUsedAttributeFlagsChangeEventListener;
+			__pDrawcall->getDrawcallChangeEvent() -= __pDrawcallChangeEventListener;
+		}
+
 		__pDrawcall = pDrawcall;
+
+		if (__pDrawcall)
+		{
+			__pDrawcall->getUsedAttributeFlagsChangeEvent() += __pUsedAttributeFlagsChangeEventListener;
+			__pDrawcall->getDrawcallChangeEvent() += __pDrawcallChangeEventListener;
+		}
+	}
+
+	void ScreenManager::ScreenImpl::__update()
+	{
+		__pDrawcall->update();
+
+		if (__needToUpdateSurfaceDependencies)
+		{
+			__updateSurfaceDependencies();
+			__needToUpdateSurfaceDependencies = false;
+			__needToUpdatePipelineDependencies = false;
+			__needToUpdateMainCommands = false;
+		}
+
+		if (__needToUpdatePipelineDependencies)
+		{
+			__updatePipelineDependencies();
+			__needToUpdatePipelineDependencies = false;
+			__needToUpdateMainCommands = false;
+		}
+
+		if (__needToUpdateMainCommands)
+		{
+			__updateMainCommands();
+			__needToUpdateMainCommands = false;
+		}
 	}
 
 	bool ScreenManager::ScreenImpl::__draw()
 	{
+		__update();
+
 		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };
 
 		uint32_t imageIdx{};
-		VkResult acquirementResult{ __acquireNextImage(presentCompleteSemaphore, imageIdx) };
+		const VkResult acquirementResult{ __acquireNextImage(presentCompleteSemaphore, imageIdx) };
 
 		if (acquirementResult == VkResult::VK_NOT_READY)
 			return false;
@@ -40,12 +83,9 @@ namespace HyperFast
 		if ((acquirementResult == VkResult::VK_SUBOPTIMAL_KHR) ||
 			(acquirementResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
-			__updateSurfaceDependencies();
-			acquirementResult = __acquireNextImage(presentCompleteSemaphore, imageIdx);
+			__needToUpdateSurfaceDependencies = true;
+			return false;
 		}
-
-		if (acquirementResult != VkResult::VK_SUCCESS)
-			throw std::exception{ "Error occurred while drawing" };
 
 		const size_t numCommandBuffers{ __mainCommandBuffers.size() };
 		__frameCursor = ((__frameCursor + 1ULL) % numCommandBuffers);
@@ -100,6 +140,12 @@ namespace HyperFast
 		};
 
 		const VkResult presentResult{ __deviceProc.vkQueuePresentKHR(__graphicsQueue, &presentInfo) };
+		if ((presentResult == VkResult::VK_SUBOPTIMAL_KHR) ||
+			(presentResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
+		{
+			__needToUpdateSurfaceDependencies = true;
+		}
+
 		return (presentResult == VkResult::VK_SUCCESS);
 	}
 
@@ -128,18 +174,28 @@ namespace HyperFast
 			if (resizingType == Win::Window::ResizingType::MINIMIZED)
 				return;
 
-			__updateSurfaceDependencies();
+			__needToUpdateSurfaceDependencies = true;
 		});
 
-		__pDrawEventListener = Infra::EventListener<Win::Window &>::make([this](Win::Window &window)
+		__pDrawEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &window)
 		{
 			__draw();
 			window.validate();
 		});
 
-		__pDestroyEventListener = Infra::EventListener<Win::Window &>::make([this](Win::Window &window)
+		__pDestroyEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &)
 		{
 			__destroy();
+		});
+
+		__pUsedAttributeFlagsChangeEventListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
+		{
+			__needToUpdatePipelineDependencies = true;
+		});
+
+		__pDrawcallChangeEventListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
+		{
+			__needToUpdateMainCommands = true;
 		});
 
 		__window.getResizeEvent() += __pResizeEventListener;
@@ -251,6 +307,66 @@ namespace HyperFast
 		{
 			__destroySwapchain(oldSwapchain);
 		}).succeed(t1);
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		executor.run(taskflow).wait();
+	}
+
+	void ScreenManager::ScreenImpl::__updatePipelineDependencies()
+	{
+		tf::Taskflow taskflow;
+		taskflow.emplace([this](tf::Subflow &subflow)
+		{
+			__waitDeviceIdle();
+			__resetPipelines();
+			__resetFrameCursor();
+			__populatePipelineBuildParam();
+
+			tf::Task t1
+			{
+				subflow.emplace([this](tf::Subflow &subflow)
+				{
+					__buildPipelines(subflow);
+				})
+			};
+
+			subflow.emplace([this](tf::Subflow &subflow)
+			{
+				const size_t numSwapchainImages{ __swapChainImages.size() };
+				for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+				{
+					subflow.emplace([this, imageIdx = swapchainImageIter]
+					{
+						__recordMainCommand(imageIdx);
+					});
+				}
+			}).succeed(t1);
+		});
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		executor.run(taskflow).wait();
+	}
+
+	void ScreenManager::ScreenImpl::__updateMainCommands() noexcept
+	{
+		tf::Taskflow taskflow;
+		taskflow.emplace([this](tf::Subflow &subflow)
+		{
+			__waitDeviceIdle();
+			__resetFrameCursor();
+
+			subflow.emplace([this](tf::Subflow &subflow)
+			{
+				const size_t numSwapchainImages{ __swapChainImages.size() };
+				for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+				{
+					subflow.emplace([this, imageIdx = swapchainImageIter]
+					{
+						__recordMainCommand(imageIdx);
+					});
+				}
+			});
+		});
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		executor.run(taskflow).wait();
@@ -640,7 +756,11 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__buildPipelines(tf::Subflow &subflow)
 	{
-		__pipelineFactory.build(__pipelineBuildParam, subflow);
+		if (__pDrawcall)
+		{
+			__pipelineFactory.build(
+				__pDrawcall->getUsedAttributeFlags(), __pipelineBuildParam, subflow);
+		}
 	}
 
 	void ScreenManager::ScreenImpl::__resetPipelines() noexcept
@@ -689,10 +809,19 @@ namespace HyperFast
 		__deviceProc.vkCmdBeginRenderPass(
 			commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-		__deviceProc.vkCmdBindPipeline(
-			commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
+		if (__pDrawcall)
+		{
+			for (const VertexAttributeFlag attribFlag : __pDrawcall->getUsedAttributeFlags())
+			{
+				const VkPipeline pipeline{ __pipelineFactory.get(attribFlag) };
 
-		__deviceProc.vkCmdDraw(commandBuffer, 3U, 1U, 0U, 0U);
+				__deviceProc.vkCmdBindPipeline(
+					commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+				__pDrawcall->draw(attribFlag, commandBuffer);
+			}
+		}
+
 		__deviceProc.vkCmdEndRenderPass(commandBuffer);
 		__deviceProc.vkEndCommandBuffer(commandBuffer);
 	}

@@ -76,7 +76,14 @@ namespace HyperFast
 
 	std::shared_ptr<Mesh> RenderingEngine::createMesh() noexcept
 	{
+		__available.wait();
 		return std::make_shared<Mesh>(__deviceProc);
+	}
+
+	std::shared_ptr<Submesh> RenderingEngine::createSubmesh(const std::shared_ptr<Mesh> &pMesh) noexcept
+	{
+		__available.wait();
+		return std::make_shared<Submesh>(pMesh, __deviceProc);
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
