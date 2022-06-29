@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Scene/Scene.h"
-#include "../RenderingEngine/Screen.h"
 
 class BufferTestScene : public Jin::Scene
 {
@@ -20,5 +19,6 @@ private:
 	std::unique_ptr<HyperFast::Screen> __pScreen2;
 
 	std::shared_ptr<HyperFast::Mesh> __pMesh;
-	std::shared_ptr<HyperFast::Submesh> __pSubmesh;
+	std::shared_ptr<HyperFast::Submesh> __pSubmesh1;
+	std::shared_ptr<HyperFast::Submesh> __pSubmesh2;
 };

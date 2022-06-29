@@ -40,11 +40,14 @@ namespace HyperFast
 			__pDrawcall->getUsedAttributeFlagsChangeEvent() += __pUsedAttributeFlagsChangeEventListener;
 			__pDrawcall->getDrawcallChangeEvent() += __pDrawcallChangeEventListener;
 		}
+
+		__needToUpdatePipelineDependencies = true;
 	}
 
 	void ScreenManager::ScreenImpl::__update()
 	{
-		__pDrawcall->update();
+		if (__pDrawcall)
+			__pDrawcall->update();
 
 		if (__needToUpdateSurfaceDependencies)
 		{

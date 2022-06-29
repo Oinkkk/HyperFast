@@ -42,7 +42,7 @@ namespace HyperFast
 
 	VkPipeline PipelineFactory::get(const VertexAttributeFlag attribFlag) noexcept
 	{
-		return __attribFlag2ResourceMap[attribFlag].getPipeline();
+		return __attribFlag2ResourceMap.at(attribFlag).getPipeline();
 	}
 
 	void PipelineFactory::__createPipelineLayouts()

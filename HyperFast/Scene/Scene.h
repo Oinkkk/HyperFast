@@ -2,6 +2,7 @@
 
 #include "../RenderingEngine/RenderingEngine.h"
 #include "../RenderingEngine/Drawcall.h"
+#include "../RenderingEngine/Screen.h"
 
 namespace Jin
 {
@@ -13,16 +14,19 @@ namespace Jin
 
 	protected:
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Buffer> _createVertexBuffer(const VkDeviceSize dataSize) const;
+		std::shared_ptr<HyperFast::Buffer> _createBuffer(
+			const VkDeviceSize dataSize, const VkBufferUsageFlags usage) const;
 
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Memory> _createVertexMemory(const VkMemoryRequirements &memRequirements) const;
+		std::shared_ptr<HyperFast::Memory> _createMemory(const VkMemoryRequirements &memRequirements) const;
 
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Mesh> _createMesh() noexcept;
 
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Submesh> _createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept;
+
+		void _bindScreen(HyperFast::Screen &screen) noexcept;
 
 	private:
 		HyperFast::RenderingEngine &__renderingEngine;

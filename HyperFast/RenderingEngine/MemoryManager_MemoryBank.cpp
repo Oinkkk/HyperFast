@@ -38,6 +38,8 @@ namespace HyperFast
 
 			if ((targetOffset + memSize) <= nextOffset)
 				return MemorySegment{ targetOffset, memSize };
+
+			segmentIter = nextSegmentIter;
 		}
 
 		return std::nullopt;
