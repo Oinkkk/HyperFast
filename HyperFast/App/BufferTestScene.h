@@ -11,10 +11,8 @@ public:
 
 	virtual ~BufferTestScene() noexcept;
 
-	virtual void process(const float deltaTime) override;
-
-private:
-	void __createMesh();
+protected:
+	virtual void _onProcess(const float deltaTime) override;
 
 private:
 	HyperFast::Screen &__screen1;
@@ -26,4 +24,6 @@ private:
 
 	float __submeshTimer1{};
 	float __submeshTimer2{};
+
+	void __createMesh();
 };

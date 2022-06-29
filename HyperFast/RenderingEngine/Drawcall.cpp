@@ -2,145 +2,133 @@
 
 namespace HyperFast
 {
-	Drawcall::Drawcall() noexcept :
+	Drawcall::Drawcall(
+		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept :
+		__device{ device }, __deviceProc{ deviceProc },
+		__bufferManager{ bufferManager }, __memoryManager{ memoryManager },
 		__pAttributeFlagChangeEventListener{ std::make_shared<AttributeFlagChangeEventListener>() },
-		__pSubmeshVisibleChangeEventListener{ std::make_shared<Infra::EventListener<Submesh &>>() },
-		__pSubmeshDestroyEventListener{ std::make_shared<Infra::EventListener<Submesh &>>() }
+		__pIndirectBufferUpdateEventListener{ std::make_shared<Infra::EventListener<IndirectBufferBuilder &>>() },
+		__pIndirectBufferCreateEventListener{ std::make_shared<Infra::EventListener<IndirectBufferBuilder &>>() }
+	{
+		__initEventListeners();
+	}
+
+	void Drawcall::addSubmesh(Submesh &submesh) noexcept
+	{
+		Mesh &mesh{ submesh.getMesh() };
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
+		IndirectBufferBuilder *pIndirectBufferBuilder{};
+
+		if (indirectBufferBuilderMap.empty())
+		{
+			mesh.getAttributeFlagChangeEvent() += __pAttributeFlagChangeEventListener;
+			__attribFlagsUpdated = true;
+
+			pIndirectBufferBuilder =
+				indirectBufferBuilderMap.emplace(
+					&mesh, std::make_unique<IndirectBufferBuilder>(
+						__device, __deviceProc, __bufferManager, __memoryManager)).first->second.get();
+
+			pIndirectBufferBuilder->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateEventListener;
+			pIndirectBufferBuilder->getIndirectBufferCreateEvent() += __pIndirectBufferCreateEventListener;
+		}
+		else
+			pIndirectBufferBuilder = indirectBufferBuilderMap.at(&mesh).get();
+
+		pIndirectBufferBuilder->addSubmesh(submesh);
+	}
+
+	void Drawcall::removeSubmesh(Submesh &submesh) noexcept
+	{
+		Mesh &mesh{ submesh.getMesh() };
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
+		indirectBufferBuilderMap.at(&mesh)->removeSubmesh(submesh);
+	}
+
+	void Drawcall::validate()
+	{
+		if (__attribFlagsUpdated)
+		{
+			__attribFlags.resize(__attribFlag2IndirectBufferMap.size());
+
+			size_t cursor{};
+			for (const auto &[attribFlag, _] : __attribFlag2IndirectBufferMap)
+			{
+				__attribFlags[cursor] = attribFlag;
+				cursor++;
+			}
+
+			__attributeFlagsUpdateEvent.invoke(*this);
+			__attribFlagsUpdated = false;
+		}
+
+		for (const auto &[_, indirectBufferBuilderMap] : __attribFlag2IndirectBufferMap)
+		{
+			for (const auto &[_, indirectBufferBuilder] : indirectBufferBuilderMap)
+				indirectBufferBuilder->validate();
+		}
+
+		if (__indirectBufferUpdated)
+		{
+			__indirectBufferUpdateEvent.invoke(*this);
+			__indirectBufferUpdated = false;
+		}
+
+		if (__indirectBufferCreated)
+		{
+			__indirectBufferCreateEvent.invoke(*this);
+			__indirectBufferCreated = false;
+		}
+	}
+
+	void Drawcall::draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept
+	{
+		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
+		for (const auto &[pMesh, indirectBufferBuilder] : indirectBufferBuilderMap)
+		{
+			if (indirectBufferBuilder->isEmpty())
+				continue;
+
+			pMesh->bind(commandBuffer);
+			indirectBufferBuilder->draw(commandBuffer);
+		}
+	}
+
+	void Drawcall::__initEventListeners() noexcept
 	{
 		__pAttributeFlagChangeEventListener->setCallback(
 			std::bind(
 				&Drawcall::__onAttributeFlagChange, this,
 				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-		__pSubmeshVisibleChangeEventListener->setCallback(
-			std::bind(
-				&Drawcall::__onSubmeshVisibleChange, this,
-				std::placeholders::_1));
+		__pIndirectBufferUpdateEventListener->setCallback(
+			std::bind(&Drawcall::__onIndirectBufferUpdate, this, std::placeholders::_1));
 
-		__pSubmeshDestroyEventListener->setCallback(
-			std::bind(
-				&Drawcall::__onSubmeshDestroy, this,
-				std::placeholders::_1));
-	}
-
-	void Drawcall::addSubmesh(Submesh &submesh) noexcept
-	{
-		submesh.getVisibleChangeEvent() += __pSubmeshVisibleChangeEventListener;
-		submesh.getDestroyEvent() += __pSubmeshDestroyEventListener;
-
-		if (submesh.isVisible())
-			__registerSubmesh(submesh);
-	}
-
-	void Drawcall::removeSubmesh(Submesh &submesh) noexcept
-	{
-		submesh.getVisibleChangeEvent() -= __pSubmeshVisibleChangeEventListener;
-		submesh.getDestroyEvent() -= __pSubmeshDestroyEventListener;
-
-		if (submesh.isVisible())
-			__unregisterSubmesh(submesh);
-	}
-
-	void Drawcall::draw() noexcept
-	{
-		if (__attribFlagsChanged)
-		{
-			__usedAttribFlags.clear();
-			for (const auto &[attribFlag, submeshGroup] : __attribFlag2SubmeshGroup)
-			{
-				if (submeshGroup.empty())
-					continue;
-
-				__usedAttribFlags.emplace_back(attribFlag);
-			}
-
-			__usedAttributeFlagsChangeEvent.invoke(*this);
-			__attribFlagsChanged = false;
-		}
-
-		if (__drawcallChanged)
-		{
-			__drawcallChangeEvent.invoke(*this);
-			__drawcallChanged = false;
-		}
-	}
-
-	void Drawcall::draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept
-	{
-		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
-		for (const auto &[pMesh, submeshes] : submeshGroup)
-		{
-			if (submeshes.empty())
-				continue;
-
-			pMesh->bind(commandBuffer);
-			for (Submesh *const pSubmesh : submeshes)
-				pSubmesh->draw(commandBuffer);
-		}
-	}
-
-	void Drawcall::__registerSubmesh(Submesh &submesh) noexcept
-	{
-		Mesh &mesh{ submesh.getMesh() };
-		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
-
-		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
-		if (submeshGroup.empty())
-		{
-			mesh.getAttributeFlagChangeEvent() += __pAttributeFlagChangeEventListener;
-			__attribFlagsChanged = true;
-		}
-
-		submeshGroup[&mesh].emplace(&submesh);
-		__drawcallChanged = true;
-	}
-
-	void Drawcall::__unregisterSubmesh(Submesh &submesh) noexcept
-	{
-		Mesh &mesh{ submesh.getMesh() };
-		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
-
-		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
-		submeshGroup[&mesh].erase(&submesh);
-		__drawcallChanged = true;
-
-		if (submeshGroup.empty())
-		{
-			mesh.getAttributeFlagChangeEvent() -= __pAttributeFlagChangeEventListener;
-			__attribFlagsChanged = true;
-		}
+		__pIndirectBufferCreateEventListener->setCallback(
+			std::bind(&Drawcall::__onIndirectBufferCreate, this, std::placeholders::_1));
 	}
 
 	void Drawcall::__onAttributeFlagChange(
 		Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept
 	{
-		SubmeshGroup &oldSubmeshGroup{ __attribFlag2SubmeshGroup[oldFlag] };
-		SubmeshGroup &newSubmeshGroup{ __attribFlag2SubmeshGroup[newFlag] };
+		IndirectBufferBuilderMap &oldMap{ __attribFlag2IndirectBufferMap[oldFlag] };
+		IndirectBufferBuilderMap &newMap{ __attribFlag2IndirectBufferMap[newFlag] };
 
-		newSubmeshGroup.insert(oldSubmeshGroup.extract(&mesh));
+		newMap.insert(oldMap.extract(&mesh));
 	}
 
-	void Drawcall::__onSubmeshVisibleChange(Submesh &submesh) noexcept
+	void Drawcall::__onIndirectBufferUpdate(IndirectBufferBuilder &builder) noexcept
 	{
-		if (submesh.isVisible())
-			__registerSubmesh(submesh);
-		else
-			__unregisterSubmesh(submesh);
+		__indirectBufferUpdated = true;
 	}
 
-	void Drawcall::__onSubmeshDestroy(Submesh &submesh) noexcept
+	void Drawcall::__onIndirectBufferCreate(IndirectBufferBuilder &builder) noexcept
 	{
-		Mesh &mesh{ submesh.getMesh() };
-		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
-
-		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
-		submeshGroup[&mesh].erase(&submesh);
-		__drawcallChanged = true;
-
-		if (submeshGroup.empty())
-		{
-			mesh.getAttributeFlagChangeEvent() -= __pAttributeFlagChangeEventListener;
-			__attribFlagsChanged = true;
-		}
+		__indirectBufferCreated = true;
 	}
 }

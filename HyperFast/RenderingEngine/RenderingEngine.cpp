@@ -314,6 +314,7 @@ namespace HyperFast
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
 			.pNext = &device13Features,
+			.drawIndirectCount = VK_TRUE,
 			.imagelessFramebuffer = VK_TRUE
 		};
 
@@ -323,11 +324,13 @@ namespace HyperFast
 			.pNext = &device12Features
 		};
 
-		const VkPhysicalDeviceFeatures2 deviceFeatures2
+		VkPhysicalDeviceFeatures2 deviceFeatures2
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 			.pNext = &device11Features,
 		};
+
+		deviceFeatures2.features.multiDrawIndirect = VK_TRUE;
 
 		pNext = &deviceFeatures2;
 

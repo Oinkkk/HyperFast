@@ -37,6 +37,7 @@
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="CommandBufferManager.cpp" />
     <ClCompile Include="Drawcall.cpp" />
+    <ClCompile Include="IndirectBufferBuilder.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="MemoryManager_MemoryBank.cpp" />
     <ClCompile Include="MemoryManager_MemoryImpl.cpp" />

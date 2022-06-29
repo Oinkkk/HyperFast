@@ -12,7 +12,10 @@ namespace Jin
 	}
 
 	void Scene::process(const float deltaTime)
-	{}
+	{
+		_onProcess(deltaTime);
+		__pDrawcall->validate();
+	}
 
 	std::shared_ptr<HyperFast::Buffer> Scene::_createBuffer(
 		const VkDeviceSize size, const VkBufferUsageFlags usage) const
@@ -49,4 +52,7 @@ namespace Jin
 	{
 		screen.setDrawcall(__pDrawcall.get());
 	}
+
+	void Scene::_onProcess(const float deltaTime)
+	{}
 }

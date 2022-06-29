@@ -96,6 +96,9 @@
     <ClCompile Include="Submesh.cpp">
       <Filter>Mesh</Filter>
     </ClCompile>
+    <ClCompile Include="IndirectBufferBuilder.cpp">
+      <Filter>Drawcall</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">

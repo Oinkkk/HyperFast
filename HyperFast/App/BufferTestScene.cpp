@@ -22,7 +22,7 @@ BufferTestScene::~BufferTestScene() noexcept
 	__pMesh = nullptr;
 }
 
-void BufferTestScene::process(const float deltaTime)
+void BufferTestScene::_onProcess(const float deltaTime)
 {
 	__submeshTimer1 += deltaTime;
 	__submeshTimer2 += deltaTime;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Submesh.h"
+#include "IndirectBufferBuilder.h"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -10,65 +10,80 @@ namespace HyperFast
 	class Drawcall : public Infra::Unique
 	{
 	public:
-		Drawcall() noexcept;
+		Drawcall(
+			const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+			HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept;
 
 		void addSubmesh(Submesh &submesh) noexcept;
 		void removeSubmesh(Submesh &submesh) noexcept;
 
-		void draw() noexcept;
+		void validate();
 
 		[[nodiscard]]
-		constexpr const std::vector<VertexAttributeFlag> &getUsedAttributeFlags() const noexcept;
+		constexpr const std::vector<VertexAttributeFlag> &getAttributeFlags() const noexcept;
 
-		// TODO: mesh별로 submesh 묶은 다음 indirect command buffer 구성
 		// TODO: secondary buffer recording은 attribFlag 별로
 		void draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Drawcall &> &getUsedAttributeFlagsChangeEvent() noexcept;
+		constexpr Infra::EventView<Drawcall &> &getAttributeFlagsUpdateEvent() noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Drawcall &> &getDrawcallChangeEvent() noexcept;
+		constexpr Infra::EventView<Drawcall &> &getIndirectBufferUpdateEvent() noexcept;
+
+		[[nodiscard]]
+		constexpr Infra::EventView<Drawcall &> &getIndirectBufferCreateEvent() noexcept;
 
 	private:
-		using SubmeshGroup = std::unordered_map<Mesh *, std::unordered_set<Submesh *>>;
+		using IndirectBufferBuilderMap = std::unordered_map<Mesh *, std::unique_ptr<IndirectBufferBuilder>>;
 		using AttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
 
-		bool __attribFlagsChanged{};
-		bool __drawcallChanged{};
+		const VkDevice __device;
+		const VKL::DeviceProcedure &__deviceProc;
+		HyperFast::BufferManager &__bufferManager;
+		HyperFast::MemoryManager &__memoryManager;
 
-		std::unordered_map<VertexAttributeFlag, SubmeshGroup> __attribFlag2SubmeshGroup;
-		std::vector<VertexAttributeFlag> __usedAttribFlags;
+		bool __attribFlagsUpdated{};
+		bool __indirectBufferUpdated{};
+		bool __indirectBufferCreated{};
+
+		std::unordered_map<VertexAttributeFlag, IndirectBufferBuilderMap> __attribFlag2IndirectBufferMap;
+		std::vector<VertexAttributeFlag> __attribFlags;
 
 		const std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
-		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshVisibleChangeEventListener;
-		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDestroyEventListener;
+		const std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferUpdateEventListener;
+		const std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferCreateEventListener;
 
-		Infra::Event<Drawcall &> __usedAttributeFlagsChangeEvent;
-		Infra::Event<Drawcall &> __drawcallChangeEvent;
+		Infra::Event<Drawcall &> __attributeFlagsUpdateEvent;
+		Infra::Event<Drawcall &> __indirectBufferUpdateEvent;
+		Infra::Event<Drawcall &> __indirectBufferCreateEvent;
 
-		void __registerSubmesh(Submesh &submesh) noexcept;
-		void __unregisterSubmesh(Submesh &submesh) noexcept;
+		void __initEventListeners() noexcept;
 
 		void __onAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;
 
-		void __onSubmeshVisibleChange(Submesh &submesh) noexcept;
-		void __onSubmeshDestroy(Submesh &submesh) noexcept;
+		void __onIndirectBufferUpdate(IndirectBufferBuilder &builder) noexcept;
+		void __onIndirectBufferCreate(IndirectBufferBuilder &builder) noexcept;
 	};
 
-	constexpr const std::vector<VertexAttributeFlag> &Drawcall::getUsedAttributeFlags() const noexcept
+	constexpr const std::vector<VertexAttributeFlag> &Drawcall::getAttributeFlags() const noexcept
 	{
-		return __usedAttribFlags;
+		return __attribFlags;
 	}
 
-	constexpr Infra::EventView<Drawcall &> &Drawcall::getUsedAttributeFlagsChangeEvent() noexcept
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getAttributeFlagsUpdateEvent() noexcept
 	{
-		return __usedAttributeFlagsChangeEvent;
+		return __attributeFlagsUpdateEvent;
 	}
 
-	constexpr Infra::EventView<Drawcall &> &Drawcall::getDrawcallChangeEvent() noexcept
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getIndirectBufferUpdateEvent() noexcept
 	{
-		return __drawcallChangeEvent;
+		return __indirectBufferUpdateEvent;
+	}
+
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getIndirectBufferCreateEvent() noexcept
+	{
+		return __indirectBufferCreateEvent;
 	}
 }

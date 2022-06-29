@@ -43,8 +43,9 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDestroyEventListener;
 
 			Drawcall *__pDrawcall{};
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pUsedAttributeFlagsChangeEventListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallChangeEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pAttribFlagsUpdateEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferUpdateListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferCreateListener;
 
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			PipelineFactory __pipelineFactory;

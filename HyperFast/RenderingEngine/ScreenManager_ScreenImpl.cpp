@@ -29,16 +29,18 @@ namespace HyperFast
 
 		if (__pDrawcall)
 		{
-			__pDrawcall->getUsedAttributeFlagsChangeEvent() -= __pUsedAttributeFlagsChangeEventListener;
-			__pDrawcall->getDrawcallChangeEvent() -= __pDrawcallChangeEventListener;
+			__pDrawcall->getAttributeFlagsUpdateEvent() -= __pAttribFlagsUpdateEventListener;
+			__pDrawcall->getIndirectBufferUpdateEvent() -= __pIndirectBufferUpdateListener;
+			__pDrawcall->getIndirectBufferCreateEvent() -= __pIndirectBufferCreateListener;
 		}
 
 		__pDrawcall = pDrawcall;
 
 		if (__pDrawcall)
 		{
-			__pDrawcall->getUsedAttributeFlagsChangeEvent() += __pUsedAttributeFlagsChangeEventListener;
-			__pDrawcall->getDrawcallChangeEvent() += __pDrawcallChangeEventListener;
+			__pDrawcall->getAttributeFlagsUpdateEvent() += __pAttribFlagsUpdateEventListener;
+			__pDrawcall->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateListener;
+			__pDrawcall->getIndirectBufferCreateEvent() += __pIndirectBufferCreateListener;
 		}
 
 		__needToUpdatePipelineDependencies = true;
@@ -60,9 +62,6 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__update()
 	{
-		if (__pDrawcall)
-			__pDrawcall->draw();
-
 		if (__needToUpdateSurfaceDependencies)
 		{
 			__updateSurfaceDependencies();
@@ -206,12 +205,17 @@ namespace HyperFast
 			__destroy();
 		});
 
-		__pUsedAttributeFlagsChangeEventListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
+		__pAttribFlagsUpdateEventListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
 		{
 			__needToUpdatePipelineDependencies = true;
 		});
 
-		__pDrawcallChangeEventListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
+		__pIndirectBufferUpdateListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
+		{
+			__needToDraw = true;
+		});
+
+		__pIndirectBufferCreateListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
 		{
 			__needToUpdateMainCommands = true;
 		});
@@ -777,7 +781,7 @@ namespace HyperFast
 		if (__pDrawcall)
 		{
 			__pipelineFactory.build(
-				__pDrawcall->getUsedAttributeFlags(), __pipelineBuildParam, subflow);
+				__pDrawcall->getAttributeFlags(), __pipelineBuildParam, subflow);
 		}
 	}
 
@@ -829,7 +833,7 @@ namespace HyperFast
 
 		if (__pDrawcall)
 		{
-			for (const VertexAttributeFlag attribFlag : __pDrawcall->getUsedAttributeFlags())
+			for (const VertexAttributeFlag attribFlag : __pDrawcall->getAttributeFlags())
 			{
 				const VkPipeline pipeline{ __pipelineFactory.get(attribFlag) };
 

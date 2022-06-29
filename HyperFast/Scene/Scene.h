@@ -12,7 +12,7 @@ namespace Jin
 		Scene(HyperFast::RenderingEngine &renderingEngine) noexcept;
 		virtual ~Scene() noexcept;
 
-		virtual void process(const float deltaTime);
+		void process(const float deltaTime);
 
 	protected:
 		[[nodiscard]]
@@ -29,6 +29,8 @@ namespace Jin
 		std::shared_ptr<HyperFast::Submesh> _createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept;
 
 		void _bindScreen(HyperFast::Screen &screen) noexcept;
+
+		virtual void _onProcess(const float deltaTime);
 
 	private:
 		HyperFast::RenderingEngine &__renderingEngine;
