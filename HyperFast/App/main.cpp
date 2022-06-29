@@ -27,6 +27,15 @@ int main()
 	win1.setSize(800, 600);
 	win2.setSize(800, 600);
 
+	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
+	std::unique_ptr<HyperFast::Screen> pScreen1{ std::make_unique<HyperFast::Screen>(screenManager, win1) };
+	std::unique_ptr<HyperFast::Screen> pScreen2{ std::make_unique<HyperFast::Screen>(screenManager, win2) };
+
+	std::unique_ptr<BufferTestScene> pBufferTestScene
+	{
+		std::make_unique<BufferTestScene>(*pRenderingEngine, *pScreen1, *pScreen2)
+	};
+
 	std::shared_ptr<Infra::EventListener<Win::Window &>> pDestroyEventListener
 	{
 		Infra::EventListener<Win::Window &>::make([&](Win::Window &window)
@@ -39,21 +48,14 @@ int main()
 	{
 		Infra::EventListener<float>::make([&](const float deltaTime)
 		{
-			
+			pBufferTestScene->process(deltaTime);
+			pScreen1->draw();
+			pScreen2->draw();
 		})
 	};
 
 	win1.getDestroyEvent() += pDestroyEventListener;
-	// mainLooper.getIdleEvent() += pIdleEventListener;
-
-	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
-	std::unique_ptr<HyperFast::Screen> pScreen1{ std::make_unique<HyperFast::Screen>(screenManager, win1) };
-	std::unique_ptr<HyperFast::Screen> pScreen2{ std::make_unique<HyperFast::Screen>(screenManager, win2) };
-
-	std::unique_ptr<BufferTestScene> pBufferTestScene
-	{
-		std::make_unique<BufferTestScene>(*pRenderingEngine, std::move(pScreen1), std::move(pScreen2))
-	};
+	mainLooper.getIdleEvent() += pIdleEventListener;
 
 	mainLooper.start();
 

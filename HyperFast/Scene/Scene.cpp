@@ -13,6 +13,9 @@ namespace Jin
 
 	}
 
+	void Scene::process(const float deltaTime)
+	{}
+
 	std::shared_ptr<HyperFast::Buffer> Scene::_createBuffer(
 		const VkDeviceSize dataSize, const VkBufferUsageFlags usage) const
 	{

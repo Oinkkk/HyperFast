@@ -11,6 +11,9 @@ namespace HyperFast
 		Submesh(const std::shared_ptr<Mesh> &pMesh, const VKL::DeviceProcedure &deviceProc) noexcept;
 		~Submesh() noexcept;
 
+		[[nodiscard]]
+		constexpr const VkDrawIndexedIndirectCommand &getDrawCommand() const noexcept;
+
 		void setIndexCount(const uint32_t indexCount) noexcept;
 		void setInstanceCount(const uint32_t instanceCount) noexcept;
 		void setFirstIndex(const uint32_t firstIndex) noexcept;
@@ -21,10 +24,11 @@ namespace HyperFast
 			const int32_t vertexOffset, const uint32_t firstInstance) noexcept;
 
 		[[nodiscard]]
-		Mesh &getMesh() const noexcept;
+		constexpr bool isVisible() const noexcept;
+		void setVisible(const bool visible) noexcept;
 
 		[[nodiscard]]
-		constexpr const VkDrawIndexedIndirectCommand &getDrawCommand() const noexcept;
+		Mesh &getMesh() const noexcept;
 
 		[[nodiscard]]
 		constexpr Infra::EventView<Submesh &> &getDrawCommandChangeEvent() noexcept;
@@ -42,6 +46,7 @@ namespace HyperFast
 		const VKL::DeviceProcedure &__deviceProc;
 
 		VkDrawIndexedIndirectCommand __drawCommand{};
+		bool __visible{ true };
 
 		Infra::Event<Submesh &> __drawCommandChangeEvent;
 		Infra::Event<Submesh &> __visibleChangeEvent;
@@ -51,6 +56,11 @@ namespace HyperFast
 	constexpr const VkDrawIndexedIndirectCommand &Submesh::getDrawCommand() const noexcept
 	{
 		return __drawCommand;
+	}
+
+	constexpr bool Submesh::isVisible() const noexcept
+	{
+		return __visible;
 	}
 
 	constexpr Infra::EventView<Submesh &> &Submesh::getDrawCommandChangeEvent() noexcept

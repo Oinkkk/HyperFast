@@ -10,4 +10,9 @@ namespace HyperFast
 	{
 		__pImpl->setDrawcall(pDrawcall);
 	}
+
+	void Screen::draw()
+	{
+		__pImpl->draw();
+	}
 }

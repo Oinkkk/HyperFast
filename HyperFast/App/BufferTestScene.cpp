@@ -4,20 +4,40 @@
 
 BufferTestScene::BufferTestScene(
 	HyperFast::RenderingEngine &renderingEngine,
-	std::unique_ptr<HyperFast::Screen> &&pScreen1,
-	std::unique_ptr<HyperFast::Screen> &&pScreen2) noexcept :
-	Scene{ renderingEngine },
-	__pScreen1{ std::move(pScreen1) }, __pScreen2{ std::move(pScreen2) }
+	HyperFast::Screen &screen1, HyperFast::Screen &screen2) noexcept :
+	Scene{ renderingEngine }, __screen1{ screen1 }, __screen2{ screen2 }
 {
-	_bindScreen(*__pScreen1);
-	_bindScreen(*__pScreen2);
+	_bindScreen(__screen1);
+	_bindScreen(__screen2);
 	__createMesh();
 }
 
 BufferTestScene::~BufferTestScene() noexcept
 {
-	__pScreen1->setDrawcall(nullptr);
-	__pScreen2->setDrawcall(nullptr);
+	__screen1.setDrawcall(nullptr);
+	__screen2.setDrawcall(nullptr);
+
+	__pSubmesh2 = nullptr;
+	__pSubmesh1 = nullptr;
+	__pMesh = nullptr;
+}
+
+void BufferTestScene::process(const float deltaTime)
+{
+	__submeshTimer1 += deltaTime;
+	__submeshTimer2 += deltaTime;
+
+	if (__submeshTimer1 > 1000.0f)
+	{
+		__pSubmesh1->setVisible(!__pSubmesh1->isVisible());
+		__submeshTimer1 -= 1000.0f;
+	}
+
+	if (__submeshTimer2 > 2000.0f)
+	{
+		__pSubmesh2->setVisible(!__pSubmesh2->isVisible());
+		__submeshTimer2 -= 2000.0f;
+	}
 }
 
 void BufferTestScene::__createMesh()

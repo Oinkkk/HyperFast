@@ -24,6 +24,7 @@ namespace HyperFast
 			~ScreenImpl() noexcept;
 
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
+			void draw();
 
 		private:
 			const VkInstance __instance;
@@ -72,9 +73,11 @@ namespace HyperFast
 
 			size_t __frameCursor{};
 
+			bool __needToDraw{};
 			bool __needToUpdateSurfaceDependencies{};
 			bool __needToUpdatePipelineDependencies{};
 			bool __needToUpdateMainCommands{};
+			bool __destroyed{};
 
 			void __update();
 			bool __draw();

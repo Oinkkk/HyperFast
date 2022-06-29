@@ -15,7 +15,7 @@ namespace HyperFast
 		void addSubmesh(Submesh &submesh) noexcept;
 		void removeSubmesh(Submesh &submesh) noexcept;
 
-		void update() noexcept;
+		void draw() noexcept;
 
 		[[nodiscard]]
 		constexpr const std::vector<VertexAttributeFlag> &getUsedAttributeFlags() const noexcept;
@@ -41,14 +41,19 @@ namespace HyperFast
 		std::vector<VertexAttributeFlag> __usedAttribFlags;
 
 		const std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
+		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshVisibleChangeEventListener;
 		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDestroyEventListener;
 
 		Infra::Event<Drawcall &> __usedAttributeFlagsChangeEvent;
 		Infra::Event<Drawcall &> __drawcallChangeEvent;
 
+		void __registerSubmesh(Submesh &submesh) noexcept;
+		void __unregisterSubmesh(Submesh &submesh) noexcept;
+
 		void __onAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;
 
+		void __onSubmeshVisibleChange(Submesh &submesh) noexcept;
 		void __onSubmeshDestroy(Submesh &submesh) noexcept;
 	};
 

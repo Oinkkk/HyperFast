@@ -12,6 +12,8 @@ namespace Jin
 		Scene(HyperFast::RenderingEngine &renderingEngine) noexcept;
 		virtual ~Scene() noexcept;
 
+		virtual void process(const float deltaTime);
+
 	protected:
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Buffer> _createBuffer(

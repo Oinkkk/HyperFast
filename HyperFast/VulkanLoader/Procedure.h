@@ -96,5 +96,6 @@ namespace VKL
 		PFN_vkCmdBindIndexBuffer vkCmdBindIndexBuffer{};
 		PFN_vkCmdDraw vkCmdDraw{};
 		PFN_vkCmdDrawIndexed vkCmdDrawIndexed{};
+		PFN_vkCmdDrawIndexedIndirectCount vkCmdDrawIndexedIndirectCount{};
 	};
 }

@@ -96,6 +96,15 @@ namespace HyperFast
 			__drawCommandChangeEvent.invoke(*this);
 	}
 
+	void Submesh::setVisible(const bool visible) noexcept
+	{
+		if (__visible == visible)
+			return;
+
+		__visible = visible;
+		__visibleChangeEvent.invoke(*this);
+	}
+
 	Mesh &Submesh::getMesh() const noexcept
 	{
 		return *__pMesh;

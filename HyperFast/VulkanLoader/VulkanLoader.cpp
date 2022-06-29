@@ -354,6 +354,10 @@ namespace VKL
 			reinterpret_cast<PFN_vkCmdDrawIndexed>(
 				vkGetDeviceProcAddr(device, "vkCmdDrawIndexed"));
 
+		retVal.vkCmdDrawIndexedIndirectCount =
+			reinterpret_cast<PFN_vkCmdDrawIndexedIndirectCount>(
+				vkGetDeviceProcAddr(device, "vkCmdDrawIndexedIndirectCount"));
+
 		return retVal;
 	}
 

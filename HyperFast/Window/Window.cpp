@@ -59,6 +59,7 @@ namespace Win
 			break;
 
 		case WM_PAINT:
+			ValidateRect(__handle, nullptr);
 			__drawEvent.invoke(*this);
 			customReturn = true;
 			customRetVal = 0LL;
@@ -121,11 +122,6 @@ namespace Win
 	void Window::invalidate() noexcept
 	{
 		InvalidateRect(__handle, nullptr, FALSE);
-	}
-
-	void Window::validate() noexcept
-	{
-		ValidateRect(__handle, nullptr);
 	}
 
 	void Window::destroy()

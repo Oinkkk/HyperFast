@@ -152,5 +152,8 @@
     <ClInclude Include="Submesh.h">
       <Filter>Mesh</Filter>
     </ClInclude>
+    <ClInclude Include="IndirectBufferBuilder.h">
+      <Filter>Drawcall</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -16,6 +16,7 @@
     <ClInclude Include="CommandBufferManager.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
+    <ClInclude Include="IndirectBufferBuilder.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="Mesh.h" />

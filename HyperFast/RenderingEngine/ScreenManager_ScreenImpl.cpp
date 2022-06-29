@@ -44,10 +44,24 @@ namespace HyperFast
 		__needToUpdatePipelineDependencies = true;
 	}
 
+	void ScreenManager::ScreenImpl::draw()
+	{
+		if (__destroyed)
+			return;
+
+		__update();
+
+		if (__needToDraw)
+		{
+			__draw();
+			__needToDraw = false;
+		}
+	}
+
 	void ScreenManager::ScreenImpl::__update()
 	{
 		if (__pDrawcall)
-			__pDrawcall->update();
+			__pDrawcall->draw();
 
 		if (__needToUpdateSurfaceDependencies)
 		{
@@ -55,6 +69,7 @@ namespace HyperFast
 			__needToUpdateSurfaceDependencies = false;
 			__needToUpdatePipelineDependencies = false;
 			__needToUpdateMainCommands = false;
+			__needToDraw = true;
 		}
 
 		if (__needToUpdatePipelineDependencies)
@@ -62,19 +77,19 @@ namespace HyperFast
 			__updatePipelineDependencies();
 			__needToUpdatePipelineDependencies = false;
 			__needToUpdateMainCommands = false;
+			__needToDraw = true;
 		}
 
 		if (__needToUpdateMainCommands)
 		{
 			__updateMainCommands();
 			__needToUpdateMainCommands = false;
+			__needToDraw = true;
 		}
 	}
 
 	bool ScreenManager::ScreenImpl::__draw()
 	{
-		__update();
-
 		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };
 
 		uint32_t imageIdx{};
@@ -154,7 +169,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__destroy() noexcept
 	{
-		if (!__surface)
+		if (__destroyed)
 			return;
 
 		__waitDeviceIdle();
@@ -166,7 +181,8 @@ namespace HyperFast
 		__destroyMainCommandBufferManagers();
 		__destroySwapchain(__swapchain);
 		__destroySurface();
-		__surface = VK_NULL_HANDLE;
+	
+		__destroyed = true;
 	}
 
 	void ScreenManager::ScreenImpl::__initListeners() noexcept
@@ -182,8 +198,7 @@ namespace HyperFast
 
 		__pDrawEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &window)
 		{
-			__draw();
-			window.validate();
+			__needToDraw = true;
 		});
 
 		__pDestroyEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &)

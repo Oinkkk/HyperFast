@@ -60,8 +60,6 @@ namespace Win
 		void setSize(const int width, const int height) noexcept;
 
 		void invalidate() noexcept;
-		void validate() noexcept;
-
 		void destroy();
 
 		[[nodiscard]]
