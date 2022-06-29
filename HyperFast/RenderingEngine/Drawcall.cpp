@@ -19,6 +19,8 @@ namespace HyperFast
 
 	void Drawcall::addSubmesh(Submesh &submesh) noexcept
 	{
+		submesh.getDestroyEvent() += __pSubmeshDestroyEventListener;
+
 		Mesh &mesh{ submesh.getMesh() };
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
@@ -35,6 +37,8 @@ namespace HyperFast
 
 	void Drawcall::removeSubmesh(Submesh &submesh) noexcept
 	{
+		submesh.getDestroyEvent() -= __pSubmeshDestroyEventListener;
+
 		Mesh &mesh{ submesh.getMesh() };
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
@@ -98,6 +102,17 @@ namespace HyperFast
 
 	void Drawcall::__onSubmeshDestroy(Submesh &submesh) noexcept
 	{
-		removeSubmesh(submesh);
+		Mesh &mesh{ submesh.getMesh() };
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		SubmeshGroup &submeshGroup{ __attribFlag2SubmeshGroup[attribFlag] };
+		submeshGroup[&mesh].erase(&submesh);
+		__drawcallChanged = true;
+
+		if (submeshGroup.empty())
+		{
+			mesh.getAttributeFlagChangeEvent() -= __pAttributeFlagChangeEventListener;
+			__attribFlagsChanged = true;
+		}
 	}
 }
