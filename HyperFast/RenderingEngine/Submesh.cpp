@@ -109,11 +109,4 @@ namespace HyperFast
 	{
 		return *__pMesh;
 	}
-
-	void Submesh::draw(const VkCommandBuffer commandBuffer) const noexcept
-	{
-		__deviceProc.vkCmdDrawIndexed(
-			commandBuffer, __drawCommand.indexCount, __drawCommand.instanceCount,
-			__drawCommand.firstIndex, __drawCommand.vertexOffset, __drawCommand.firstInstance);
-	}
 }

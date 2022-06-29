@@ -27,9 +27,8 @@ int main()
 	win1.setSize(800, 600);
 	win2.setSize(800, 600);
 
-	HyperFast::ScreenManager &screenManager{ pRenderingEngine->getScreenManager() };
-	std::unique_ptr<HyperFast::Screen> pScreen1{ std::make_unique<HyperFast::Screen>(screenManager, win1) };
-	std::unique_ptr<HyperFast::Screen> pScreen2{ std::make_unique<HyperFast::Screen>(screenManager, win2) };
+	std::shared_ptr<HyperFast::Screen> pScreen1{ pRenderingEngine->createScreen(win1) };
+	std::shared_ptr<HyperFast::Screen> pScreen2{ pRenderingEngine->createScreen(win2) };
 
 	std::unique_ptr<BufferTestScene> pBufferTestScene
 	{

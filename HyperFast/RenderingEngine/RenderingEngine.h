@@ -3,10 +3,10 @@
 #include <string>
 #include "../VulkanLoader/VulkanLoader.h"
 #include "../Infrastructure/Logger.h"
-#include "ScreenManager.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
-#include "Submesh.h"
+#include "Screen.h"
+#include "Drawcall.h"
 
 namespace HyperFast
 {
@@ -17,13 +17,19 @@ namespace HyperFast
 		~RenderingEngine() noexcept;
 
 		[[nodiscard]]
-		ScreenManager &getScreenManager() noexcept;
+		std::shared_ptr<Screen> createScreen(Win::Window &window);
 
 		[[nodiscard]]
-		MemoryManager &getMemoryManager() noexcept;
+		std::shared_ptr<Buffer> createBuffer(
+			const VkDeviceSize size, const VkBufferUsageFlags usage);
 
 		[[nodiscard]]
-		BufferManager &getBufferManager() noexcept;
+		std::shared_ptr<Memory> createMemory(
+			const VkMemoryRequirements &memRequirements,
+			const VkMemoryPropertyFlags requiredProps, const bool linearity);
+
+		[[nodiscard]]
+		std::unique_ptr<Drawcall> createDrawcall() noexcept;
 
 		[[nodiscard]]
 		std::shared_ptr<Mesh> createMesh() noexcept;
@@ -35,8 +41,6 @@ namespace HyperFast
 		Infra::Logger &__logger;
 		const std::string __appName;
 		const std::string __engineName;
-
-		tf::Future<void> __available;
 
 		uint32_t __instanceVersion{};
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{};

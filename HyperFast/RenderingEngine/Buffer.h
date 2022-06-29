@@ -11,6 +11,12 @@ namespace HyperFast
 		~Buffer() noexcept;
 
 		[[nodiscard]]
+		constexpr VkDeviceSize getSize() const noexcept;
+
+		[[nodiscard]]
+		constexpr VkBufferUsageFlags getUsage() const noexcept;
+
+		[[nodiscard]]
 		constexpr VkBuffer getHandle() const noexcept;
 
 		[[nodiscard]]
@@ -21,6 +27,16 @@ namespace HyperFast
 		BufferManager &__manager;
 		BufferManager::BufferImpl *const __pImpl;
 	};
+
+	constexpr VkDeviceSize Buffer::getSize() const noexcept
+	{
+		return __pImpl->getSize();
+	}
+
+	constexpr VkBufferUsageFlags Buffer::getUsage() const noexcept
+	{
+		return __pImpl->getUsage();
+	}
 
 	constexpr VkBuffer Buffer::getHandle() const noexcept
 	{

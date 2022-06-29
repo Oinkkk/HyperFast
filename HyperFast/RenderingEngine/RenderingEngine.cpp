@@ -11,38 +11,33 @@ namespace HyperFast
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
-		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__available = executor.async([this]
-		{
-			__getInstanceVersion();
-			__checkInstanceVersionSupport();
+		__getInstanceVersion();
+		__checkInstanceVersionSupport();
 
 #ifndef NDEBUG
-			__populateDebugMessengerCreateInfo();
+		__populateDebugMessengerCreateInfo();
 #endif
 
-			__createInstance();
-			__queryInstanceProc();
+		__createInstance();
+		__queryInstanceProc();
 
 #ifndef NDEBUG
-			__createDebugMessenger();
+		__createDebugMessenger();
 #endif
 
-			__pickPhysicalDevice();
-			__queryPhysicalDeviceProps();
-			__retrieveQueueFamilies();
-			__createDevice();
-			__queryDeviceProc();
-			__queryGraphicsQueue();
-			__createScreenManager();
-			__createMemoryManager();
-			__createBufferManager();
-		});
+		__pickPhysicalDevice();
+		__queryPhysicalDeviceProps();
+		__retrieveQueueFamilies();
+		__createDevice();
+		__queryDeviceProc();
+		__queryGraphicsQueue();
+		__createScreenManager();
+		__createMemoryManager();
+		__createBufferManager();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
-		__available.wait();
 		__waitDeviceIdle();
 		__destroyBufferManager();
 		__destroyMemoryManager();
@@ -56,33 +51,38 @@ namespace HyperFast
 		__destroyInstance();
 	}
 
-	ScreenManager &RenderingEngine::getScreenManager() noexcept
+	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
 	{
-		__available.wait();
-		return *__pScreenManager;
+		return std::make_shared<HyperFast::Screen>(*__pScreenManager, window);
 	}
 
-	MemoryManager &RenderingEngine::getMemoryManager() noexcept
+	std::shared_ptr<Buffer> RenderingEngine::createBuffer(
+		const VkDeviceSize size, const VkBufferUsageFlags usage)
 	{
-		__available.wait();
-		return *__pMemoryManager;
+		return std::make_shared<Buffer>(*__pBufferManager, size, usage);
 	}
 
-	BufferManager &RenderingEngine::getBufferManager() noexcept
+	std::shared_ptr<Memory> RenderingEngine::createMemory(
+		const VkMemoryRequirements &memRequirements,
+		const VkMemoryPropertyFlags requiredProps, const bool linearity)
 	{
-		__available.wait();
-		return *__pBufferManager;
+		return std::make_shared<Memory>(
+			*__pMemoryManager, memRequirements, requiredProps, linearity);
+	}
+
+	std::unique_ptr<Drawcall> RenderingEngine::createDrawcall() noexcept
+	{
+		return std::make_unique<Drawcall>(
+			__device, __deviceProc, *__pBufferManager, *__pMemoryManager);
 	}
 
 	std::shared_ptr<Mesh> RenderingEngine::createMesh() noexcept
 	{
-		__available.wait();
 		return std::make_shared<Mesh>(__deviceProc);
 	}
 
 	std::shared_ptr<Submesh> RenderingEngine::createSubmesh(const std::shared_ptr<Mesh> &pMesh) noexcept
 	{
-		__available.wait();
 		return std::make_shared<Submesh>(pMesh, __deviceProc);
 	}
 

@@ -17,7 +17,7 @@ namespace Jin
 	protected:
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Buffer> _createBuffer(
-			const VkDeviceSize dataSize, const VkBufferUsageFlags usage) const;
+			const VkDeviceSize size, const VkBufferUsageFlags usage) const;
 
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Memory> _createMemory(const VkMemoryRequirements &memRequirements) const;
@@ -32,6 +32,6 @@ namespace Jin
 
 	private:
 		HyperFast::RenderingEngine &__renderingEngine;
-		HyperFast::Drawcall __drawcall;
+		std::unique_ptr<HyperFast::Drawcall> __pDrawcall;
 	};
 }

@@ -39,8 +39,6 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr Infra::EventView<Submesh &> &getDestroyEvent() noexcept;
 
-		void draw(const VkCommandBuffer commandBuffer) const noexcept;
-
 	private:
 		std::shared_ptr<Mesh> __pMesh;
 		const VKL::DeviceProcedure &__deviceProc;

@@ -5,10 +5,10 @@ namespace HyperFast
 {
 	BufferManager::BufferImpl::BufferImpl(
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-		const VkDeviceSize dataSize, const VkBufferUsageFlags usage) :
-		__device{ device }, __deviceProc{ deviceProc }
+		const VkDeviceSize size, const VkBufferUsageFlags usage) :
+		__device{ device }, __deviceProc{ deviceProc }, __size{ size }, __usage{ usage }
 	{
-		__createBuffer(dataSize, usage);
+		__createBuffer(size, usage);
 		__queryMemoryRequirements();
 	}
 
