@@ -6,6 +6,11 @@ namespace HyperFast
 		__pMesh{ pMesh }, __deviceProc{ deviceProc }
 	{}
 
+	Submesh::~Submesh() noexcept
+	{
+		__destroyEvent.invoke(*this);
+	}
+
 	void Submesh::setIndexCount(const uint32_t indexCount) noexcept
 	{
 		if (__drawCommand.indexCount == indexCount)

@@ -9,6 +9,7 @@ namespace HyperFast
 	{
 	public:
 		Submesh(const std::shared_ptr<Mesh> &pMesh, const VKL::DeviceProcedure &deviceProc) noexcept;
+		~Submesh() noexcept;
 
 		void setIndexCount(const uint32_t indexCount) noexcept;
 		void setInstanceCount(const uint32_t instanceCount) noexcept;
