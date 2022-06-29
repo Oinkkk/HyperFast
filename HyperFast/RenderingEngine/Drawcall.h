@@ -40,12 +40,16 @@ namespace HyperFast
 		std::unordered_map<VertexAttributeFlag, SubmeshGroup> __attribFlag2SubmeshGroup;
 		std::vector<VertexAttributeFlag> __usedAttribFlags;
 
-		std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
+		const std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
+		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDestroyEventListener;
+
 		Infra::Event<Drawcall &> __usedAttributeFlagsChangeEvent;
 		Infra::Event<Drawcall &> __drawcallChangeEvent;
 
 		void __onAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;
+
+		void __onSubmeshDestroy(Submesh &submesh) noexcept;
 	};
 
 	constexpr const std::vector<VertexAttributeFlag> &Drawcall::getUsedAttributeFlags() const noexcept

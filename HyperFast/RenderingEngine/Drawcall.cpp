@@ -3,12 +3,18 @@
 namespace HyperFast
 {
 	Drawcall::Drawcall() noexcept :
-		__pAttributeFlagChangeEventListener{ std::make_shared<AttributeFlagChangeEventListener>() }
+		__pAttributeFlagChangeEventListener{ std::make_shared<AttributeFlagChangeEventListener>() },
+		__pSubmeshDestroyEventListener{ std::make_shared<Infra::EventListener<Submesh &>>() }
 	{
 		__pAttributeFlagChangeEventListener->setCallback(
 			std::bind(
 				&Drawcall::__onAttributeFlagChange, this,
 				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+		__pSubmeshDestroyEventListener->setCallback(
+			std::bind(
+				&Drawcall::__onSubmeshDestroy, this,
+				std::placeholders::_1));
 	}
 
 	void Drawcall::addSubmesh(Submesh &submesh) noexcept
@@ -88,5 +94,10 @@ namespace HyperFast
 		SubmeshGroup &newSubmeshGroup{ __attribFlag2SubmeshGroup[newFlag] };
 
 		newSubmeshGroup.insert(oldSubmeshGroup.extract(&mesh));
+	}
+
+	void Drawcall::__onSubmeshDestroy(Submesh &submesh) noexcept
+	{
+		removeSubmesh(submesh);
 	}
 }
