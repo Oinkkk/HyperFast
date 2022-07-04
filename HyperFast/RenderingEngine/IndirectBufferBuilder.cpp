@@ -1,4 +1,5 @@
-#include "IndirectBufferBuilder.h"
+ï»¿#include "IndirectBufferBuilder.h"
+#include <iostream>
 
 namespace HyperFast
 {
@@ -6,10 +7,7 @@ namespace HyperFast
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
 		HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
-		__bufferManager{ bufferManager }, __memoryManager{ memoryManager },
-		__pSubmeshDrawCommandChangeEventListener{ std::make_shared<Infra::EventListener<Submesh &>>() },
-		__pSubmeshVisibleChangeEventListener{ std::make_shared<Infra::EventListener<Submesh &>>() },
-		__pSubmeshDestroyEventListener{ std::make_shared<Infra::EventListener<Submesh &>>() }
+		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }
 	{
 		__initEventListeners();
 		__createCountResources();
@@ -50,6 +48,9 @@ namespace HyperFast
 
 	void IndirectBufferBuilder::draw(VkCommandBuffer commandBuffer) noexcept
 	{
+		if (!__drawCount)
+			return;
+
 		__deviceProc.vkCmdDrawIndexedIndirectCount(
 			commandBuffer,
 			__pIndirectBuffer->getHandle(), 0ULL,
@@ -59,53 +60,43 @@ namespace HyperFast
 
 	void IndirectBufferBuilder::__initEventListeners() noexcept
 	{
-		__pSubmeshDrawCommandChangeEventListener->setCallback(
-			std::bind(
-				&IndirectBufferBuilder::__onSubmeshDrawCommandChange, this,
-				std::placeholders::_1));
+		__pSubmeshDrawCommandChangeEventListener =
+			Infra::EventListener<Submesh &>::bind(
+				&IndirectBufferBuilder::__onSubmeshDrawCommandChange, this, std::placeholders::_1);
 
-		__pSubmeshVisibleChangeEventListener->setCallback(
-			std::bind(
-				&IndirectBufferBuilder::__onSubmeshVisibleChange, this,
-				std::placeholders::_1));
+		__pSubmeshVisibleChangeEventListener =
+			Infra::EventListener<Submesh &>::bind(
+				&IndirectBufferBuilder::__onSubmeshVisibleChange, this, std::placeholders::_1);
 
-		__pSubmeshDestroyEventListener->setCallback(
-			std::bind(
-				&IndirectBufferBuilder::__onSubmeshDestroy, this,
-				std::placeholders::_1));
+		__pSubmeshDestroyEventListener =
+			Infra::EventListener<Submesh &>::bind(
+				&IndirectBufferBuilder::__onSubmeshDestroy, this, std::placeholders::_1);
 	}
 
 	void IndirectBufferBuilder::__update()
 	{
-		__drawCount = 0U;
-		for (Submesh *const pSubmesh : __submeshes)
-		{
-			if (pSubmesh->isVisible())
-				__drawCount++;
-		}
-
-		if (!__drawCount)
-			return;
-
-		const bool needToCreateBuffer{ __drawCount > __maxDrawCount };
-		if (needToCreateBuffer)
-			__createIndirectResources();
-
 		__updateHostBuffer();
 
-		std::memcpy(
-			__pIndirectMemory->map(), __hostBuffer.data(),
-			sizeof(VkDrawIndexedIndirectCommand) * __drawCount);
-
 		std::memcpy(__pCountMemory->map(), &__drawCount, sizeof(uint32_t));
-
-		__pIndirectMemory->unmap();
 		__pCountMemory->unmap();
 
-		__indirectBufferUpdateEvent.invoke(*this);
+		if (__drawCount)
+		{
+			const bool needToCreateBuffer{ __drawCount > __maxDrawCount };
+			if (needToCreateBuffer)
+				__createIndirectResources();
 
-		if (needToCreateBuffer)
-			__indirectBufferCreateEvent.invoke(*this);
+			std::memcpy(
+				__pIndirectMemory->map(), __hostBuffer.data(),
+				sizeof(VkDrawIndexedIndirectCommand) * __drawCount);
+
+			__pIndirectMemory->unmap();
+
+			if (needToCreateBuffer)
+				__indirectBufferCreateEvent.invoke(*this);
+		}
+
+		__indirectBufferUpdateEvent.invoke(*this);
 	}
 
 	void IndirectBufferBuilder::__createCountResources()
@@ -149,18 +140,18 @@ namespace HyperFast
 
 	void IndirectBufferBuilder::__updateHostBuffer() noexcept
 	{
-		// TODO: ½ºÅ×ÀÌÂ¡ ¹öÆÛ »ç¿ë ½Ã host buffer race condition ÇØ°á ÇÊ¿ä.
-		// TODO: Device synchronizer ¸ðµâ Ãß°¡
-		__hostBuffer.resize(__drawCount);
+		// TODO: ìŠ¤í…Œì´ì§• ë²„í¼ ì‚¬ìš© ì‹œ host buffer race condition í•´ê²° í•„ìš”.
+		// TODO: Device synchronizer ëª¨ë“ˆ ì¶”ê°€
+		__drawCount = 0U;
+		__hostBuffer.clear();
 
-		size_t cursor{};
 		for (Submesh *const pSubmesh : __submeshes)
 		{
 			if (!(pSubmesh->isVisible()))
 				continue;
 				
-			__hostBuffer[cursor] = pSubmesh->getDrawCommand();
-			cursor++;
+			__hostBuffer.emplace_back(pSubmesh->getDrawCommand());
+			__drawCount++;
 		}
 	}
 

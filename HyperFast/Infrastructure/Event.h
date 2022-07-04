@@ -18,6 +18,10 @@ namespace Infra
 		static std::shared_ptr<EventListener<$Args...>>
 			make(const std::function<void(const $Args &...)> &callback) noexcept;
 
+		template <typename ...$Params>
+		[[nodiscard]]
+		static std::shared_ptr<EventListener<$Args...>> bind($Params &&...params) noexcept;
+
 	private:
 		std::function<void(const $Args &...)> __callbackFunc;
 	};
@@ -80,6 +84,13 @@ namespace Infra
 
 		pRetVal->setCallback(callback);
 		return pRetVal;
+	}
+
+	template <typename ...$Args>
+	template <typename ...$Params>
+	std::shared_ptr<EventListener<$Args...>> EventListener<$Args...>::bind($Params &&...params) noexcept
+	{
+		return make(std::bind(std::forward<$Params>(params)...));
 	}
 
 	template <typename ...$Args>

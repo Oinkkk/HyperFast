@@ -50,9 +50,9 @@ namespace HyperFast
 		std::unordered_map<VertexAttributeFlag, IndirectBufferBuilderMap> __attribFlag2IndirectBufferMap;
 		std::vector<VertexAttributeFlag> __attribFlags;
 
-		const std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
-		const std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferUpdateEventListener;
-		const std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferCreateEventListener;
+		std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
+		std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferUpdateEventListener;
+		std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferCreateEventListener;
 
 		Infra::Event<Drawcall &> __attributeFlagsUpdateEvent;
 		Infra::Event<Drawcall &> __indirectBufferUpdateEvent;

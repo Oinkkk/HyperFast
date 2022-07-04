@@ -1,4 +1,5 @@
-#include "Drawcall.h"
+﻿#include "Drawcall.h"
+#include <iostream>
 
 namespace HyperFast
 {
@@ -6,10 +7,7 @@ namespace HyperFast
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
 		HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
-		__bufferManager{ bufferManager }, __memoryManager{ memoryManager },
-		__pAttributeFlagChangeEventListener{ std::make_shared<AttributeFlagChangeEventListener>() },
-		__pIndirectBufferUpdateEventListener{ std::make_shared<Infra::EventListener<IndirectBufferBuilder &>>() },
-		__pIndirectBufferCreateEventListener{ std::make_shared<Infra::EventListener<IndirectBufferBuilder &>>() }
+		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }
 	{
 		__initEventListeners();
 	}
@@ -88,6 +86,8 @@ namespace HyperFast
 
 	void Drawcall::draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept
 	{
+		// TODO: 화면에 그릴 게 없을 때 강제 갱신하면 그 뒤로 screen이 업데이트 되지 않는 버그 수정
+
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
 		for (const auto &[pMesh, indirectBufferBuilder] : indirectBufferBuilderMap)
 		{
@@ -101,16 +101,18 @@ namespace HyperFast
 
 	void Drawcall::__initEventListeners() noexcept
 	{
-		__pAttributeFlagChangeEventListener->setCallback(
-			std::bind(
+		__pAttributeFlagChangeEventListener =
+			AttributeFlagChangeEventListener::bind(
 				&Drawcall::__onAttributeFlagChange, this,
-				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		__pIndirectBufferUpdateEventListener->setCallback(
-			std::bind(&Drawcall::__onIndirectBufferUpdate, this, std::placeholders::_1));
+		__pIndirectBufferUpdateEventListener =
+			Infra::EventListener<IndirectBufferBuilder &>::bind(
+				&Drawcall::__onIndirectBufferUpdate, this, std::placeholders::_1);
 
-		__pIndirectBufferCreateEventListener->setCallback(
-			std::bind(&Drawcall::__onIndirectBufferCreate, this, std::placeholders::_1));
+		__pIndirectBufferCreateEventListener =
+			Infra::EventListener<IndirectBufferBuilder &>::bind(
+				&Drawcall::__onIndirectBufferCreate, this, std::placeholders::_1);
 	}
 
 	void Drawcall::__onAttributeFlagChange(

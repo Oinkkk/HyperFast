@@ -46,9 +46,9 @@ namespace HyperFast
 
 		bool __needToUpdate{};
 
-		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDrawCommandChangeEventListener;
-		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshVisibleChangeEventListener;
-		const std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDestroyEventListener;
+		std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDrawCommandChangeEventListener;
+		std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshVisibleChangeEventListener;
+		std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDestroyEventListener;
 
 		Infra::Event<IndirectBufferBuilder &> __indirectBufferUpdateEvent;
 		Infra::Event<IndirectBufferBuilder &> __indirectBufferCreateEvent;
