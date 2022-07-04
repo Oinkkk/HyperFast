@@ -86,14 +86,9 @@ namespace HyperFast
 
 	void Drawcall::draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept
 	{
-		// TODO: 화면에 그릴 게 없을 때 강제 갱신하면 그 뒤로 screen이 업데이트 되지 않는 버그 수정
-
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
 		for (const auto &[pMesh, indirectBufferBuilder] : indirectBufferBuilderMap)
 		{
-			if (indirectBufferBuilder->isEmpty())
-				continue;
-
 			pMesh->bind(commandBuffer);
 			indirectBufferBuilder->draw(commandBuffer);
 		}

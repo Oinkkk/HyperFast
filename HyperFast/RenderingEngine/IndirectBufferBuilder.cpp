@@ -48,7 +48,7 @@ namespace HyperFast
 
 	void IndirectBufferBuilder::draw(VkCommandBuffer commandBuffer) noexcept
 	{
-		if (!__drawCount)
+		if (!__pIndirectBuffer)
 			return;
 
 		__deviceProc.vkCmdDrawIndexedIndirectCount(

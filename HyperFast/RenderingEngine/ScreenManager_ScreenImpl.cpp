@@ -51,6 +51,10 @@ namespace HyperFast
 		if (__destroyed)
 			return;
 
+		const bool validSize{ __window.getWidth() && __window.getHeight() };
+		if (!validSize)
+			return;
+
 		__update();
 
 		if (__needToDraw)
@@ -248,10 +252,6 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
 	{
-		const bool validSize{ __window.getWidth() && __window.getHeight() };
-		if (!validSize)
-			return;
-
 		const VkSwapchainKHR oldSwapchain{ __swapchain };
 
 		tf::Taskflow taskflow;
