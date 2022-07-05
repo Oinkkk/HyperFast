@@ -2,8 +2,8 @@
 
 namespace HyperFast
 {
-	Buffer::Buffer(BufferManager &manager, const VkDeviceSize dataSize, const VkBufferUsageFlags usage) :
-		__manager{ manager }, __pImpl{ manager.create(dataSize, usage) }
+	Buffer::Buffer(BufferManager &manager, const VkDeviceSize size, const VkBufferUsageFlags usage) :
+		__manager{ manager }, __pImpl{ manager.create(size, usage) }
 	{}
 
 	Buffer::~Buffer() noexcept

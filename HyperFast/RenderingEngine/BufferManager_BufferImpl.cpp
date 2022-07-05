@@ -21,6 +21,8 @@ namespace HyperFast
 		const std::shared_ptr<Memory> &pMemory, const VkDeviceAddress offset) noexcept
 	{
 		__pMemory = pMemory;
+		__memoryOffset = offset;
+
 		if (pMemory)
 		{
 			__deviceProc.vkBindBufferMemory(

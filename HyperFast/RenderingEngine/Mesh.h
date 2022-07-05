@@ -11,13 +11,17 @@ namespace HyperFast
 	public:
 		Mesh(const VKL::DeviceProcedure &deviceProc) noexcept;
 
-		// vertex buffer
+		[[nodiscard]]
+		constexpr const std::shared_ptr<Buffer> &getPositionBuffer() const noexcept;
 		void setPositionBuffer(const std::shared_ptr<Buffer> &pBuffer) noexcept;
+
+		[[nodiscard]]
+		constexpr const std::shared_ptr<Buffer> &getColorBuffer() const noexcept;
 		void setColorBuffer(const std::shared_ptr<Buffer> &pBuffer) noexcept;
 
-		// index buffer
-		void setIndexBuffer(
-			const std::shared_ptr<Buffer> &pBuffer, const VkIndexType indexType) noexcept;
+		[[nodiscard]]
+		constexpr const std::shared_ptr<Buffer> &getIndexBuffer() const noexcept;
+		void setIndexBuffer(const std::shared_ptr<Buffer> &pBuffer, const VkIndexType indexType) noexcept;
 
 		[[nodiscard]]
 		constexpr VertexAttributeFlag getVertexAttributeFlag() const noexcept;
@@ -49,6 +53,21 @@ namespace HyperFast
 			const VertexAttributeFlagBit attribFlagBit, const uint32_t attribLocation,
 			std::shared_ptr<Buffer> &pOldBuffer, const std::shared_ptr<Buffer> &pNewBuffer) noexcept;
 	};
+
+	constexpr const std::shared_ptr<Buffer> &Mesh::getPositionBuffer() const noexcept
+	{
+		return __pPositionBuffer;
+	}
+
+	constexpr const std::shared_ptr<Buffer> &Mesh::getColorBuffer() const noexcept
+	{
+		return __pColorBuffer;
+	}
+
+	constexpr const std::shared_ptr<Buffer> &Mesh::getIndexBuffer() const noexcept
+	{
+		return __pIndexBuffer;
+	}
 
 	constexpr VertexAttributeFlag Mesh::getVertexAttributeFlag() const noexcept
 	{

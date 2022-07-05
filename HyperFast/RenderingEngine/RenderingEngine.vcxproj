@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -12,11 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="BufferCopyManager.h" />
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
+    <ClInclude Include="InstantCommandSubmitter.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="Mesh.h" />
@@ -38,6 +40,7 @@
     <ClCompile Include="CommandBufferManager.cpp" />
     <ClCompile Include="Drawcall.cpp" />
     <ClCompile Include="IndirectBufferBuilder.cpp" />
+    <ClCompile Include="InstantCommandSubmitter.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="MemoryManager_MemoryBank.cpp" />
     <ClCompile Include="MemoryManager_MemoryImpl.cpp" />

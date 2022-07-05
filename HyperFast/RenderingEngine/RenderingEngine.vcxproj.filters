@@ -40,6 +40,12 @@
     <Filter Include="Memory">
       <UniqueIdentifier>{55e8d6e0-095e-492e-97a6-c88f654cc0b9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BufferCopyManager">
+      <UniqueIdentifier>{51a000fe-e251-4203-a315-64d55c482724}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="InstantCommandSubmitter">
+      <UniqueIdentifier>{e107dadf-21a6-4859-860c-65b9eb938d88}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -99,6 +105,9 @@
     <ClCompile Include="IndirectBufferBuilder.cpp">
       <Filter>Drawcall</Filter>
     </ClCompile>
+    <ClCompile Include="InstantCommandSubmitter.cpp">
+      <Filter>InstantCommandSubmitter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -157,6 +166,12 @@
     </ClInclude>
     <ClInclude Include="IndirectBufferBuilder.h">
       <Filter>Drawcall</Filter>
+    </ClInclude>
+    <ClInclude Include="InstantCommandSubmitter.h">
+      <Filter>InstantCommandSubmitter</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferCopyManager.h">
+      <Filter>BufferCopyManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

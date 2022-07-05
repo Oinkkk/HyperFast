@@ -16,11 +16,10 @@ namespace Jin
 
 	protected:
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Buffer> _createBuffer(
-			const VkDeviceSize size, const VkBufferUsageFlags usage) const;
+		std::shared_ptr<HyperFast::Buffer> _createVertexBuffer(const void *const pData, const VkDeviceSize size) const;
 
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Memory> _createMemory(const VkMemoryRequirements &memRequirements) const;
+		std::shared_ptr<HyperFast::Buffer> _createIndexBuffer(const void *const pData, const VkDeviceSize size) const;
 
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Mesh> _createMesh() noexcept;

@@ -17,10 +17,44 @@ namespace Jin
 		__pDrawcall->validate();
 	}
 
+	std::shared_ptr<HyperFast::Buffer> Scene::_createVertexBuffer(const void *const pData, const VkDeviceSize size) const
+	{
+		const VkBufferUsageFlags bufferUsage
+		{
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT
+		};
+
+		const VkMemoryPropertyFlags memProps
+		{
+			VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		};
+
+		const std::shared_ptr<HyperFast::Buffer> pBuffer
+		{
+			__renderingEngine.createBuffer(size, bufferUsage)
+		};
+
+		const std::shared_ptr<HyperFast::Memory> pMemory
+		{
+			__renderingEngine.createMemory(
+				pBuffer->getMemoryRequirements(), memProps, true)
+		};
+
+		pBuffer->bindMemory(pMemory, 0ULL);
+		//__renderingEngine.copyBuffer(VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT, VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT)
+
+		return pBuffer;
+	}
+
+	std::shared_ptr<HyperFast::Buffer> Scene::_createIndexBuffer(const void *const pData, const VkDeviceSize size) const
+	{
+
+	}
+
 	std::shared_ptr<HyperFast::Buffer> Scene::_createBuffer(
 		const VkDeviceSize size, const VkBufferUsageFlags usage) const
 	{
-		return __renderingEngine.createBuffer(size, usage);
 	}
 
 	std::shared_ptr<HyperFast::Memory> Scene::_createMemory(const VkMemoryRequirements &memRequirements) const

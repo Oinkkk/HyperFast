@@ -16,6 +16,10 @@ namespace HyperFast
 		RenderingEngine(Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName);
 		~RenderingEngine() noexcept;
 
+		void startFrame() noexcept;
+		void endFrame() noexcept;
+		void update() noexcept;
+
 		[[nodiscard]]
 		std::shared_ptr<Screen> createScreen(Win::Window &window);
 
@@ -36,6 +40,12 @@ namespace HyperFast
 
 		[[nodiscard]]
 		std::shared_ptr<Submesh> createSubmesh(const std::shared_ptr<Mesh> &pMesh) noexcept;
+
+		void copyBuffer(
+			const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask,
+			const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask,
+			const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
+			const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept;
 
 	private:
 		Infra::Logger &__logger;
@@ -67,6 +77,9 @@ namespace HyperFast
 		std::unique_ptr<MemoryManager> __pMemoryManager;
 		std::unique_ptr<BufferManager> __pBufferManager;
 
+		std::unique_ptr<InstantCommandSubmitter> __pInstantCommandSubmitter;
+		std::unique_ptr<BufferCopyManager> __pBufferCopyManager;
+
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
 		void __getInstanceVersion() noexcept;
@@ -93,6 +106,12 @@ namespace HyperFast
 
 		void __createBufferManager() noexcept;
 		void __destroyBufferManager() noexcept;
+
+		void __createInstantCommandSubmitter() noexcept;
+		void __destroyInstantCommandSubmitter() noexcept;
+
+		void __createBufferCopyManager() noexcept;
+		void __destroyBufferCopyManager() noexcept;
 
 		void __waitDeviceIdle() const noexcept;
 

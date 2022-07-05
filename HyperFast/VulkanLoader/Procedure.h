@@ -88,6 +88,7 @@ namespace VKL
 		PFN_vkMapMemory vkMapMemory{};
 		PFN_vkUnmapMemory vkUnmapMemory{};
 		PFN_vkFlushMappedMemoryRanges vkFlushMappedMemoryRanges{};
+		PFN_vkResetCommandBuffer vkResetCommandBuffer{};
 
 		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
 		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};
@@ -97,5 +98,7 @@ namespace VKL
 		PFN_vkCmdDraw vkCmdDraw{};
 		PFN_vkCmdDrawIndexed vkCmdDrawIndexed{};
 		PFN_vkCmdDrawIndexedIndirectCount vkCmdDrawIndexedIndirectCount{};
+		PFN_vkCmdPipelineBarrier2 vkCmdPipelineBarrier2{};
+		PFN_vkCmdCopyBuffer vkCmdCopyBuffer{};
 	};
 }

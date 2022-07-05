@@ -5,9 +5,11 @@ namespace HyperFast
 {
 	Drawcall::Drawcall(
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-		HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept :
+		BufferManager &bufferManager, MemoryManager &memoryManager,
+		BufferCopyManager &bufferCopyManager) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
-		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }
+		__bufferManager{ bufferManager }, __memoryManager{ memoryManager },
+		__bufferCopyManager{ bufferCopyManager }
 	{
 		__initEventListeners();
 	}
@@ -89,6 +91,9 @@ namespace HyperFast
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
 		for (const auto &[pMesh, indirectBufferBuilder] : indirectBufferBuilderMap)
 		{
+			if (__isBusy(*pMesh))
+				continue;
+
 			pMesh->bind(commandBuffer);
 			indirectBufferBuilder->draw(commandBuffer);
 		}
@@ -108,6 +113,25 @@ namespace HyperFast
 		__pIndirectBufferCreateEventListener =
 			Infra::EventListener<IndirectBufferBuilder &>::bind(
 				&Drawcall::__onIndirectBufferCreate, this, std::placeholders::_1);
+	}
+
+	bool Drawcall::__isBusy(Mesh &mesh) const noexcept
+	{
+		static const auto isBusyFunc = [this](const std::shared_ptr<Buffer> &pBuffer)
+		{
+			return __bufferCopyManager.isBusy(pBuffer->getHandle());
+		};
+
+		if (isBusyFunc(mesh.getPositionBuffer()))
+			return true;
+
+		if (isBusyFunc(mesh.getColorBuffer()))
+			return true;
+
+		if (isBusyFunc(mesh.getIndexBuffer()))
+			return true;
+
+		return false;
 	}
 
 	void Drawcall::__onAttributeFlagChange(

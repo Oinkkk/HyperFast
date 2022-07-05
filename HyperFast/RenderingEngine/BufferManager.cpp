@@ -8,9 +8,9 @@ namespace HyperFast
 	{}
 
 	[[nodiscard]]
-	BufferManager::BufferImpl *BufferManager::create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage)
+	BufferManager::BufferImpl *BufferManager::create(const VkDeviceSize size, const VkBufferUsageFlags usage)
 	{
-		return new BufferManager::BufferImpl{ __device, __deviceProc, dataSize, usage };
+		return new BufferManager::BufferImpl{ __device, __deviceProc, size, usage };
 	}
 
 	void BufferManager::destroy(BufferImpl *const pImpl) noexcept

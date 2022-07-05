@@ -324,6 +324,11 @@ namespace VKL
 			reinterpret_cast<PFN_vkFlushMappedMemoryRanges>(
 				vkGetDeviceProcAddr(device, "vkFlushMappedMemoryRanges"));
 
+		retVal.vkResetCommandBuffer =
+			reinterpret_cast<PFN_vkResetCommandBuffer>(
+				vkGetDeviceProcAddr(device, "vkResetCommandBuffer"));
+
+
 		// commands
 
 		retVal.vkCmdBeginRenderPass =
@@ -357,6 +362,14 @@ namespace VKL
 		retVal.vkCmdDrawIndexedIndirectCount =
 			reinterpret_cast<PFN_vkCmdDrawIndexedIndirectCount>(
 				vkGetDeviceProcAddr(device, "vkCmdDrawIndexedIndirectCount"));
+
+		retVal.vkCmdCopyBuffer =
+			reinterpret_cast<PFN_vkCmdCopyBuffer>(
+				vkGetDeviceProcAddr(device, "vkCmdCopyBuffer"));
+
+		retVal.vkCmdPipelineBarrier2 =
+			reinterpret_cast<PFN_vkCmdPipelineBarrier2>(
+				vkGetDeviceProcAddr(device, "vkCmdPipelineBarrier2"));
 
 		return retVal;
 	}

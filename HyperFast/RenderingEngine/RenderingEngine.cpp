@@ -34,11 +34,15 @@ namespace HyperFast
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
+		__createInstantCommandSubmitter();
+		__createBufferCopyManager();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
 		__waitDeviceIdle();
+		__destroyBufferCopyManager();
+		__destroyInstantCommandSubmitter();
 		__destroyBufferManager();
 		__destroyMemoryManager();
 		__destroyScreenManager();
@@ -49,6 +53,24 @@ namespace HyperFast
 #endif
 
 		__destroyInstance();
+	}
+
+	void RenderingEngine::startFrame() noexcept
+	{
+		__pInstantCommandSubmitter->begin();
+	}
+
+	void RenderingEngine::endFrame() noexcept
+	{
+		__pInstantCommandSubmitter->end();
+
+		// TODO: 다른 작업 추가 시 비동기 처리
+		__pInstantCommandSubmitter->submit();
+	}
+
+	void RenderingEngine::update() noexcept
+	{
+		__pInstantCommandSubmitter->refresh();
 	}
 
 	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
@@ -73,7 +95,8 @@ namespace HyperFast
 	std::unique_ptr<Drawcall> RenderingEngine::createDrawcall() noexcept
 	{
 		return std::make_unique<Drawcall>(
-			__device, __deviceProc, *__pBufferManager, *__pMemoryManager);
+			__device, __deviceProc,
+			*__pBufferManager, *__pMemoryManager, *__pBufferCopyManager);
 	}
 
 	std::shared_ptr<Mesh> RenderingEngine::createMesh() noexcept
@@ -84,6 +107,17 @@ namespace HyperFast
 	std::shared_ptr<Submesh> RenderingEngine::createSubmesh(const std::shared_ptr<Mesh> &pMesh) noexcept
 	{
 		return std::make_shared<Submesh>(pMesh, __deviceProc);
+	}
+
+	void RenderingEngine::copyBuffer(
+		const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask,
+		const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask,
+		const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
+		const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept
+	{
+		__pBufferCopyManager->copy(
+			srcStageMask, srcAccessMask, dstStageMask, dstAccessMask,
+			dst, pSrc, srcBufferSize, regionCount, pRegions);
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -413,6 +447,29 @@ namespace HyperFast
 	void RenderingEngine::__destroyBufferManager() noexcept
 	{
 		__pBufferManager = nullptr;
+	}
+
+	void RenderingEngine::__createInstantCommandSubmitter() noexcept
+	{
+		__pInstantCommandSubmitter =
+			std::make_unique<InstantCommandSubmitter>(
+				__device, __deviceProc, __graphicsQueueFamilyIndex, __graphicsQueue);
+	}
+
+	void RenderingEngine::__destroyInstantCommandSubmitter() noexcept
+	{
+		__pInstantCommandSubmitter = nullptr;
+	}
+
+	void RenderingEngine::__createBufferCopyManager() noexcept
+	{
+		__pBufferCopyManager = std::make_unique<BufferCopyManager>(
+			*__pBufferManager, *__pMemoryManager, *__pInstantCommandSubmitter);
+	}
+
+	void RenderingEngine::__destroyBufferCopyManager() noexcept
+	{
+		__pBufferCopyManager = nullptr;
 	}
 
 	void RenderingEngine::__waitDeviceIdle() const noexcept

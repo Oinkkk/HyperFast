@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IndirectBufferBuilder.h"
+#include "BufferCopyManager.h"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -12,7 +13,8 @@ namespace HyperFast
 	public:
 		Drawcall(
 			const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-			HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept;
+			BufferManager &bufferManager, MemoryManager &memoryManager,
+			BufferCopyManager &bufferCopyManager) noexcept;
 
 		void addSubmesh(Submesh &submesh) noexcept;
 		void removeSubmesh(Submesh &submesh) noexcept;
@@ -40,8 +42,9 @@ namespace HyperFast
 
 		const VkDevice __device;
 		const VKL::DeviceProcedure &__deviceProc;
-		HyperFast::BufferManager &__bufferManager;
-		HyperFast::MemoryManager &__memoryManager;
+		BufferManager &__bufferManager;
+		MemoryManager &__memoryManager;
+		BufferCopyManager &__bufferCopyManager;
 
 		bool __attribFlagsUpdated{};
 		bool __indirectBufferUpdated{};
@@ -59,6 +62,9 @@ namespace HyperFast
 		Infra::Event<Drawcall &> __indirectBufferCreateEvent;
 
 		void __initEventListeners() noexcept;
+		
+		[[nodiscard]]
+		bool __isBusy(Mesh &mesh) const noexcept;
 
 		void __onAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;

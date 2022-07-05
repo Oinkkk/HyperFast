@@ -47,7 +47,10 @@ int main()
 	{
 		Infra::EventListener<float>::make([&](const float deltaTime)
 		{
+			pRenderingEngine->startFrame();
 			pBufferTestScene->process(deltaTime);
+			pRenderingEngine->endFrame();
+
 			pScreen1->draw();
 			pScreen2->draw();
 		})

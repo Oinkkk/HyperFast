@@ -792,7 +792,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__recordMainCommand(const size_t imageIdx) noexcept
 	{
-		const VkCommandBufferBeginInfo commandBufferBeginInfo
+		static const VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
 		};

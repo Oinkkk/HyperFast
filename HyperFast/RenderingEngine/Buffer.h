@@ -7,7 +7,7 @@ namespace HyperFast
 	class Buffer : public Infra::Unique
 	{
 	public:
-		Buffer(BufferManager &manager, const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
+		Buffer(BufferManager &manager, const VkDeviceSize size, const VkBufferUsageFlags usage);
 		~Buffer() noexcept;
 
 		[[nodiscard]]
@@ -22,6 +22,12 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
 		void bindMemory(const std::shared_ptr<Memory> &pMemory, const VkDeviceAddress offset) noexcept;
+
+		[[nodiscard]]
+		constexpr const std::shared_ptr<Memory> &getMemory() const noexcept;
+
+		[[nodiscard]]
+		constexpr VkDeviceAddress getMemoryOffset() const noexcept;
 
 	private:
 		BufferManager &__manager;
@@ -43,9 +49,18 @@ namespace HyperFast
 		return __pImpl->getHandle();
 	}
 
-	[[nodiscard]]
 	constexpr const VkMemoryRequirements &Buffer::getMemoryRequirements() const noexcept
 	{
 		return __pImpl->getMemoryRequirements();
+	}
+
+	constexpr const std::shared_ptr<Memory> &Buffer::getMemory() const noexcept
+	{
+		return __pImpl->getMemory();
+	}
+
+	constexpr VkDeviceAddress Buffer::getMemoryOffset() const noexcept
+	{
+		return __pImpl->getMemoryOffset();
 	}
 }
