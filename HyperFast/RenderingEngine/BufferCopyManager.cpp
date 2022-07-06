@@ -16,7 +16,8 @@ namespace HyperFast
 		const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask,
 		const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask,
 		const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-		const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept
+		const uint32_t regionCount, const VkBufferCopy *const pRegions,
+		const std::any &srcPlaceholder) noexcept
 	{
 		Buffer *const pStagingBuffer{ __getStagingBuffer(pSrc, srcBufferSize) };
 
@@ -25,25 +26,27 @@ namespace HyperFast
 			pStagingBuffer->getHandle(), dst, regionCount, pRegions);
 
 		__buffer2ResourceMap.emplace(
-			dst, std::make_pair(pStagingBuffer, __instantCommandSubmitter.getCurrentExecution()));
+			dst, Resource{ pStagingBuffer, __instantCommandSubmitter.getCurrentExecution(), srcPlaceholder });
+	}
+
+	void BufferCopyManager::refresh() noexcept
+	{
+		for (auto mapIter = __buffer2ResourceMap.begin(); mapIter != __buffer2ResourceMap.end(); )
+		{
+			auto &[pStagingBuffer, execution, _] { mapIter->second };
+			if (execution.wait_for(std::chrono::seconds{ 0 }) == std::future_status::ready)
+			{
+				__idleStagingBuffers.emplace(pStagingBuffer);
+				mapIter = __buffer2ResourceMap.erase(mapIter);
+			}
+			else
+				mapIter++;
+		}
 	}
 
 	bool BufferCopyManager::isBusy(const VkBuffer buffer) noexcept
 	{
-		if (!(__buffer2ResourceMap.contains(buffer)))
-			return false;
-
-		const auto entry{ __buffer2ResourceMap.find(buffer) };
-		auto &[pStagingBuffer, execution]{ entry->second };
-
-		if (execution.wait_for(std::chrono::seconds{ 0 }) == std::future_status::ready)
-		{
-			__idleStagingBuffers.emplace(pStagingBuffer);
-			__buffer2ResourceMap.erase(entry);
-			return false;
-		}
-
-		return true;
+		return __buffer2ResourceMap.contains(buffer);
 	}
 
 	Buffer *BufferCopyManager::__createStagingBuffer(const VkDeviceSize size)

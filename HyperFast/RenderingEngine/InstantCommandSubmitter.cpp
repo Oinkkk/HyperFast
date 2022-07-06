@@ -28,6 +28,7 @@ namespace HyperFast
 		__retrieveResources();
 		__deviceProc.vkBeginCommandBuffer(__currentCommandBuffer, &beginInfo);
 		__pCurrentPromise = std::make_unique<std::promise<void>>();
+		__currentFuture = __pCurrentPromise->get_future();
 	}
 
 	void InstantCommandSubmitter::end() noexcept
@@ -51,8 +52,11 @@ namespace HyperFast
 		};
 
 		__deviceProc.vkQueueSubmit2(__queue, 1U, &submitInfo, __currentFence);
+
 		__busyResources.emplace(
 			__currentFence, std::make_pair(__currentCommandBuffer, std::move(__pCurrentPromise)));
+
+		__currentFuture = {};
 	}
 
 	void InstantCommandSubmitter::refresh() noexcept
@@ -76,9 +80,9 @@ namespace HyperFast
 		}
 	}
 
-	std::future<void> InstantCommandSubmitter::getCurrentExecution() noexcept
+	std::shared_future<void> InstantCommandSubmitter::getCurrentExecution() noexcept
 	{
-		return __pCurrentPromise->get_future();
+		return __currentFuture;
 	}
 
 	void InstantCommandSubmitter::vkCmdCopyBuffer(

@@ -16,16 +16,26 @@ namespace Jin
 
 	protected:
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Buffer> _createVertexBuffer(const void *const pData, const VkDeviceSize size) const;
+		std::shared_ptr<HyperFast::Buffer> _createBuffer(
+			const VkDeviceSize size, const VkBufferUsageFlags usage) const;
 
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Buffer> _createIndexBuffer(const void *const pData, const VkDeviceSize size) const;
+		std::shared_ptr<HyperFast::Memory> _createMemory(
+			const VkMemoryRequirements &memRequirements, const VkMemoryPropertyFlags propFlags) const;
 
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Mesh> _createMesh() noexcept;
 
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Submesh> _createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept;
+
+		void _copyVertexBuffer(
+			const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
+			const uint32_t regionCount, const VkBufferCopy *const pRegions, const std::any &srcPlaceholder) noexcept;
+
+		void _copyIndexBuffer(
+			const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
+			const uint32_t regionCount, const VkBufferCopy *const pRegions, const std::any &srcPlaceholder) noexcept;
 
 		void _bindScreen(HyperFast::Screen &screen) noexcept;
 

@@ -45,7 +45,8 @@ namespace HyperFast
 			const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask,
 			const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask,
 			const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-			const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept;
+			const uint32_t regionCount, const VkBufferCopy *const pRegions,
+			const std::any &srcPlaceholder) noexcept;
 
 	private:
 		Infra::Logger &__logger;

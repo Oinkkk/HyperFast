@@ -4,6 +4,7 @@
 #include "Memory.h"
 #include "InstantCommandSubmitter.h"
 #include <unordered_set>
+#include <any>
 
 namespace HyperFast
 {
@@ -20,12 +21,23 @@ namespace HyperFast
 			const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask,
 			const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask,
 			const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-			const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept;
+			const uint32_t regionCount, const VkBufferCopy *const pRegions,
+			const std::any &srcPlaceholder = {}) noexcept;
+
+		void refresh() noexcept;
 
 		[[nodiscard]]
 		bool isBusy(const VkBuffer buffer) noexcept;
 
 	private:
+		class Resource
+		{
+		public:
+			Buffer *pStagingBuffer{};
+			std::shared_future<void> execution;
+			std::any srcPlaceholder;
+		};
+
 		BufferManager &__bufferManager;
 		MemoryManager &__memoryManager;
 		InstantCommandSubmitter &__instantCommandSubmitter;
@@ -33,7 +45,7 @@ namespace HyperFast
 		std::vector<std::unique_ptr<Buffer>> __stagingBuffers;
 
 		std::unordered_set<Buffer *> __idleStagingBuffers;
-		std::unordered_map<VkBuffer, std::pair<Buffer *, std::future<void>>> __buffer2ResourceMap;
+		std::unordered_map<VkBuffer, Resource> __buffer2ResourceMap;
 
 		[[nodiscard]]
 		Buffer *__createStagingBuffer(const VkDeviceSize size);

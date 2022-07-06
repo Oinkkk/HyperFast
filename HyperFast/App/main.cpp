@@ -30,10 +30,7 @@ int main()
 	std::shared_ptr<HyperFast::Screen> pScreen1{ pRenderingEngine->createScreen(win1) };
 	std::shared_ptr<HyperFast::Screen> pScreen2{ pRenderingEngine->createScreen(win2) };
 
-	std::unique_ptr<BufferTestScene> pBufferTestScene
-	{
-		std::make_unique<BufferTestScene>(*pRenderingEngine, *pScreen1, *pScreen2)
-	};
+	std::unique_ptr<BufferTestScene> pBufferTestScene;
 
 	std::shared_ptr<Infra::EventListener<Win::Window &>> pDestroyEventListener
 	{
@@ -48,8 +45,13 @@ int main()
 		Infra::EventListener<float>::make([&](const float deltaTime)
 		{
 			pRenderingEngine->startFrame();
+
+			if (!pBufferTestScene)
+				pBufferTestScene = std::make_unique<BufferTestScene>(*pRenderingEngine, *pScreen1, *pScreen2);
+
 			pBufferTestScene->process(deltaTime);
 			pRenderingEngine->endFrame();
+			pRenderingEngine->update();
 
 			pScreen1->draw();
 			pScreen2->draw();

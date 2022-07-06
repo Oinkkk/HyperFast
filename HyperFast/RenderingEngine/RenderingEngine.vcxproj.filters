@@ -108,6 +108,9 @@
     <ClCompile Include="InstantCommandSubmitter.cpp">
       <Filter>InstantCommandSubmitter</Filter>
     </ClCompile>
+    <ClCompile Include="BufferCopyManager.cpp">
+      <Filter>BufferCopyManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">

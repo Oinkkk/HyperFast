@@ -24,7 +24,7 @@ namespace HyperFast
 		void refresh() noexcept;
 
 		[[nodiscard]]
-		std::future<void> getCurrentExecution() noexcept;
+		std::shared_future<void> getCurrentExecution() noexcept;
 
 		void vkCmdCopyBuffer(
 			const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask,
@@ -47,6 +47,7 @@ namespace HyperFast
 		VkFence __currentFence{};
 		VkCommandBuffer __currentCommandBuffer{};
 		std::unique_ptr<std::promise<void>> __pCurrentPromise;
+		std::shared_future<void> __currentFuture;
 
 		Infra::Event<InstantCommandSubmitter &> __completeEvent;
 

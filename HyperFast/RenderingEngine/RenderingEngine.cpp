@@ -71,6 +71,7 @@ namespace HyperFast
 	void RenderingEngine::update() noexcept
 	{
 		__pInstantCommandSubmitter->refresh();
+		__pBufferCopyManager->refresh();
 	}
 
 	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
@@ -113,11 +114,12 @@ namespace HyperFast
 		const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask,
 		const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask,
 		const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-		const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept
+		const uint32_t regionCount, const VkBufferCopy *const pRegions,
+		const std::any &srcPlaceholder) noexcept
 	{
 		__pBufferCopyManager->copy(
 			srcStageMask, srcAccessMask, dstStageMask, dstAccessMask,
-			dst, pSrc, srcBufferSize, regionCount, pRegions);
+			dst, pSrc, srcBufferSize, regionCount, pRegions, srcPlaceholder);
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
