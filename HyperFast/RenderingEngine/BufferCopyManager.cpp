@@ -44,11 +44,6 @@ namespace HyperFast
 		}
 	}
 
-	bool BufferCopyManager::isBusy(const VkBuffer buffer) noexcept
-	{
-		return __buffer2ResourceMap.contains(buffer);
-	}
-
 	Buffer *BufferCopyManager::__createStagingBuffer(const VkDeviceSize size)
 	{
 		Buffer *const pRetVal
@@ -99,7 +94,6 @@ namespace HyperFast
 
 		const std::shared_ptr<HyperFast::Memory> &pMemory{ pRetVal->getMemory() };
 		std::memcpy(pMemory->map(), pData, size);
-		pMemory->unmap();
 
 		return pRetVal;
 	}

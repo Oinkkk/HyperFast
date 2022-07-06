@@ -26,9 +26,6 @@ namespace HyperFast
 
 		void refresh() noexcept;
 
-		[[nodiscard]]
-		bool isBusy(const VkBuffer buffer) noexcept;
-
 	private:
 		class Resource
 		{

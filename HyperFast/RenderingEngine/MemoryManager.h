@@ -44,7 +44,6 @@ namespace HyperFast
 
 			[[nodiscard]]
 			void *map();
-			void unmap() noexcept;
 
 		private:
 			const VkDevice __device;
@@ -56,10 +55,10 @@ namespace HyperFast
 			std::map<VkDeviceAddress, VkDeviceSize> __segmentMap;
 
 			void *__mapped{};
-			size_t __mappingRequested{};
 
 			void __allocateBank();
 			void __freeBank() noexcept;
+			void __unmap() noexcept;
 		};
 
 		class MemoryImpl final : public Infra::Unique

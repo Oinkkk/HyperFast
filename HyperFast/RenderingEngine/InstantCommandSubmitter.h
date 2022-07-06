@@ -49,6 +49,8 @@ namespace HyperFast
 		std::unique_ptr<std::promise<void>> __pCurrentPromise;
 		std::shared_future<void> __currentFuture;
 
+		bool __initState{};
+
 		Infra::Event<InstantCommandSubmitter &> __completeEvent;
 
 		void __createCommandPool();

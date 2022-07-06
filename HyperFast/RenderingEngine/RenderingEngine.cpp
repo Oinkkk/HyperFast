@@ -40,6 +40,8 @@ namespace HyperFast
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		// The only time you should wait for a device to idle is when you want to destroy the device.
+
 		__waitDeviceIdle();
 		__destroyBufferCopyManager();
 		__destroyInstantCommandSubmitter();

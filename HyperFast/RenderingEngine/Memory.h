@@ -25,7 +25,6 @@ namespace HyperFast
 
 		[[nodiscard]]
 		void *map();
-		void unmap() noexcept;
 
 	private:
 		MemoryManager &__manager;

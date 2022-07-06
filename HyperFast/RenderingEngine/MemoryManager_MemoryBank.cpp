@@ -14,6 +14,7 @@ namespace HyperFast
 
 	MemoryManager::MemoryBank::~MemoryBank() noexcept
 	{
+		__unmap();
 		__freeBank();
 	}
 
@@ -58,25 +59,15 @@ namespace HyperFast
 
 	void *MemoryManager::MemoryBank::map()
 	{
-		if (!__mappingRequested)
+		if (!__mapped)
 		{
+			// there is no requirement that memory be unmapped before it can be used
 			__deviceProc.vkMapMemory(__device, __handle, 0ULL, VK_WHOLE_SIZE, 0U, &__mapped);
 			if (!__mapped)
 				throw std::exception{ "Cannot map a memory." };
 		}
 
-		__mappingRequested++;
 		return __mapped;
-	}
-
-	void MemoryManager::MemoryBank::unmap() noexcept
-	{
-		__mappingRequested--;
-		if (!__mappingRequested)
-		{
-			__mapped = nullptr;
-			__deviceProc.vkUnmapMemory(__device, __handle);
-		}
 	}
 
 	void MemoryManager::MemoryBank::__allocateBank()
@@ -97,5 +88,12 @@ namespace HyperFast
 	{
 		__deviceProc.vkFreeMemory(__device, __handle, nullptr);
 	}
-}
 
+	void MemoryManager::MemoryBank::__unmap() noexcept
+	{
+		if (!__mapped)
+			return;
+
+		__deviceProc.vkUnmapMemory(__device, __handle);
+	}
+}

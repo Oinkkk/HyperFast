@@ -78,7 +78,6 @@ namespace HyperFast
 		__updateHostBuffer();
 
 		std::memcpy(__pCountMemory->map(), &__drawCount, sizeof(uint32_t));
-		__pCountMemory->unmap();
 
 		if (__drawCount)
 		{
@@ -89,8 +88,6 @@ namespace HyperFast
 			std::memcpy(
 				__pIndirectMemory->map(), __hostBuffer.data(),
 				sizeof(VkDrawIndexedIndirectCommand) * __drawCount);
-
-			__pIndirectMemory->unmap();
 
 			if (needToCreateBuffer)
 				__indirectBufferCreateEvent.invoke(*this);

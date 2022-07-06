@@ -26,6 +26,6 @@ namespace Infra
 		oss << __resetColor;
 
 		std::lock_guard lck{ __mutex };
-		std::cout << oss.str() << std::endl;
+		std::cerr << oss.str() << std::endl;
 	}
 }

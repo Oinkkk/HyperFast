@@ -19,6 +19,9 @@ namespace HyperFast
 
 	void InstantCommandSubmitter::begin() noexcept
 	{
+		if (__initState)
+			return;
+
 		static const VkCommandBufferBeginInfo beginInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -29,15 +32,23 @@ namespace HyperFast
 		__deviceProc.vkBeginCommandBuffer(__currentCommandBuffer, &beginInfo);
 		__pCurrentPromise = std::make_unique<std::promise<void>>();
 		__currentFuture = __pCurrentPromise->get_future();
+
+		__initState = true;
 	}
 
 	void InstantCommandSubmitter::end() noexcept
 	{
+		if (__initState)
+			return;
+
 		__deviceProc.vkEndCommandBuffer(__currentCommandBuffer);
 	}
 
 	void InstantCommandSubmitter::submit() noexcept
 	{
+		if (__initState)
+			return;
+
 		const VkCommandBufferSubmitInfo commandBufferInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
@@ -118,6 +129,8 @@ namespace HyperFast
 
 		__deviceProc.vkCmdPipelineBarrier2(__currentCommandBuffer, &barrierInfo);
 		__deviceProc.vkCmdCopyBuffer(__currentCommandBuffer, srcBuffer, dstBuffer, regionCount, pRegions);
+
+		__initState = false;
 	}
 
 	void InstantCommandSubmitter::__createCommandPool()

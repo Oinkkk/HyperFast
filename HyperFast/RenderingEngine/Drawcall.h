@@ -63,9 +63,6 @@ namespace HyperFast
 
 		void __initEventListeners() noexcept;
 		
-		[[nodiscard]]
-		bool __isBusy(Mesh &mesh) const noexcept;
-
 		void __onAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;
 

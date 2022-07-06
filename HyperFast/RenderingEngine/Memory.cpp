@@ -18,9 +18,4 @@ namespace HyperFast
 	{
 		return __pImpl->map();
 	}
-
-	void Memory::unmap() noexcept
-	{
-		__pImpl->unmap();
-	}
 }

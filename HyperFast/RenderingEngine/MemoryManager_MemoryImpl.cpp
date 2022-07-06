@@ -16,10 +16,5 @@ namespace HyperFast
 	{
 		return (reinterpret_cast<std::byte *>(__bank.map()) + __offset);
 	}
-
-	void MemoryManager::MemoryImpl::unmap() noexcept
-	{
-		return __bank.unmap();
-	}
 }
 

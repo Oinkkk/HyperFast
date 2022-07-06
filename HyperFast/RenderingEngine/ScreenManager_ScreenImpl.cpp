@@ -148,6 +148,8 @@ namespace HyperFast
 
 		__deviceProc.vkWaitForFences(__device, 1U, &renderCompleteFence, VK_TRUE, __maxTime);
 		__deviceProc.vkResetFences(__device, 1U, &renderCompleteFence);
+
+		// You should never submit more than once to the same queue in a single frame.
 		__deviceProc.vkQueueSubmit2(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
 
 		const VkPresentInfoKHR presentInfo
