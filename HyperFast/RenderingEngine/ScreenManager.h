@@ -73,6 +73,8 @@ namespace HyperFast
 			std::vector<VkFence> __renderCompleteFences;
 
 			size_t __frameCursor{};
+			bool __imageAcquired{};
+			uint32_t __imageIdx{};
 
 			bool __needToDraw{};
 			bool __needToUpdateSurfaceDependencies{};
@@ -120,8 +122,7 @@ namespace HyperFast
 			void __onDeviceIdle() noexcept;
 
 			VkResult __acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept;
-
-			static inline constexpr uint64_t __maxTime{ std::numeric_limits<uint64_t>::max() };
+			constexpr void __advanceFrameCursor() noexcept;
 		};
 
 		ScreenManager(
@@ -149,5 +150,11 @@ namespace HyperFast
 	constexpr void ScreenManager::ScreenImpl::__resetFrameCursor() noexcept
 	{
 		__frameCursor = 0ULL;
+	}
+
+	constexpr void ScreenManager::ScreenImpl::__advanceFrameCursor() noexcept
+	{
+		const size_t numCommandBuffers{ __mainCommandBuffers.size() };
+		__frameCursor = ((__frameCursor + 1ULL) % numCommandBuffers);
 	}
 }

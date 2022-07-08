@@ -95,25 +95,38 @@ namespace HyperFast
 	{
 		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };
 
-		uint32_t imageIdx{};
-		const VkResult acquirementResult{ __acquireNextImage(presentCompleteSemaphore, imageIdx) };
-
-		if (acquirementResult == VkResult::VK_NOT_READY)
-			return false;
-
-		if ((acquirementResult == VkResult::VK_SUBOPTIMAL_KHR) ||
-			(acquirementResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
+		if (!__imageAcquired)
 		{
-			__needToUpdateSurfaceDependencies = true;
-			return false;
+			const VkResult acquirementResult{ __acquireNextImage(presentCompleteSemaphore, __imageIdx) };
+
+			if (acquirementResult == VkResult::VK_NOT_READY)
+				return false;
+
+			if ((acquirementResult == VkResult::VK_SUBOPTIMAL_KHR) ||
+				(acquirementResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
+			{
+				__needToUpdateSurfaceDependencies = true;
+				return false;
+			}
+
+			__advanceFrameCursor();
+			__imageAcquired = true;
 		}
+		
+		const VkFence renderCompleteFence{ __renderCompleteFences[__imageIdx] };
+		const VkResult waitResult
+		{
+			__deviceProc.vkWaitForFences(
+				__device, 1U, &renderCompleteFence, VK_TRUE, 0ULL)
+		};
 
-		const size_t numCommandBuffers{ __mainCommandBuffers.size() };
-		__frameCursor = ((__frameCursor + 1ULL) % numCommandBuffers);
+		if (waitResult == VkResult::VK_TIMEOUT)
+			return false;
 
-		const VkCommandBuffer mainCommandBuffer{ __mainCommandBuffers[imageIdx] };
-		const VkSemaphore renderCompleteSemaphore{ __renderCompleteSemaphores[imageIdx] };
-		const VkFence renderCompleteFence{ __renderCompleteFences[imageIdx] };
+		__deviceProc.vkResetFences(__device, 1U, &renderCompleteFence);
+
+		const VkCommandBuffer mainCommandBuffer{ __mainCommandBuffers[__imageIdx] };
+		const VkSemaphore renderCompleteSemaphore{ __renderCompleteSemaphores[__imageIdx] };
 
 		const VkSemaphoreSubmitInfo waitInfo
 		{
@@ -146,10 +159,6 @@ namespace HyperFast
 			.pSignalSemaphoreInfos = &signalInfo
 		};
 
-		__deviceProc.vkWaitForFences(__device, 1U, &renderCompleteFence, VK_TRUE, __maxTime);
-		__deviceProc.vkResetFences(__device, 1U, &renderCompleteFence);
-
-		// You should never submit more than once to the same queue in a single frame.
 		__deviceProc.vkQueueSubmit2(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
 
 		const VkPresentInfoKHR presentInfo
@@ -159,10 +168,12 @@ namespace HyperFast
 			.pWaitSemaphores = &renderCompleteSemaphore,
 			.swapchainCount = 1U,
 			.pSwapchains = &__swapchain,
-			.pImageIndices = &imageIdx
+			.pImageIndices = &__imageIdx
 		};
 
 		const VkResult presentResult{ __deviceProc.vkQueuePresentKHR(__graphicsQueue, &presentInfo) };
+		__imageAcquired = false;
+
 		if ((presentResult == VkResult::VK_SUBOPTIMAL_KHR) ||
 			(presentResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
