@@ -5,11 +5,9 @@ namespace HyperFast
 {
 	Drawcall::Drawcall(
 		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
-		BufferManager &bufferManager, MemoryManager &memoryManager,
-		BufferCopyManager &bufferCopyManager) noexcept :
+		BufferManager &bufferManager, MemoryManager &memoryManager) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
-		__bufferManager{ bufferManager }, __memoryManager{ memoryManager },
-		__bufferCopyManager{ bufferCopyManager }
+		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }
 	{
 		__initEventListeners();
 	}

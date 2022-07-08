@@ -43,26 +43,6 @@ namespace Jin
 		return pRetVal;
 	}
 
-	void Scene::_copyVertexBuffer(
-		const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-		const uint32_t regionCount, const VkBufferCopy *const pRegions, const std::any &srcPlaceholder) noexcept
-	{
-		__renderingEngine.copyBuffer(
-			VK_PIPELINE_STAGE_2_NONE, VK_ACCESS_2_NONE,
-			VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT, VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT,
-			dst, pSrc, srcBufferSize, regionCount, pRegions, srcPlaceholder);
-	}
-
-	void Scene::_copyIndexBuffer(
-		const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-		const uint32_t regionCount, const VkBufferCopy *const pRegions, const std::any &srcPlaceholder) noexcept
-	{
-		__renderingEngine.copyBuffer(
-			VK_PIPELINE_STAGE_2_NONE, VK_ACCESS_2_NONE,
-			VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT, VK_ACCESS_2_INDEX_READ_BIT,
-			dst, pSrc, srcBufferSize, regionCount, pRegions, srcPlaceholder);
-	}
-
 	void Scene::_bindScreen(HyperFast::Screen &screen) noexcept
 	{
 		screen.setDrawcall(__pDrawcall.get());

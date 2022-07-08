@@ -42,105 +42,62 @@ void BufferTestScene::_onProcess(const float deltaTime)
 
 void BufferTestScene::__createMesh()
 {
-	std::shared_ptr<std::vector<glm::vec3>> pPositions{ std::make_shared<std::vector<glm::vec3>>() };
-	pPositions->emplace_back(-0.5f, -0.5f, 0.5f);
-	pPositions->emplace_back(-0.5f, 0.5f, 0.5f);
-	pPositions->emplace_back(0.5f, 0.5f, 0.5f);
-	pPositions->emplace_back(0.5f, -0.5f, 0.5f);
+	std::vector<glm::vec3> positions;
+	positions.emplace_back(-0.5f, -0.5f, 0.5f);
+	positions.emplace_back(-0.5f, 0.5f, 0.5f);
+	positions.emplace_back(0.5f, 0.5f, 0.5f);
+	positions.emplace_back(0.5f, -0.5f, 0.5f);
 
-	std::shared_ptr<std::vector<glm::vec4>> pColors{ std::make_shared<std::vector<glm::vec4>>() };
-	pColors->emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
-	pColors->emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
-	pColors->emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
-	pColors->emplace_back(1.0f, 1.0f, 0.0f, 1.0f);
+	std::vector<glm::vec4> colors;
+	colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
+	colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
+	colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
+	colors.emplace_back(1.0f, 1.0f, 0.0f, 1.0f);
 
-	std::shared_ptr<std::vector<uint16_t>> pIndices{ std::make_shared<std::vector<uint16_t>>() };
-	pIndices->emplace_back(0U);
-	pIndices->emplace_back(1U);
-	pIndices->emplace_back(2U);
-	pIndices->emplace_back(0U);
-	pIndices->emplace_back(2U);
-	pIndices->emplace_back(3U);
+	std::vector<uint16_t> indices;
+	indices.emplace_back(0U);
+	indices.emplace_back(1U);
+	indices.emplace_back(2U);
+	indices.emplace_back(0U);
+	indices.emplace_back(2U);
+	indices.emplace_back(3U);
 
-	const size_t positionDataSize{ sizeof(glm::vec3) * pPositions->size() };
-	const size_t colorDataSize{ sizeof(glm::vec4) * pColors->size() };
-	const size_t indexDataSize{ sizeof(uint16_t) * pIndices->size() };
-
-	const VkBufferCopy positionCopy
-	{
-		.size = positionDataSize
-	};
-
-	const VkBufferCopy colorCopy
-	{
-		.size = colorDataSize
-	};
-
-	const VkBufferCopy indexCopy
-	{
-		.size = indexDataSize
-	};
+	const size_t positionDataSize{ sizeof(glm::vec3) * positions.size() };
+	const size_t colorDataSize{ sizeof(glm::vec4) * colors.size() };
+	const size_t indexDataSize{ sizeof(uint16_t) * indices.size() };
 
 	std::shared_ptr<HyperFast::Buffer> pPositionBuffer
 	{
-		_createBuffer(
-			positionDataSize,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+		_createBuffer(positionDataSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
 	};
 
 	std::shared_ptr<HyperFast::Buffer> pColorBuffer
 	{
-		_createBuffer(
-			colorDataSize,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+		_createBuffer(colorDataSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
 	};
 
 	std::shared_ptr<HyperFast::Buffer> pIndexBuffer
 	{
-		_createBuffer(
-			indexDataSize,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+		_createBuffer(indexDataSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
 	};
 
-	const std::shared_ptr<HyperFast::Memory> pPositionMemory
+	const VkMemoryPropertyFlags memProps
 	{
-		_createMemory(
-			pPositionBuffer->getMemoryRequirements(),
-			VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+		VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+		VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	};
 
-	const std::shared_ptr<HyperFast::Memory> pColorMemory
-	{
-		_createMemory(
-			pColorBuffer->getMemoryRequirements(),
-			VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-	};
+	std::shared_ptr<HyperFast::Memory> pPositionMemory{ _createMemory(pPositionBuffer->getMemoryRequirements(), memProps) };
+	std::shared_ptr<HyperFast::Memory> pColorMemory{ _createMemory(pColorBuffer->getMemoryRequirements(), memProps) };
+	std::shared_ptr<HyperFast::Memory> pIndexMemory{ _createMemory(pIndexBuffer->getMemoryRequirements(), memProps) };
 
-	const std::shared_ptr<HyperFast::Memory> pIndexMemory
-	{
-		_createMemory(
-			pIndexBuffer->getMemoryRequirements(),
-			VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-	};
+	std::memcpy(pPositionMemory->map(), positions.data(), positionDataSize);
+	std::memcpy(pColorMemory->map(), colors.data(), colorDataSize);
+	std::memcpy(pIndexMemory->map(), indices.data(), indexDataSize);
 
 	pPositionBuffer->bindMemory(pPositionMemory, 0ULL);
 	pColorBuffer->bindMemory(pColorMemory, 0ULL);
 	pIndexBuffer->bindMemory(pIndexMemory, 0ULL);
-
-	_copyVertexBuffer(
-		pPositionBuffer->getHandle(), pPositions->data(),
-		positionDataSize, 1U, &positionCopy, pPositions);
-
-	_copyVertexBuffer(
-		pColorBuffer->getHandle(), pColors->data(),
-		colorDataSize, 1U, &colorCopy, pColors);
-
-	_copyIndexBuffer(
-		pIndexBuffer->getHandle(), pIndices->data(),
-		indexDataSize, 1U, &indexCopy, pIndices);
 
 	__pMesh = _createMesh();
 	__pMesh->setPositionBuffer(pPositionBuffer);
@@ -152,7 +109,4 @@ void BufferTestScene::__createMesh()
 
 	__pSubmesh2 = _createSubmesh(__pMesh);
 	__pSubmesh2->setDrawCommand(3U, 1U, 3U, 0, 0U);
-
-	// TODO: indirect buffer도 스테이징 버퍼 사용
-	// TODO: buffer delete 지연되어 처리되도록
 }

@@ -29,14 +29,6 @@ namespace Jin
 		[[nodiscard]]
 		std::shared_ptr<HyperFast::Submesh> _createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept;
 
-		void _copyVertexBuffer(
-			const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-			const uint32_t regionCount, const VkBufferCopy *const pRegions, const std::any &srcPlaceholder) noexcept;
-
-		void _copyIndexBuffer(
-			const VkBuffer dst, const void *const pSrc, const VkDeviceSize srcBufferSize,
-			const uint32_t regionCount, const VkBufferCopy *const pRegions, const std::any &srcPlaceholder) noexcept;
-
 		void _bindScreen(HyperFast::Screen &screen) noexcept;
 
 		virtual void _onProcess(const float deltaTime);
