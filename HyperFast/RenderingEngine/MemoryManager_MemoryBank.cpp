@@ -4,7 +4,7 @@
 namespace HyperFast
 {
 	MemoryManager::MemoryBank::MemoryBank(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 		const uint32_t memoryTypeIndex, const VkDeviceSize size) :
 		__device{ device }, __deviceProc{ deviceProc },
 		__memoryTypeIndex{ memoryTypeIndex }, __size{ size }

@@ -3,7 +3,7 @@
 
 namespace HyperFast
 {
-	PipelineFactory::PipelineFactory(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept :
+	PipelineFactory::PipelineFactory(const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept :
 		__device{ device }, __deviceProc{ deviceProc }
 	{
 		__createPipelineLayouts();
@@ -63,7 +63,7 @@ namespace HyperFast
 	}
 
 	PipelineFactory::PipelineResource::PipelineResource(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 		const VkPipelineLayout pipelineLayout, const VertexAttributeFlag attribFlag) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
 		__pipelineLayout{ pipelineLayout }, __attribFlag{ attribFlag }

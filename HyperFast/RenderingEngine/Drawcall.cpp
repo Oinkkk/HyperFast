@@ -4,7 +4,7 @@
 namespace HyperFast
 {
 	Drawcall::Drawcall(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 		BufferManager &bufferManager, MemoryManager &memoryManager) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
 		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }

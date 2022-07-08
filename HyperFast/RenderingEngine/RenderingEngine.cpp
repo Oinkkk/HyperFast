@@ -52,18 +52,6 @@ namespace HyperFast
 		__destroyInstance();
 	}
 
-	void RenderingEngine::startFrame() noexcept
-	{
-	}
-
-	void RenderingEngine::endFrame() noexcept
-	{
-	}
-
-	void RenderingEngine::update() noexcept
-	{
-	}
-
 	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
 	{
 		return std::make_shared<HyperFast::Screen>(*__pScreenManager, window);
@@ -101,7 +89,7 @@ namespace HyperFast
 
 	void RenderingEngine::__getInstanceVersion() noexcept
 	{
-		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
+		const Vulkan::GlobalProcedure &globalGlobalProcedure{ Vulkan::VulkanLoader::getInstance().getGlobalProcedure() };
 		if (!(globalGlobalProcedure.vkEnumerateInstanceVersion))
 		{
 			__instanceVersion = VK_API_VERSION_1_0;
@@ -155,7 +143,7 @@ namespace HyperFast
 
 	void RenderingEngine::__createInstance()
 	{
-		const VKL::GlobalProcedure &globalGlobalProcedure{ VKL::VulkanLoader::getInstance().getGlobalProcedure() };
+		const Vulkan::GlobalProcedure &globalGlobalProcedure{ Vulkan::VulkanLoader::getInstance().getGlobalProcedure() };
 
 		std::vector<const char *> enabledLayers;
 		std::vector<const char *> enabledExtensions;
@@ -233,7 +221,7 @@ namespace HyperFast
 
 	void RenderingEngine::__queryInstanceProc() noexcept
 	{
-		__instanceProc = VKL::VulkanLoader::getInstance().queryInstanceProcedure(__instance);
+		__instanceProc = Vulkan::VulkanLoader::getInstance().queryInstanceProcedure(__instance);
 	}
 
 	void RenderingEngine::__createDebugMessenger()
@@ -384,7 +372,7 @@ namespace HyperFast
 	void RenderingEngine::__queryDeviceProc() noexcept
 	{
 		__deviceProc =
-			VKL::VulkanLoader::getInstance().queryDeviceProcedure(__instanceProc.vkGetDeviceProcAddr, __device);
+			Vulkan::VulkanLoader::getInstance().queryDeviceProcedure(__instanceProc.vkGetDeviceProcAddr, __device);
 	}
 
 	void RenderingEngine::__queryGraphicsQueue()

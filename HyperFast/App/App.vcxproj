@@ -109,7 +109,7 @@
     <ProjectReference Include="..\Scene\Scene.vcxproj">
       <Project>{0b068852-8eef-4877-953e-f39fc503994a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\VulkanLoader\VulkanLoader.vcxproj">
+    <ProjectReference Include="..\Vulkan\Vulkan.vcxproj">
       <Project>{022e6446-daf0-45d3-a57f-c041a461d5e0}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Window\Window.vcxproj">

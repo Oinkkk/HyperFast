@@ -3,7 +3,7 @@
 namespace HyperFast
 {
 	BufferManager::BufferManager(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept :
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept :
 		__device{ device }, __deviceProc{ deviceProc }
 	{}
 

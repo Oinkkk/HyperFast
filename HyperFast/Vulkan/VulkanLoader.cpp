@@ -2,7 +2,7 @@
 #include <exception>
 #include <cassert>
 
-namespace VKL
+namespace Vulkan
 {
 	VulkanLoader::~VulkanLoader()
 	{

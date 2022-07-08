@@ -4,7 +4,7 @@
 namespace HyperFast
 {
 	BufferManager::BufferImpl::BufferImpl(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 		const VkDeviceSize size, const VkBufferUsageFlags usage) :
 		__device{ device }, __deviceProc{ deviceProc }, __size{ size }, __usage{ usage }
 	{

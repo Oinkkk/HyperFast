@@ -16,9 +16,9 @@ namespace HyperFast
 		{
 		public:
 			ScreenImpl(
-				const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+				const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc,
 				const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-				const VkDevice device, const VKL::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
+				const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
 				Win::Window &window);
 
 			~ScreenImpl() noexcept;
@@ -28,13 +28,13 @@ namespace HyperFast
 
 		private:
 			const VkInstance __instance;
-			const VKL::InstanceProcedure &__instanceProc;
+			const Vulkan::InstanceProcedure &__instanceProc;
 
 			const VkPhysicalDevice __physicalDevice;
 			const uint32_t __graphicsQueueFamilyIndex;
 
 			const VkDevice __device;
-			const VKL::DeviceProcedure &__deviceProc;
+			const Vulkan::DeviceProcedure &__deviceProc;
 			const VkQueue __graphicsQueue;
 
 			Win::Window &__window;
@@ -126,9 +126,9 @@ namespace HyperFast
 		};
 
 		ScreenManager(
-			const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+			const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc,
 			const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-			const VkDevice device, const VKL::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept;
+			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept;
 
 		~ScreenManager() noexcept = default;
 
@@ -137,13 +137,13 @@ namespace HyperFast
 
 	private:
 		const VkInstance __instance;
-		const VKL::InstanceProcedure &__instanceProc;
+		const Vulkan::InstanceProcedure &__instanceProc;
 
 		const VkPhysicalDevice __physicalDevice;
 		const uint32_t __graphicsQueueFamilyIndex;
 
 		const VkDevice __device;
-		const VKL::DeviceProcedure &__deviceProc;
+		const Vulkan::DeviceProcedure &__deviceProc;
 		const VkQueue __graphicsQueue;
 	};
 

@@ -4,7 +4,7 @@
 namespace HyperFast
 {
 	IndirectBufferBuilder::IndirectBufferBuilder(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 		HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
 		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }

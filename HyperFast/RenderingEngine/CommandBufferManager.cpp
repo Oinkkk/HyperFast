@@ -3,7 +3,7 @@
 namespace HyperFast
 {
 	CommandBufferManager::CommandBufferManager(
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 		const uint32_t queueFamilyIndex, const size_t numMaxBuffers) noexcept :
 		__device{ device }, __deviceProc{ deviceProc },
 		__queueFamilyIndex{ queueFamilyIndex }, __numMaxBuffers{ numMaxBuffers }

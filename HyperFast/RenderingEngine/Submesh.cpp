@@ -2,7 +2,7 @@
 
 namespace HyperFast
 {
-	Submesh::Submesh(const std::shared_ptr<Mesh> &pMesh, const VKL::DeviceProcedure &deviceProc) noexcept :
+	Submesh::Submesh(const std::shared_ptr<Mesh> &pMesh, const Vulkan::DeviceProcedure &deviceProc) noexcept :
 		__pMesh{ pMesh }, __deviceProc{ deviceProc }
 	{}
 

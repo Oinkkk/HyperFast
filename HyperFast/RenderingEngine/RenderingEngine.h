@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "../VulkanLoader/VulkanLoader.h"
+#include "../Vulkan/VulkanLoader.h"
 #include "../Infrastructure/Logger.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
@@ -15,10 +15,6 @@ namespace HyperFast
 	public:
 		RenderingEngine(Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName);
 		~RenderingEngine() noexcept;
-
-		void startFrame() noexcept;
-		void endFrame() noexcept;
-		void update() noexcept;
 
 		[[nodiscard]]
 		std::shared_ptr<Screen> createScreen(Win::Window &window);
@@ -50,7 +46,7 @@ namespace HyperFast
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{};
 
 		VkInstance __instance{};
-		VKL::InstanceProcedure __instanceProc;
+		Vulkan::InstanceProcedure __instanceProc;
 		VkDebugUtilsMessengerEXT __debugMessenger{};
 
 		VkPhysicalDevice __physicalDevice{};
@@ -63,7 +59,7 @@ namespace HyperFast
 		uint32_t __graphicsQueueFamilyIndex{};
 
 		VkDevice __device{};
-		VKL::DeviceProcedure __deviceProc;
+		Vulkan::DeviceProcedure __deviceProc;
 		
 		VkQueue __graphicsQueue{};
 

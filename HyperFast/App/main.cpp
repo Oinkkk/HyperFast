@@ -11,7 +11,7 @@ int main()
 	Infra::Logger logger;
 
 	Win::MainLooper &mainLooper{ Win::MainLooper::getInstance() };
-	VKL::VulkanLoader &vulkanLoader{ VKL::VulkanLoader::getInstance() };
+	Vulkan::VulkanLoader &vulkanLoader{ Vulkan::VulkanLoader::getInstance() };
 	vulkanLoader.load();
 
 	std::unique_ptr<HyperFast::RenderingEngine> pRenderingEngine
@@ -44,15 +44,10 @@ int main()
 	{
 		Infra::EventListener<float>::make([&](const float deltaTime)
 		{
-			pRenderingEngine->startFrame();
-
 			if (!pBufferTestScene)
 				pBufferTestScene = std::make_unique<BufferTestScene>(*pRenderingEngine, *pScreen1, *pScreen2);
 
 			pBufferTestScene->process(deltaTime);
-			pRenderingEngine->endFrame();
-			pRenderingEngine->update();
-
 			pScreen1->draw();
 			pScreen2->draw();
 		})

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Infrastructure/Unique.h"
-#include "../VulkanLoader/Procedure.h"
+#include "../Vulkan/Procedure.h"
 #include <vector>
 
 namespace HyperFast
@@ -10,7 +10,7 @@ namespace HyperFast
 	{
 	public:
 		CommandBufferManager(
-			const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 			const uint32_t queueFamilyIndex, const size_t numMaxBuffers) noexcept;
 		
 		~CommandBufferManager() noexcept;
@@ -20,7 +20,7 @@ namespace HyperFast
 
 	private:
 		const VkDevice __device;
-		const VKL::DeviceProcedure &__deviceProc;
+		const Vulkan::DeviceProcedure &__deviceProc;
 		const uint32_t __queueFamilyIndex;
 		const size_t __numMaxBuffers;
 

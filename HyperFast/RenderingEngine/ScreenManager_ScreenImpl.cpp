@@ -3,9 +3,9 @@
 namespace HyperFast
 {
 	ScreenManager::ScreenImpl::ScreenImpl(
-		const VkInstance instance, const VKL::InstanceProcedure &instanceProc,
+		const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc,
 		const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
 		Win::Window &window) :
 		__instance{ instance }, __instanceProc{ instanceProc },
 		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },

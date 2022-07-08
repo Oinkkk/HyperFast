@@ -11,7 +11,7 @@ namespace HyperFast
 	{
 	public:
 		Drawcall(
-			const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 			BufferManager &bufferManager, MemoryManager &memoryManager) noexcept;
 
 		void addSubmesh(Submesh &submesh) noexcept;
@@ -39,7 +39,7 @@ namespace HyperFast
 		using AttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
 
 		const VkDevice __device;
-		const VKL::DeviceProcedure &__deviceProc;
+		const Vulkan::DeviceProcedure &__deviceProc;
 		BufferManager &__bufferManager;
 		MemoryManager &__memoryManager;
 

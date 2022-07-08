@@ -4,7 +4,7 @@
 #include "Procedure.h"
 #include <Windows.h>
 
-namespace VKL
+namespace Vulkan
 {
 	class VulkanLoader : public Infra::Unique
 	{

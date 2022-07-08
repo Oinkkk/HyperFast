@@ -5,7 +5,7 @@
 namespace HyperFast
 {
 	PhysicalDevicePicker::PhysicalDevicePicker(
-		const VkInstance instance, const VKL::InstanceProcedure &instanceProc) noexcept :
+		const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc) noexcept :
 		__instance{ instance }, __instanceProc{ instanceProc }
 	{}
 

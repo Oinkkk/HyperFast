@@ -9,7 +9,7 @@ namespace HyperFast
 	class Mesh : public Infra::Unique
 	{
 	public:
-		Mesh(const VKL::DeviceProcedure &deviceProc) noexcept;
+		Mesh(const Vulkan::DeviceProcedure &deviceProc) noexcept;
 
 		[[nodiscard]]
 		constexpr const std::shared_ptr<Buffer> &getPositionBuffer() const noexcept;
@@ -31,7 +31,7 @@ namespace HyperFast
 		constexpr Infra::EventView<Mesh &, VertexAttributeFlag, VertexAttributeFlag> &getAttributeFlagChangeEvent() noexcept;
 
 	private:
-		const VKL::DeviceProcedure &__deviceProc;
+		const Vulkan::DeviceProcedure &__deviceProc;
 
 		std::shared_ptr<Buffer> __pPositionBuffer;
 		std::shared_ptr<Buffer> __pColorBuffer;

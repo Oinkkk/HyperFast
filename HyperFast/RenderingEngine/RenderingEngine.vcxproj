@@ -62,7 +62,7 @@
     <ProjectReference Include="..\libshaderc_util\libshaderc_util.vcxproj">
       <Project>{049ccf30-6172-4a18-b572-f9179c22ba95}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\VulkanLoader\VulkanLoader.vcxproj">
+    <ProjectReference Include="..\Vulkan\Vulkan.vcxproj">
       <Project>{022e6446-daf0-45d3-a57f-c041a461d5e0}</Project>
     </ProjectReference>
   </ItemGroup>

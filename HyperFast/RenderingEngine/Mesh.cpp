@@ -2,7 +2,7 @@
 
 namespace HyperFast
 {
-	Mesh::Mesh(const VKL::DeviceProcedure &deviceProc) noexcept :
+	Mesh::Mesh(const Vulkan::DeviceProcedure &deviceProc) noexcept :
 		__deviceProc{ deviceProc }
 	{}
 

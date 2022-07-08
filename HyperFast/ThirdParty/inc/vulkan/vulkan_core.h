@@ -1837,7 +1837,7 @@ typedef enum VkStencilOp {
     VK_STENCIL_OP_MAX_ENUM = 0x7FFFFFFF
 } VkStencilOp;
 
-typedef enum VkLogicOp {
+typedef enum VulkanogicOp {
     VK_LOGIC_OP_CLEAR = 0,
     VK_LOGIC_OP_AND = 1,
     VK_LOGIC_OP_AND_REVERSE = 2,
@@ -1855,7 +1855,7 @@ typedef enum VkLogicOp {
     VK_LOGIC_OP_NAND = 14,
     VK_LOGIC_OP_SET = 15,
     VK_LOGIC_OP_MAX_ENUM = 0x7FFFFFFF
-} VkLogicOp;
+} VulkanogicOp;
 
 typedef enum VkBorderColor {
     VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0,
@@ -3003,12 +3003,12 @@ typedef struct VkExtensionProperties {
     uint32_t    specVersion;
 } VkExtensionProperties;
 
-typedef struct VkLayerProperties {
+typedef struct VulkanayerProperties {
     char        layerName[VK_MAX_EXTENSION_NAME_SIZE];
     uint32_t    specVersion;
     uint32_t    implementationVersion;
     char        description[VK_MAX_DESCRIPTION_SIZE];
-} VkLayerProperties;
+} VulkanayerProperties;
 
 typedef struct VkSubmitInfo {
     VkStructureType                sType;
@@ -3380,7 +3380,7 @@ typedef struct VkPipelineColorBlendStateCreateInfo {
     const void*                                   pNext;
     VkPipelineColorBlendStateCreateFlags          flags;
     VkBool32                                      logicOpEnable;
-    VkLogicOp                                     logicOp;
+    VulkanogicOp                                     logicOp;
     uint32_t                                      attachmentCount;
     const VkPipelineColorBlendAttachmentState*    pAttachments;
     float                                         blendConstants[4];
@@ -3723,8 +3723,8 @@ typedef VkResult (VKAPI_PTR *PFN_vkCreateDevice)(VkPhysicalDevice physicalDevice
 typedef void (VKAPI_PTR *PFN_vkDestroyDevice)(VkDevice device, const VkAllocationCallbacks* pAllocator);
 typedef VkResult (VKAPI_PTR *PFN_vkEnumerateInstanceExtensionProperties)(const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties);
 typedef VkResult (VKAPI_PTR *PFN_vkEnumerateDeviceExtensionProperties)(VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties);
-typedef VkResult (VKAPI_PTR *PFN_vkEnumerateInstanceLayerProperties)(uint32_t* pPropertyCount, VkLayerProperties* pProperties);
-typedef VkResult (VKAPI_PTR *PFN_vkEnumerateDeviceLayerProperties)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkLayerProperties* pProperties);
+typedef VkResult (VKAPI_PTR *PFN_vkEnumerateInstanceLayerProperties)(uint32_t* pPropertyCount, VulkanayerProperties* pProperties);
+typedef VkResult (VKAPI_PTR *PFN_vkEnumerateDeviceLayerProperties)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VulkanayerProperties* pProperties);
 typedef void (VKAPI_PTR *PFN_vkGetDeviceQueue)(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue);
 typedef VkResult (VKAPI_PTR *PFN_vkQueueSubmit)(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
 typedef VkResult (VKAPI_PTR *PFN_vkQueueWaitIdle)(VkQueue queue);
@@ -3923,12 +3923,12 @@ VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceExtensionProperties(
 
 VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceLayerProperties(
     uint32_t*                                   pPropertyCount,
-    VkLayerProperties*                          pProperties);
+    VulkanayerProperties*                          pProperties);
 
 VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceLayerProperties(
     VkPhysicalDevice                            physicalDevice,
     uint32_t*                                   pPropertyCount,
-    VkLayerProperties*                          pProperties);
+    VulkanayerProperties*                          pProperties);
 
 VKAPI_ATTR void VKAPI_CALL vkGetDeviceQueue(
     VkDevice                                    device,
@@ -12636,13 +12636,13 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateHeadlessSurfaceEXT(
 #define VK_EXT_LINE_RASTERIZATION_SPEC_VERSION 1
 #define VK_EXT_LINE_RASTERIZATION_EXTENSION_NAME "VK_EXT_line_rasterization"
 
-typedef enum VkLineRasterizationModeEXT {
+typedef enum VulkanineRasterizationModeEXT {
     VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT = 0,
     VK_LINE_RASTERIZATION_MODE_RECTANGULAR_EXT = 1,
     VK_LINE_RASTERIZATION_MODE_BRESENHAM_EXT = 2,
     VK_LINE_RASTERIZATION_MODE_RECTANGULAR_SMOOTH_EXT = 3,
     VK_LINE_RASTERIZATION_MODE_MAX_ENUM_EXT = 0x7FFFFFFF
-} VkLineRasterizationModeEXT;
+} VulkanineRasterizationModeEXT;
 typedef struct VkPhysicalDeviceLineRasterizationFeaturesEXT {
     VkStructureType    sType;
     void*              pNext;
@@ -12663,7 +12663,7 @@ typedef struct VkPhysicalDeviceLineRasterizationPropertiesEXT {
 typedef struct VkPipelineRasterizationLineStateCreateInfoEXT {
     VkStructureType               sType;
     const void*                   pNext;
-    VkLineRasterizationModeEXT    lineRasterizationMode;
+    VulkanineRasterizationModeEXT    lineRasterizationMode;
     VkBool32                      stippledLineEnable;
     uint32_t                      lineStippleFactor;
     uint16_t                      lineStipplePattern;
@@ -13878,7 +13878,7 @@ typedef struct VkPhysicalDeviceExtendedDynamicState2FeaturesEXT {
 typedef void (VKAPI_PTR *PFN_vkCmdSetPatchControlPointsEXT)(VkCommandBuffer commandBuffer, uint32_t patchControlPoints);
 typedef void (VKAPI_PTR *PFN_vkCmdSetRasterizerDiscardEnableEXT)(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable);
 typedef void (VKAPI_PTR *PFN_vkCmdSetDepthBiasEnableEXT)(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable);
-typedef void (VKAPI_PTR *PFN_vkCmdSetLogicOpEXT)(VkCommandBuffer commandBuffer, VkLogicOp logicOp);
+typedef void (VKAPI_PTR *PFN_vkCmdSetLogicOpEXT)(VkCommandBuffer commandBuffer, VulkanogicOp logicOp);
 typedef void (VKAPI_PTR *PFN_vkCmdSetPrimitiveRestartEnableEXT)(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable);
 
 #ifndef VK_NO_PROTOTYPES
@@ -13896,7 +13896,7 @@ VKAPI_ATTR void VKAPI_CALL vkCmdSetDepthBiasEnableEXT(
 
 VKAPI_ATTR void VKAPI_CALL vkCmdSetLogicOpEXT(
     VkCommandBuffer                             commandBuffer,
-    VkLogicOp                                   logicOp);
+    VulkanogicOp                                   logicOp);
 
 VKAPI_ATTR void VKAPI_CALL vkCmdSetPrimitiveRestartEnableEXT(
     VkCommandBuffer                             commandBuffer,

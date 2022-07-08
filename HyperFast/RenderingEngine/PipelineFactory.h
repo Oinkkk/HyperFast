@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ShaderCompiler.h"
-#include "../VulkanLoader/Procedure.h"
+#include "../Vulkan/Procedure.h"
 #include "../Infrastructure/Environment.h"
 #include "VertexAttribute.h"
 
@@ -18,7 +18,7 @@ namespace HyperFast
 			VkRect2D scissor{};
 		};
 
-		PipelineFactory(const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept;
+		PipelineFactory(const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept;
 		~PipelineFactory() noexcept;
 
 		void build(
@@ -35,7 +35,7 @@ namespace HyperFast
 		{
 		public:
 			PipelineResource(
-				const VkDevice device, const VKL::DeviceProcedure &deviceProc,
+				const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
 				const VkPipelineLayout pipelineLayout, const VertexAttributeFlag attribFlag) noexcept;
 			
 			~PipelineResource() noexcept;
@@ -48,7 +48,7 @@ namespace HyperFast
 
 		private:
 			const VkDevice __device;
-			const VKL::DeviceProcedure &__deviceProc;
+			const Vulkan::DeviceProcedure &__deviceProc;
 			const VkPipelineLayout __pipelineLayout;
 			const VertexAttributeFlag __attribFlag;
 
@@ -68,7 +68,7 @@ namespace HyperFast
 		};
 
 		const VkDevice __device;
-		const VKL::DeviceProcedure &__deviceProc;
+		const Vulkan::DeviceProcedure &__deviceProc;
 
 		VkPipelineLayout __pipelineLayout{};
 		std::unordered_map<VertexAttributeFlag, PipelineResource> __attribFlag2ResourceMap;

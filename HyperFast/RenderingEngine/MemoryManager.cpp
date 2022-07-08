@@ -3,8 +3,8 @@
 namespace HyperFast
 {
 	MemoryManager::MemoryManager(
-		const VkPhysicalDevice physicalDevice, const VKL::InstanceProcedure &instanceProc,
-		const VkDevice device, const VKL::DeviceProcedure &deviceProc) noexcept :
+		const VkPhysicalDevice physicalDevice, const Vulkan::InstanceProcedure &instanceProc,
+		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept :
 		__physicalDevice{ physicalDevice }, __instanceProc{ instanceProc },
 		__device{ device }, __deviceProc{ deviceProc }
 	{
