@@ -3,11 +3,11 @@
 namespace HyperFast
 {
 	ScreenManager::ScreenManager(
-		Vulkan::Instance &instance,
-		const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept :
-		__instance{ instance },
-		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
+		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
+		const uint32_t graphicsQueueFamilyIndex, const VkDevice device,
+		const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept :
+		__instance{ instance }, __physicalDevice{ physicalDevice },
+		__graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __deviceProc{ deviceProc }, __graphicsQueue{ graphicsQueue }
 	{}
 

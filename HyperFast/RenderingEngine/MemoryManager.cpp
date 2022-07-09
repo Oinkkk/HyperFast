@@ -3,7 +3,7 @@
 namespace HyperFast
 {
 	MemoryManager::MemoryManager(
-		Vulkan::Instance &instance, const VkPhysicalDevice physicalDevice,
+		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept :
 		__instance{ instance }, __physicalDevice{ physicalDevice },
 		__device{ device }, __deviceProc{ deviceProc }
@@ -76,6 +76,6 @@ namespace HyperFast
 
 	void MemoryManager::__updateDeviceMemProps() noexcept
 	{
-		__instance.vkGetPhysicalDeviceMemoryProperties2(__physicalDevice, &__deviceMemProps2);
+		__physicalDevice.vkGetPhysicalDeviceMemoryProperties2(&__deviceMemProps2);
 	}
 }

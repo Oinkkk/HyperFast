@@ -8,7 +8,7 @@ namespace HyperFast
 		__instance{ instance }
 	{}
 
-	VkPhysicalDevice PhysicalDevicePicker::pick() const noexcept
+	VkPhysicalDevice PhysicalDevicePicker::pick() const
 	{
 		uint32_t numDevices{};
 		__instance.vkEnumeratePhysicalDevices(&numDevices, nullptr);
@@ -31,7 +31,7 @@ namespace HyperFast
 		}
 
 		if (scoreMap.empty())
-			return VK_NULL_HANDLE;
+			throw std::exception{ "No suitable device" };
 
 		return scoreMap.begin()->second;
 	}

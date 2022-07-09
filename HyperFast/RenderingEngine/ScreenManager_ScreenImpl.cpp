@@ -3,12 +3,12 @@
 namespace HyperFast
 {
 	ScreenManager::ScreenImpl::ScreenImpl(
-		Vulkan::Instance &instance,
-		const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
+		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
+		const uint32_t graphicsQueueFamilyIndex,
 		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
 		Win::Window &window) :
-		__instance{ instance },
-		__physicalDevice{ physicalDevice }, __graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
+		__instance{ instance }, __physicalDevice{ physicalDevice },
+		__graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __deviceProc{ deviceProc }, __graphicsQueue{ graphicsQueue },
 		__window{ window }, __pipelineFactory{ device, deviceProc }
 	{
@@ -410,8 +410,8 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const
 	{
 		VkBool32 surfaceSupported{};
-		__instance.vkGetPhysicalDeviceSurfaceSupportKHR(
-			__physicalDevice, __graphicsQueueFamilyIndex, __surface, &surfaceSupported);
+		__physicalDevice.vkGetPhysicalDeviceSurfaceSupportKHR(
+			__graphicsQueueFamilyIndex, __surface, &surfaceSupported);
 
 		if (!surfaceSupported)
 			throw std::exception{ "The physical device doesn't support the surface." };
@@ -419,30 +419,29 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__querySurfaceCapabilities() noexcept
 	{
-		__instance.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-			__physicalDevice, __surface, &__surfaceCapabilities);
+		__physicalDevice.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(__surface, &__surfaceCapabilities);
 	}
 
 	void ScreenManager::ScreenImpl::__querySupportedSurfaceFormats() noexcept
 	{
 		uint32_t numFormats{};
-		__instance.vkGetPhysicalDeviceSurfaceFormatsKHR(
-			__physicalDevice, __surface, &numFormats, nullptr);
+		__physicalDevice.vkGetPhysicalDeviceSurfaceFormatsKHR(
+			__surface, &numFormats, nullptr);
 
 		__supportedSurfaceFormats.resize(numFormats);
-		__instance.vkGetPhysicalDeviceSurfaceFormatsKHR(
-			__physicalDevice, __surface, &numFormats, __supportedSurfaceFormats.data());
+		__physicalDevice.vkGetPhysicalDeviceSurfaceFormatsKHR(
+			__surface, &numFormats, __supportedSurfaceFormats.data());
 	}
 
 	void ScreenManager::ScreenImpl::__querySupportedSurfacePresentModes() noexcept
 	{
 		uint32_t numModes{};
-		__instance.vkGetPhysicalDeviceSurfacePresentModesKHR(
-			__physicalDevice, __surface, &numModes, nullptr);
+		__physicalDevice.vkGetPhysicalDeviceSurfacePresentModesKHR(
+			__surface, &numModes, nullptr);
 
 		__supportedSurfacePresentModes.resize(numModes);
-		__instance.vkGetPhysicalDeviceSurfacePresentModesKHR(
-			__physicalDevice, __surface, &numModes, __supportedSurfacePresentModes.data());
+		__physicalDevice.vkGetPhysicalDeviceSurfacePresentModesKHR(
+			__surface, &numModes, __supportedSurfacePresentModes.data());
 	}
 
 	void ScreenManager::ScreenImpl::__createSwapchain(const VkSwapchainKHR oldSwapchain)

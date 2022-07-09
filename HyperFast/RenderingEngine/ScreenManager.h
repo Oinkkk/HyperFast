@@ -6,7 +6,7 @@
 #include "CommandBufferManager.h"
 #include "../Infrastructure/Environment.h"
 #include "Drawcall.h"
-#include "../Vulkan/Instance.h"
+#include "../Vulkan/PhysicalDevice.h"
 
 namespace HyperFast
 {
@@ -17,8 +17,8 @@ namespace HyperFast
 		{
 		public:
 			ScreenImpl(
-				Vulkan::Instance &instance,
-				const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
+				Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
+				const uint32_t graphicsQueueFamilyIndex,
 				const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
 				Win::Window &window);
 
@@ -29,8 +29,8 @@ namespace HyperFast
 
 		private:
 			Vulkan::Instance &__instance;
+			Vulkan::PhysicalDevice &__physicalDevice;
 
-			const VkPhysicalDevice __physicalDevice;
 			const uint32_t __graphicsQueueFamilyIndex;
 
 			const VkDevice __device;
@@ -126,9 +126,9 @@ namespace HyperFast
 		};
 
 		ScreenManager(
-			Vulkan::Instance &instance,
-			const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
-			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept;
+			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
+			const uint32_t graphicsQueueFamilyIndex, const VkDevice device,
+			const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept;
 
 		~ScreenManager() noexcept = default;
 
@@ -137,8 +137,8 @@ namespace HyperFast
 
 	private:
 		Vulkan::Instance &__instance;
+		Vulkan::PhysicalDevice &__physicalDevice;
 
-		const VkPhysicalDevice __physicalDevice;
 		const uint32_t __graphicsQueueFamilyIndex;
 
 		const VkDevice __device;

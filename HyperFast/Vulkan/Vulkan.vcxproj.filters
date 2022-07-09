@@ -10,6 +10,9 @@
     <Filter Include="Base">
       <UniqueIdentifier>{5a34c8cc-9434-4bc6-b4e1-4bd4578ce596}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PhysicalDevice">
+      <UniqueIdentifier>{fdd0661e-98b8-465c-a4ac-50a55703c1cb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -24,6 +27,9 @@
     <ClInclude Include="Handle.h">
       <Filter>Base</Filter>
     </ClInclude>
+    <ClInclude Include="PhysicalDevice.h">
+      <Filter>PhysicalDevice</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -31,6 +37,9 @@
     </ClCompile>
     <ClCompile Include="Instance.cpp">
       <Filter>Instance</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicalDevice.cpp">
+      <Filter>PhysicalDevice</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

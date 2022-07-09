@@ -2,7 +2,7 @@
 
 #include <string>
 #include "../Infrastructure/Logger.h"
-#include "../Vulkan/Instance.h"
+#include "../Vulkan/PhysicalDevice.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
 #include "Screen.h"
@@ -48,7 +48,7 @@ namespace HyperFast
 		std::unique_ptr<Vulkan::Instance> __pInstance;
 		VkDebugUtilsMessengerEXT __debugMessenger{};
 
-		VkPhysicalDevice __physicalDevice{};
+		std::unique_ptr<Vulkan::PhysicalDevice> __pPhysicalDevice;
 		VkPhysicalDeviceProperties2 __physicalDeviceProp2{};
 		VkPhysicalDeviceVulkan11Properties __physicalDevice11Prop{};
 		VkPhysicalDeviceVulkan12Properties __physicalDevice12Prop{};

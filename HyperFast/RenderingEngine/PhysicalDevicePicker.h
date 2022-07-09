@@ -10,7 +10,7 @@ namespace HyperFast
 		PhysicalDevicePicker(Vulkan::Instance &instance) noexcept;
 
 		[[nodiscard]]
-		VkPhysicalDevice pick() const noexcept;
+		VkPhysicalDevice pick() const;
 
 	private:
 		Vulkan::Instance &__instance;

@@ -226,10 +226,7 @@ namespace HyperFast
 	void RenderingEngine::__pickPhysicalDevice()
 	{
 		PhysicalDevicePicker groupPicker{ *__pInstance };
-		
-		__physicalDevice = groupPicker.pick();
-		if (!__physicalDevice)
-			throw std::exception{ "There is a no suitable physical device group." };
+		__pPhysicalDevice = std::make_unique<Vulkan::PhysicalDevice>(*__pInstance, groupPicker.pick());
 	}
 
 	void RenderingEngine::__queryPhysicalDeviceProps() noexcept
@@ -246,16 +243,16 @@ namespace HyperFast
 		__physicalDeviceProp2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 		__physicalDeviceProp2.pNext = &__physicalDevice11Prop;
 
-		__pInstance->vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProp2);
+		__pPhysicalDevice->vkGetPhysicalDeviceProperties2(&__physicalDeviceProp2);
 	}
 
 	void RenderingEngine::__retrieveQueueFamilies() noexcept
 	{
 		uint32_t numProps{};
-		__pInstance->vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, nullptr);
+		__pPhysicalDevice->vkGetPhysicalDeviceQueueFamilyProperties(&numProps, nullptr);
 
 		__queueFamilyProps.resize(numProps);
-		__pInstance->vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, __queueFamilyProps.data());
+		__pPhysicalDevice->vkGetPhysicalDeviceQueueFamilyProperties(&numProps, __queueFamilyProps.data());
 
 		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
 		{
@@ -266,7 +263,7 @@ namespace HyperFast
 
 			const VkBool32 win32SupportResult
 			{
-				__pInstance->vkGetPhysicalDeviceWin32PresentationSupportKHR(__physicalDevice, propIter)
+				__pPhysicalDevice->vkGetPhysicalDeviceWin32PresentationSupportKHR(propIter)
 			};
 
 			if (!win32SupportResult)
@@ -342,7 +339,7 @@ namespace HyperFast
 			.ppEnabledExtensionNames = enabledExtensions.data()
 		};
 
-		__pInstance->vkCreateDevice(__physicalDevice, &createInfo, nullptr, &__device);
+		__pPhysicalDevice->vkCreateDevice(&createInfo, nullptr, &__device);
 		if (!__device)
 			throw std::exception{ "Cannot create a VkDevice." };
 	}
@@ -368,8 +365,7 @@ namespace HyperFast
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
-			*__pInstance,
-			__physicalDevice, __graphicsQueueFamilyIndex,
+			*__pInstance, *__pPhysicalDevice, __graphicsQueueFamilyIndex,
 			__device, __deviceProc, __graphicsQueue);
 	}
 
@@ -381,7 +377,7 @@ namespace HyperFast
 	void RenderingEngine::__createMemoryManager() noexcept
 	{
 		__pMemoryManager = std::make_unique<MemoryManager>
-			(*__pInstance, __physicalDevice, __device, __deviceProc);
+			(*__pInstance, *__pPhysicalDevice, __device, __deviceProc);
 	}
 
 	void RenderingEngine::__destroyMemoryManager() noexcept

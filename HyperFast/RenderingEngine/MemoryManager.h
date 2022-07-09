@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Vulkan/Instance.h"
+#include "../Vulkan/PhysicalDevice.h"
 #include <unordered_map>
 #include <memory>
 #include <optional>
@@ -86,7 +86,7 @@ namespace HyperFast
 		};
 
 		MemoryManager(
-			Vulkan::Instance &instance, const VkPhysicalDevice physicalDevice,
+			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept;
 
 		[[nodiscard]]
@@ -98,7 +98,7 @@ namespace HyperFast
 
 	private:
 		Vulkan::Instance &__instance;
-		const VkPhysicalDevice __physicalDevice;
+		Vulkan::PhysicalDevice &__physicalDevice;
 
 		const VkDevice __device;
 		const Vulkan::DeviceProcedure &__deviceProc;
