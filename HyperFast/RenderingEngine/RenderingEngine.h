@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include "../Vulkan/VulkanLoader.h"
 #include "../Infrastructure/Logger.h"
+#include "../Vulkan/Instance.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
 #include "Screen.h"
@@ -45,8 +45,7 @@ namespace HyperFast
 		uint32_t __instanceVersion{};
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{};
 
-		VkInstance __instance{};
-		Vulkan::InstanceProcedure __instanceProc;
+		std::unique_ptr<Vulkan::Instance> __pInstance;
 		VkDebugUtilsMessengerEXT __debugMessenger{};
 
 		VkPhysicalDevice __physicalDevice{};
@@ -73,8 +72,6 @@ namespace HyperFast
 		void __checkInstanceVersionSupport() const;
 		void __populateDebugMessengerCreateInfo() noexcept;
 		void __createInstance();
-		void __destroyInstance() noexcept;
-		void __queryInstanceProc() noexcept;
 		void __createDebugMessenger();
 		void __destroyDebugMessenger() noexcept;
 		void __pickPhysicalDevice();

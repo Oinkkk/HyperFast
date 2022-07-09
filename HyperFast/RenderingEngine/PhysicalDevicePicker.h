@@ -1,21 +1,19 @@
 #pragma once
 
-#include "../Infrastructure/Unique.h"
-#include "../Vulkan/Procedure.h"
+#include "../Vulkan/Instance.h"
 
 namespace HyperFast
 {
 	class PhysicalDevicePicker : public Infra::Unique
 	{
 	public:
-		PhysicalDevicePicker(const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc) noexcept;
+		PhysicalDevicePicker(Vulkan::Instance &instance) noexcept;
 
 		[[nodiscard]]
 		VkPhysicalDevice pick() const noexcept;
 
 	private:
-		const VkInstance __instance;
-		const Vulkan::InstanceProcedure &__instanceProc;
+		Vulkan::Instance &__instance;
 
 		[[nodiscard]]
 		bool __checkVersionSupport(const VkPhysicalDevice physicalDevice) const noexcept;

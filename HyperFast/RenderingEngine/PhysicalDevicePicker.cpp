@@ -4,19 +4,18 @@
 
 namespace HyperFast
 {
-	PhysicalDevicePicker::PhysicalDevicePicker(
-		const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc) noexcept :
-		__instance{ instance }, __instanceProc{ instanceProc }
+	PhysicalDevicePicker::PhysicalDevicePicker(Vulkan::Instance &instance) noexcept :
+		__instance{ instance }
 	{}
 
 	VkPhysicalDevice PhysicalDevicePicker::pick() const noexcept
 	{
 		uint32_t numDevices{};
-		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, nullptr);
+		__instance.vkEnumeratePhysicalDevices(&numDevices, nullptr);
 
 		std::vector<VkPhysicalDevice> devices;
 		devices.resize(numDevices);
-		__instanceProc.vkEnumeratePhysicalDevices(__instance, &numDevices, devices.data());
+		__instance.vkEnumeratePhysicalDevices(&numDevices, devices.data());
 		
 		std::multimap<uint32_t, VkPhysicalDevice, std::greater<uint32_t>> scoreMap;
 		for (const VkPhysicalDevice device : devices)
@@ -40,7 +39,7 @@ namespace HyperFast
 	bool PhysicalDevicePicker::__checkVersionSupport(const VkPhysicalDevice physicalDevice) const noexcept
 	{
 		VkPhysicalDeviceProperties physicalDeviceProperties{};
-		__instanceProc.vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+		__instance.vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 
 		const uint32_t deviceVersion{ physicalDeviceProperties.apiVersion };
 
@@ -58,11 +57,11 @@ namespace HyperFast
 	bool PhysicalDevicePicker::__checkQueueSupport(const VkPhysicalDevice physicalDevice) const noexcept
 	{
 		uint32_t numProps{};
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numProps, nullptr);
+		__instance.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numProps, nullptr);
 
 		std::vector<VkQueueFamilyProperties> queueFamilyProps;
 		queueFamilyProps.resize(numProps);
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numProps, queueFamilyProps.data());
+		__instance.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numProps, queueFamilyProps.data());
 
 		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
 		{
@@ -78,7 +77,7 @@ namespace HyperFast
 	uint32_t PhysicalDevicePicker::__getScoreOf(const VkPhysicalDevice physicalDevice) const noexcept
 	{
 		VkPhysicalDeviceProperties deviceProp{};
-		__instanceProc.vkGetPhysicalDeviceProperties(physicalDevice, &deviceProp);
+		__instance.vkGetPhysicalDeviceProperties(physicalDevice, &deviceProp);
 
 		uint32_t retVal{};
 

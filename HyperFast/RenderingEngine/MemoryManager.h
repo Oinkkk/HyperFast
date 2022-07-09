@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../Infrastructure/Unique.h"
-#include "../Vulkan/VulkanLoader.h"
+#include "../Vulkan/Instance.h"
 #include <unordered_map>
 #include <memory>
 #include <optional>
@@ -87,7 +86,7 @@ namespace HyperFast
 		};
 
 		MemoryManager(
-			const VkPhysicalDevice physicalDevice, const Vulkan::InstanceProcedure &instanceProc,
+			Vulkan::Instance &instance, const VkPhysicalDevice physicalDevice,
 			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept;
 
 		[[nodiscard]]
@@ -98,8 +97,8 @@ namespace HyperFast
 		void destroy(MemoryImpl *const pImpl) noexcept;
 
 	private:
+		Vulkan::Instance &__instance;
 		const VkPhysicalDevice __physicalDevice;
-		const Vulkan::InstanceProcedure &__instanceProc;
 
 		const VkDevice __device;
 		const Vulkan::DeviceProcedure &__deviceProc;

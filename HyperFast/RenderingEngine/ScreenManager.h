@@ -6,6 +6,7 @@
 #include "CommandBufferManager.h"
 #include "../Infrastructure/Environment.h"
 #include "Drawcall.h"
+#include "../Vulkan/Instance.h"
 
 namespace HyperFast
 {
@@ -16,7 +17,7 @@ namespace HyperFast
 		{
 		public:
 			ScreenImpl(
-				const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc,
+				Vulkan::Instance &instance,
 				const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
 				const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
 				Win::Window &window);
@@ -27,8 +28,7 @@ namespace HyperFast
 			void draw();
 
 		private:
-			const VkInstance __instance;
-			const Vulkan::InstanceProcedure &__instanceProc;
+			Vulkan::Instance &__instance;
 
 			const VkPhysicalDevice __physicalDevice;
 			const uint32_t __graphicsQueueFamilyIndex;
@@ -126,7 +126,7 @@ namespace HyperFast
 		};
 
 		ScreenManager(
-			const VkInstance instance, const Vulkan::InstanceProcedure &instanceProc,
+			Vulkan::Instance &instance,
 			const VkPhysicalDevice physicalDevice, const uint32_t graphicsQueueFamilyIndex,
 			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept;
 
@@ -136,8 +136,7 @@ namespace HyperFast
 		std::unique_ptr<ScreenImpl> create(Win::Window &window) noexcept;
 
 	private:
-		const VkInstance __instance;
-		const Vulkan::InstanceProcedure &__instanceProc;
+		Vulkan::Instance &__instance;
 
 		const VkPhysicalDevice __physicalDevice;
 		const uint32_t __graphicsQueueFamilyIndex;

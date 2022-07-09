@@ -19,7 +19,6 @@ namespace HyperFast
 #endif
 
 		__createInstance();
-		__queryInstanceProc();
 
 #ifndef NDEBUG
 		__createDebugMessenger();
@@ -49,7 +48,7 @@ namespace HyperFast
 		__destroyDebugMessenger();
 #endif
 
-		__destroyInstance();
+		__pInstance = nullptr;
 	}
 
 	std::shared_ptr<Screen> RenderingEngine::createScreen(Win::Window &window)
@@ -143,7 +142,7 @@ namespace HyperFast
 
 	void RenderingEngine::__createInstance()
 	{
-		const Vulkan::GlobalProcedure &globalGlobalProcedure{ Vulkan::VulkanLoader::getInstance().getGlobalProcedure() };
+		const Vulkan::GlobalProcedure &globalProc{ Vulkan::VulkanLoader::getInstance().getGlobalProcedure() };
 
 		std::vector<const char *> enabledLayers;
 		std::vector<const char *> enabledExtensions;
@@ -208,40 +207,25 @@ namespace HyperFast
 			.ppEnabledExtensionNames = enabledExtensions.data()
 		};
 
-		globalGlobalProcedure.vkCreateInstance(&createInfo, nullptr, &__instance);
-		if (!__instance)
-			throw std::exception{ "Cannot create a VkInstance." };
-	}
-
-	void RenderingEngine::__destroyInstance() noexcept
-	{
-		__instanceProc.vkDestroyInstance(__instance, nullptr);
-		__instance = VK_NULL_HANDLE;
-	}
-
-	void RenderingEngine::__queryInstanceProc() noexcept
-	{
-		__instanceProc = Vulkan::VulkanLoader::getInstance().queryInstanceProcedure(__instance);
+		__pInstance = std::make_unique<Vulkan::Instance>(createInfo);
 	}
 
 	void RenderingEngine::__createDebugMessenger()
 	{
-		__instanceProc.vkCreateDebugUtilsMessengerEXT(
-			__instance, &__debugMessengerCreateInfo, nullptr, &__debugMessenger);
-
+		__pInstance->vkCreateDebugUtilsMessengerEXT(&__debugMessengerCreateInfo, nullptr, &__debugMessenger);
 		if (!__debugMessenger)
 			throw std::exception{ "Cannot create a VkDebugUtilsMessengerEXT." };
 	}
 
 	void RenderingEngine::__destroyDebugMessenger() noexcept
 	{
-		__instanceProc.vkDestroyDebugUtilsMessengerEXT(__instance, __debugMessenger, nullptr);
+		__pInstance->vkDestroyDebugUtilsMessengerEXT(__debugMessenger, nullptr);
 		__debugMessenger = VK_NULL_HANDLE;
 	}
 
 	void RenderingEngine::__pickPhysicalDevice()
 	{
-		PhysicalDevicePicker groupPicker{ __instance, __instanceProc };
+		PhysicalDevicePicker groupPicker{ *__pInstance };
 		
 		__physicalDevice = groupPicker.pick();
 		if (!__physicalDevice)
@@ -262,16 +246,16 @@ namespace HyperFast
 		__physicalDeviceProp2.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 		__physicalDeviceProp2.pNext = &__physicalDevice11Prop;
 
-		__instanceProc.vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProp2);
+		__pInstance->vkGetPhysicalDeviceProperties2(__physicalDevice, &__physicalDeviceProp2);
 	}
 
 	void RenderingEngine::__retrieveQueueFamilies() noexcept
 	{
 		uint32_t numProps{};
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, nullptr);
+		__pInstance->vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, nullptr);
 
 		__queueFamilyProps.resize(numProps);
-		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, __queueFamilyProps.data());
+		__pInstance->vkGetPhysicalDeviceQueueFamilyProperties(__physicalDevice, &numProps, __queueFamilyProps.data());
 
 		for (uint32_t propIter = 0U; propIter < numProps; propIter++)
 		{
@@ -282,7 +266,7 @@ namespace HyperFast
 
 			const VkBool32 win32SupportResult
 			{
-				__instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__physicalDevice, propIter)
+				__pInstance->vkGetPhysicalDeviceWin32PresentationSupportKHR(__physicalDevice, propIter)
 			};
 
 			if (!win32SupportResult)
@@ -358,7 +342,7 @@ namespace HyperFast
 			.ppEnabledExtensionNames = enabledExtensions.data()
 		};
 
-		__instanceProc.vkCreateDevice(__physicalDevice, &createInfo, nullptr, &__device);
+		__pInstance->vkCreateDevice(__physicalDevice, &createInfo, nullptr, &__device);
 		if (!__device)
 			throw std::exception{ "Cannot create a VkDevice." };
 	}
@@ -371,8 +355,7 @@ namespace HyperFast
 
 	void RenderingEngine::__queryDeviceProc() noexcept
 	{
-		__deviceProc =
-			Vulkan::VulkanLoader::getInstance().queryDeviceProcedure(__instanceProc.vkGetDeviceProcAddr, __device);
+		__deviceProc = __pInstance->queryDeviceProcedure(__device);
 	}
 
 	void RenderingEngine::__queryGraphicsQueue()
@@ -385,7 +368,7 @@ namespace HyperFast
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
-			__instance, __instanceProc,
+			*__pInstance,
 			__physicalDevice, __graphicsQueueFamilyIndex,
 			__device, __deviceProc, __graphicsQueue);
 	}
@@ -398,7 +381,7 @@ namespace HyperFast
 	void RenderingEngine::__createMemoryManager() noexcept
 	{
 		__pMemoryManager = std::make_unique<MemoryManager>
-			(__physicalDevice, __instanceProc, __device, __deviceProc);
+			(*__pInstance, __physicalDevice, __device, __deviceProc);
 	}
 
 	void RenderingEngine::__destroyMemoryManager() noexcept

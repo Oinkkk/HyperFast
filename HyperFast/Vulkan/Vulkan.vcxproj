@@ -11,10 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Handle.h" />
+    <ClInclude Include="Instance.h" />
     <ClInclude Include="VulkanLoader.h" />
     <ClInclude Include="Procedure.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Instance.cpp" />
     <ClCompile Include="VulkanLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
