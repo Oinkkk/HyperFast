@@ -11,6 +11,8 @@
 #include "../Vulkan/ImageView.h"
 #include "../Vulkan/RenderPass.h"
 #include "../Vulkan/Framebuffer.h"
+#include "../Vulkan/Semaphore.h"
+#include "../Vulkan/Fence.h"
 
 namespace HyperFast
 {
@@ -69,9 +71,9 @@ namespace HyperFast
 			std::unique_ptr<Vulkan::RenderPass> __pRenderPass;
 			std::unique_ptr<Vulkan::Framebuffer> __pFramebuffer;
 
-			std::vector<VkSemaphore> __presentCompleteSemaphores;
-			std::vector<VkSemaphore> __renderCompleteSemaphores;
-			std::vector<VkFence> __renderCompleteFences;
+			std::vector<std::unique_ptr<Vulkan::Semaphore>> __presentCompleteSemaphores;
+			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompleteSemaphores;
+			std::vector<std::unique_ptr<Vulkan::Fence>> __renderCompleteFences;
 
 			size_t __frameCursor{};
 			bool __imageAcquired{};
@@ -107,7 +109,6 @@ namespace HyperFast
 			void __createRenderPasses();
 			void __createFramebuffer();
 			void __createSyncObject(const size_t imageIdx);
-			void __destroySyncObjects() noexcept;
 
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines(tf::Subflow &subflow);

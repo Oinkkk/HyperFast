@@ -92,7 +92,10 @@ namespace HyperFast
 
 	bool ScreenManager::ScreenImpl::__draw()
 	{
-		const VkSemaphore presentCompleteSemaphore{ __presentCompleteSemaphores[__frameCursor] };
+		const VkSemaphore presentCompleteSemaphore
+		{
+			__presentCompleteSemaphores[__frameCursor]->getHandle()
+		};
 
 		if (!__imageAcquired)
 		{
@@ -116,19 +119,19 @@ namespace HyperFast
 			__imageAcquired = true;
 		}
 		
-		const VkFence renderCompleteFence{ __renderCompleteFences[__imageIdx] };
-		const VkResult waitResult
-		{
-			__device.vkWaitForFences(1U, &renderCompleteFence, VK_TRUE, 0ULL)
-		};
+		Vulkan::Fence &renderCompleteFence{ *(__renderCompleteFences[__imageIdx]) };
+		const VkResult waitResult{ renderCompleteFence.wait(0ULL) };
 
 		if (waitResult == VkResult::VK_TIMEOUT)
 			return false;
 
-		__device.vkResetFences(1U, &renderCompleteFence);
+		renderCompleteFence.reset();
 
 		const VkCommandBuffer mainCommandBuffer{ __mainCommandBuffers[__imageIdx] };
-		const VkSemaphore renderCompleteSemaphore{ __renderCompleteSemaphores[__imageIdx] };
+		const VkSemaphore renderCompleteSemaphore
+		{
+			__renderCompleteSemaphores[__imageIdx]->getHandle()
+		};
 
 		const VkSemaphoreSubmitInfo waitInfo
 		{
@@ -161,7 +164,7 @@ namespace HyperFast
 			.pSignalSemaphoreInfos = &signalInfo
 		};
 
-		__queue.vkQueueSubmit2(1U, &submitInfo, renderCompleteFence);
+		__queue.vkQueueSubmit2(1U, &submitInfo, renderCompleteFence.getHandle());
 
 		const VkPresentInfoKHR presentInfo
 		{
@@ -194,7 +197,9 @@ namespace HyperFast
 		__resetPipelines();
 		__pFramebuffer = nullptr;
 		__pRenderPass = nullptr;
-		__destroySyncObjects();
+		__renderCompleteFences.clear();
+		__renderCompleteSemaphores.clear();
+		__presentCompleteSemaphores.clear();
 		__swapChainImageViews.clear();
 		__destroyMainCommandBufferManagers();
 		__pSwapchain = nullptr;
@@ -549,9 +554,9 @@ namespace HyperFast
 		__mainCommandBufferManagers.resize(numSwapchainImages, nullptr);
 		__mainCommandBuffers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
-		__presentCompleteSemaphores.resize(numSwapchainImages, VK_NULL_HANDLE);
-		__renderCompleteSemaphores.resize(numSwapchainImages, VK_NULL_HANDLE);
-		__renderCompleteFences.resize(numSwapchainImages, VK_NULL_HANDLE);
+		__presentCompleteSemaphores.resize(numSwapchainImages);
+		__renderCompleteSemaphores.resize(numSwapchainImages);
+		__renderCompleteFences.resize(numSwapchainImages);
 	}
 
 	void ScreenManager::ScreenImpl::__createMainCommandBufferManager(const size_t imageIdx)
@@ -704,7 +709,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__createSyncObject(const size_t imageIdx)
 	{
-		if (__presentCompleteSemaphores[imageIdx] != VK_NULL_HANDLE)
+		if (__presentCompleteSemaphores[imageIdx])
 			return;
 
 		const VkSemaphoreCreateInfo semaphoreCreateInfo
@@ -718,32 +723,14 @@ namespace HyperFast
 			.flags = VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT
 		};
 
-		VkSemaphore presentCompleteSemaphore{};
-		VkSemaphore renderCompleteSemaphore{};
-		VkFence renderCompleteFence{};
+		__presentCompleteSemaphores[imageIdx] =
+			std::make_unique<Vulkan::Semaphore>(__device, semaphoreCreateInfo);
 
-		__device.vkCreateSemaphore(&semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
-		__device.vkCreateSemaphore(&semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
-		__device.vkCreateFence(&fenceCreateInfo, nullptr, &renderCompleteFence);
+		__renderCompleteSemaphores[imageIdx] =
+			std::make_unique<Vulkan::Semaphore>(__device, semaphoreCreateInfo);
 
-		if (!(presentCompleteSemaphore && renderCompleteSemaphore && renderCompleteFence))
-			throw std::exception{ "Error occurred while create sync objects." };
-
-		__presentCompleteSemaphores[imageIdx] = presentCompleteSemaphore;
-		__renderCompleteSemaphores[imageIdx] = renderCompleteSemaphore;
-		__renderCompleteFences[imageIdx] = renderCompleteFence;
-	}
-
-	void ScreenManager::ScreenImpl::__destroySyncObjects() noexcept
-	{
-		for (const VkFence renderCompleteFence : __renderCompleteFences)
-			__device.vkDestroyFence(renderCompleteFence, nullptr);
-
-		for (const VkSemaphore renderCompleteSemaphore :__renderCompleteSemaphores)
-			__device.vkDestroySemaphore(renderCompleteSemaphore, nullptr);
-
-		for (const VkSemaphore presentCompleteSemaphore :__presentCompleteSemaphores)
-			__device.vkDestroySemaphore(presentCompleteSemaphore, nullptr);
+		__renderCompleteFences[imageIdx] =
+			std::make_unique<Vulkan::Fence>(__device, fenceCreateInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept

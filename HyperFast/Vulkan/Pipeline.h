@@ -9,7 +9,7 @@ namespace Vulkan
 	public:
 		Pipeline(
 			Device &device, const VkPipelineCache pipelineCache,
-			const VkGraphicsPipelineCreateInfo &createInfos);
+			const VkGraphicsPipelineCreateInfo &createInfo);
 
 		~Pipeline() noexcept;
 
@@ -21,6 +21,6 @@ namespace Vulkan
 		[[nodiscard]]
 		static VkPipeline __create(
 			Device &device, const VkPipelineCache pipelineCache,
-			const VkGraphicsPipelineCreateInfo &createInfos);
+			const VkGraphicsPipelineCreateInfo &createInfo);
 	};
 }

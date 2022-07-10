@@ -12,6 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Device.h" />
+    <ClInclude Include="Fence.h" />
+    <ClInclude Include="Semaphore.h" />
+    <ClInclude Include="Pipeline.h" />
+    <ClInclude Include="PipelineCache.h" />
     <ClInclude Include="Handle.h" />
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="PipelineLayout.h" />
@@ -28,6 +32,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Device.cpp" />
+    <ClCompile Include="Fence.cpp" />
+    <ClCompile Include="Semaphore.cpp" />
+    <ClCompile Include="Pipeline.cpp" />
+    <ClCompile Include="PipelineCache.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="PipelineLayout.cpp" />
     <ClCompile Include="RenderPass.cpp" />

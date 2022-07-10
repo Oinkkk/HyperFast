@@ -86,6 +86,11 @@ namespace HyperFast
 		__pPipeline = nullptr;
 	}
 
+	VkPipeline PipelineFactory::PipelineResource::getPipeline() noexcept
+	{
+		return __pPipeline->getHandle();
+	}
+
 	void PipelineFactory::PipelineResource::__createShaderModules()
 	{
 		ShaderCompiler shaderCompiler;
@@ -282,6 +287,7 @@ namespace HyperFast
 			.basePipelineIndex = -1
 		};
 
-		__pPipeline = std::make_unique<Vulkan::Pipeline>(__pPipelineCache->getHandle(), createInfo);
+		__pPipeline = std::make_unique<Vulkan::Pipeline>(
+			__device, __pPipelineCache->getHandle(), createInfo);
 	}
 }

@@ -6,6 +6,7 @@
 #include "../Vulkan/ShaderModule.h"
 #include "../Vulkan/PipelineLayout.h"
 #include "../Vulkan/PipelineCache.h"
+#include "../Vulkan/Pipeline.h"
 
 namespace HyperFast
 {
@@ -46,7 +47,7 @@ namespace HyperFast
 			void reset() noexcept;
 
 			[[nodiscard]]
-			constexpr VkPipeline getPipeline() noexcept;
+			VkPipeline getPipeline() noexcept;
 
 		private:
 			Vulkan::Device &__device;
@@ -61,7 +62,6 @@ namespace HyperFast
 			void __createShaderModules();
 			void __createPipelineCache();
 			void __createPipeline(const BuildParam &buildParam);
-			void __destroyPipeline() noexcept;
 		};
 
 		Vulkan::Device &__device;
@@ -71,9 +71,4 @@ namespace HyperFast
 
 		void __createPipelineLayouts();
 	};
-
-	constexpr VkPipeline PipelineFactory::PipelineResource::getPipeline() noexcept
-	{
-		return __pipeline;
-	}
 }

@@ -5,8 +5,8 @@ namespace Vulkan
 {
 	Pipeline::Pipeline(
 		Device &device, const VkPipelineCache pipelineCache,
-		const VkGraphicsPipelineCreateInfo &createInfos) :
-		Handle{ __create(device, pipelineCache, createInfos) }, __device{ device }
+		const VkGraphicsPipelineCreateInfo &createInfo) :
+		Handle{ __create(device, pipelineCache, createInfo) }, __device{ device }
 	{}
 
 	Pipeline::~Pipeline() noexcept
@@ -21,10 +21,10 @@ namespace Vulkan
 
 	VkPipeline Pipeline::__create(
 		Device &device, const VkPipelineCache pipelineCache,
-		const VkGraphicsPipelineCreateInfo &createInfos)
+		const VkGraphicsPipelineCreateInfo &createInfo)
 	{
 		VkPipeline retVal{};
-		device.vkCreateGraphicsPipelines(pipelineCache, 1U, &createInfos, nullptr, &retVal);
+		device.vkCreateGraphicsPipelines(pipelineCache, 1U, &createInfo, nullptr, &retVal);
 
 		if (!retVal)
 			throw std::exception{ "Cannot create a VkPipeline." };

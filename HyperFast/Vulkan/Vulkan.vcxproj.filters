@@ -40,6 +40,18 @@
     <Filter Include="PipelineLayout">
       <UniqueIdentifier>{2dacd3a6-6d36-4cb5-a0b5-6d4e481ebd42}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PipelineCache">
+      <UniqueIdentifier>{48a65dd4-204c-4f8b-9c26-13c954da1b02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline">
+      <UniqueIdentifier>{ec4f67bc-5b35-4e96-83fe-9254eb08f7bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Semaphore">
+      <UniqueIdentifier>{4539d3cb-7352-43ae-8277-2b95f4eeb810}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fence">
+      <UniqueIdentifier>{d1c70fc6-eb9f-43ac-97d5-5b57833902f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -84,6 +96,18 @@
     <ClInclude Include="PipelineLayout.h">
       <Filter>PipelineLayout</Filter>
     </ClInclude>
+    <ClInclude Include="PipelineCache.h">
+      <Filter>PipelineCache</Filter>
+    </ClInclude>
+    <ClInclude Include="Pipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Semaphore.h">
+      <Filter>Semaphore</Filter>
+    </ClInclude>
+    <ClInclude Include="Fence.h">
+      <Filter>Fence</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -121,6 +145,18 @@
     </ClCompile>
     <ClCompile Include="PipelineLayout.cpp">
       <Filter>PipelineLayout</Filter>
+    </ClCompile>
+    <ClCompile Include="PipelineCache.cpp">
+      <Filter>PipelineCache</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Semaphore.cpp">
+      <Filter>Semaphore</Filter>
+    </ClCompile>
+    <ClCompile Include="Fence.cpp">
+      <Filter>Fence</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
