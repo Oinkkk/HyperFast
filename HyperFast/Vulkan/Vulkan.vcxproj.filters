@@ -19,6 +19,9 @@
     <Filter Include="Queue">
       <UniqueIdentifier>{9b776196-b24d-44af-bd99-ac937ca61bf3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CommandPool">
+      <UniqueIdentifier>{2370bf5a-a11f-4836-a73c-db6e99968141}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -42,6 +45,9 @@
     <ClInclude Include="Queue.h">
       <Filter>Queue</Filter>
     </ClInclude>
+    <ClInclude Include="CommandPool.h">
+      <Filter>CommandPool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -58,6 +64,9 @@
     </ClCompile>
     <ClCompile Include="Queue.cpp">
       <Filter>Queue</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandPool.cpp">
+      <Filter>CommandPool</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

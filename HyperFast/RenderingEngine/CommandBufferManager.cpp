@@ -5,23 +5,17 @@ namespace HyperFast
 	CommandBufferManager::CommandBufferManager(
 		Vulkan::Device &device, const uint32_t queueFamilyIndex,
 		const size_t numMaxBuffers) noexcept :
-		__device{ device }, __queueFamilyIndex{ queueFamilyIndex },
-		__numMaxBuffers{ numMaxBuffers }
+		__queueFamilyIndex{ queueFamilyIndex }, __numMaxBuffers{ numMaxBuffers }
 	{
-		__createCommandPool();
+		__createCommandPool(device);
 		__allocateCommandBuffers();
-	}
-
-	CommandBufferManager::~CommandBufferManager() noexcept
-	{
-		__destroyCommandPool();
 	}
 
 	VkCommandBuffer CommandBufferManager::getNextBuffer()
 	{
 		if (__cursor >= __numMaxBuffers)
 		{
-			__device.vkResetCommandPool(__commandPool, 0U);
+			__pCommandPool->vkResetCommandPool(0U);
 			__cursor = 0ULL;
 		}
 
@@ -31,7 +25,7 @@ namespace HyperFast
 		return retVal;
 	}
 
-	void CommandBufferManager::__createCommandPool()
+	void CommandBufferManager::__createCommandPool(Vulkan::Device &device)
 	{
 		const VkCommandPoolCreateInfo createInfo
 		{
@@ -39,32 +33,18 @@ namespace HyperFast
 			.queueFamilyIndex = __queueFamilyIndex
 		};
 
-		__device.vkCreateCommandPool(&createInfo, nullptr, &__commandPool);
-		if (!__commandPool)
-			throw std::exception{ "Cannot create the main command pool." };
-	}
-
-	void CommandBufferManager::__destroyCommandPool() noexcept
-	{
-		__device.vkDestroyCommandPool( __commandPool, nullptr);
+		__pCommandPool = std::make_unique<Vulkan::CommandPool>(device, &createInfo);
 	}
 
 	void CommandBufferManager::__allocateCommandBuffers()
 	{
-		const VkCommandBufferAllocateInfo allocInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.commandPool = __commandPool,
-			.level = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-			.commandBufferCount = uint32_t(__numMaxBuffers)
-		};
-
 		__commandBuffers.resize(__numMaxBuffers);
 
 		const VkResult result
 		{
-			__device.vkAllocateCommandBuffers(
-				&allocInfo, __commandBuffers.data())
+			__pCommandPool->vkAllocateCommandBuffers(
+				nullptr, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				uint32_t(__numMaxBuffers), __commandBuffers.data())
 		};
 
 		if (result != VK_SUCCESS)

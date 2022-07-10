@@ -7,7 +7,10 @@ namespace Vulkan
 	class Device final : public Handle<VkDevice>
 	{
 	public:
-		Device(Instance &instance, PhysicalDevice &physicalDevice, const VkDeviceCreateInfo &createInfo);
+		Device(
+			Instance &instance, PhysicalDevice &physicalDevice,
+			const VkDeviceCreateInfo &createInfo);
+
 		~Device() noexcept;
 
 		// Device
