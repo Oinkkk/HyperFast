@@ -28,6 +28,9 @@
     <Filter Include="ImageView">
       <UniqueIdentifier>{58412926-16f2-47bd-8ce5-d8f35eadebd3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Framebuffer">
+      <UniqueIdentifier>{cab85a57-a079-488b-94b3-21d3cfc06173}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -60,6 +63,9 @@
     <ClInclude Include="ImageView.h">
       <Filter>ImageView</Filter>
     </ClInclude>
+    <ClInclude Include="Framebuffer.h">
+      <Filter>Framebuffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -85,6 +91,9 @@
     </ClCompile>
     <ClCompile Include="ImageView.cpp">
       <Filter>ImageView</Filter>
+    </ClCompile>
+    <ClCompile Include="Framebuffer.cpp">
+      <Filter>Framebuffer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

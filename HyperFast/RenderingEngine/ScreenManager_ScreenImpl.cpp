@@ -192,7 +192,7 @@ namespace HyperFast
 
 		__device.vkDeviceWaitIdle();
 		__resetPipelines();
-		__destroyFramebuffer();
+		__pFramebuffer = nullptr;
 		__destroyRenderPasses();
 		__destroySyncObjects();
 		__swapChainImageViews.clear();
@@ -278,7 +278,7 @@ namespace HyperFast
 				{
 					__device.vkDeviceWaitIdle();
 					__resetPipelines();
-					__destroyFramebuffer();
+					__pFramebuffer = nullptr;
 					__destroyRenderPasses();
 					__swapChainImageViews.clear();
 				}
@@ -706,14 +706,7 @@ namespace HyperFast
 			.layers = 1U
 		};
 
-		__device.vkCreateFramebuffer(&createInfo, nullptr, &__framebuffer);
-		if (!__framebuffer)
-			throw std::exception{ "Cannot create a VkFramebuffer." };
-	}
-
-	void ScreenManager::ScreenImpl::__destroyFramebuffer() noexcept
-	{
-		__device.vkDestroyFramebuffer(__framebuffer, nullptr);
+		__pFramebuffer = std::make_unique<Vulkan::Framebuffer>(__device, createInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__createSyncObject(const size_t imageIdx)
@@ -818,7 +811,7 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 			.pNext = &renderPassAttachmentInfo,
 			.renderPass = __renderPass,
-			.framebuffer = __framebuffer,
+			.framebuffer = __pFramebuffer->getHandle(),
 			.renderArea =
 			{
 				.offset = { 0, 0 },

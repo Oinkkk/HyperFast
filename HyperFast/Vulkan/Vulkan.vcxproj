@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="Device.h" />
     <ClInclude Include="Handle.h" />
+    <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="PhysicalDevice.h" />
     <ClInclude Include="CommandPool.h" />
@@ -24,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Device.cpp" />
+    <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="PhysicalDevice.cpp" />
     <ClCompile Include="CommandPool.cpp" />
