@@ -7,7 +7,7 @@ namespace Vulkan
 	class CommandPool final : public Handle<VkCommandPool>
 	{
 	public:
-		CommandPool(Device &device, const VkCommandPoolCreateInfo *const pCreateInfo);
+		CommandPool(Device &device, const VkCommandPoolCreateInfo &createInfo);
 		~CommandPool() noexcept;
 
 		VkResult vkResetCommandPool(const VkCommandPoolResetFlags flags) noexcept;
@@ -22,6 +22,6 @@ namespace Vulkan
 
 		[[nodiscard]]
 		static VkCommandPool __create(
-			Device &device, const VkCommandPoolCreateInfo *const pCreateInfo);
+			Device &device, const VkCommandPoolCreateInfo &createInfo);
 	};
 }

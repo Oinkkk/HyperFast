@@ -22,6 +22,9 @@
     <Filter Include="CommandPool">
       <UniqueIdentifier>{2370bf5a-a11f-4836-a73c-db6e99968141}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Swapchain">
+      <UniqueIdentifier>{5330a2ac-7bc6-41b0-9840-bcddc116e71c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -48,6 +51,9 @@
     <ClInclude Include="CommandPool.h">
       <Filter>CommandPool</Filter>
     </ClInclude>
+    <ClInclude Include="Swapchain.h">
+      <Filter>Swapchain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -67,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="CommandPool.cpp">
       <Filter>CommandPool</Filter>
+    </ClCompile>
+    <ClCompile Include="Swapchain.cpp">
+      <Filter>Swapchain</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

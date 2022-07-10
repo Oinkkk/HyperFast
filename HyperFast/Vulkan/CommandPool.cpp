@@ -4,8 +4,8 @@
 namespace Vulkan
 {
 	CommandPool::CommandPool(
-		Device &device, const VkCommandPoolCreateInfo *const pCreateInfo) :
-		Handle{ __create(device, pCreateInfo) }, __device{ device }
+		Device &device, const VkCommandPoolCreateInfo &createInfo) :
+		Handle{ __create(device, createInfo) }, __device{ device }
 	{}
 
 	CommandPool::~CommandPool() noexcept
@@ -40,10 +40,10 @@ namespace Vulkan
 	}
 
 	VkCommandPool CommandPool::__create(
-		Device &device, const VkCommandPoolCreateInfo *const pCreateInfo)
+		Device &device, const VkCommandPoolCreateInfo &createInfo)
 	{
 		VkCommandPool retVal{};
-		device.vkCreateCommandPool(pCreateInfo, nullptr, &retVal);
+		device.vkCreateCommandPool(&createInfo, nullptr, &retVal);
 
 		if (!retVal)
 			throw std::exception{ "Cannot create a VkCommandPool." };

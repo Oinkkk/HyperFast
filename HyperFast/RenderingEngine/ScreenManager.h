@@ -7,6 +7,7 @@
 #include "../Infrastructure/Environment.h"
 #include "Drawcall.h"
 #include "../Vulkan/Queue.h"
+#include "../Vulkan/Swapchain.h"
 
 namespace HyperFast
 {
@@ -55,7 +56,7 @@ namespace HyperFast
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
 			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
 
-			VkSwapchainKHR __swapchain{};
+			std::unique_ptr<Vulkan::Swapchain> __pSwapchain;
 			VkFormat __swapchainFormat{};
 			VkExtent2D __swapchainExtent{};
 
@@ -94,8 +95,7 @@ namespace HyperFast
 			void __querySurfaceCapabilities() noexcept;
 			void __querySupportedSurfaceFormats() noexcept;
 			void __querySupportedSurfacePresentModes() noexcept;
-			void __createSwapchain(const VkSwapchainKHR oldSwapchain);
-			void __destroySwapchain(const VkSwapchainKHR swapchain) noexcept;
+			void __createSwapchain(Vulkan::Swapchain *const pOldSwapchain);
 			void __retrieveSwapchainImages() noexcept;
 			void __reserveSwapchainImageDependencyPlaceholers() noexcept;
 			void __createMainCommandBufferManager(const size_t imageIdx);
@@ -113,11 +113,8 @@ namespace HyperFast
 			void __buildPipelines(tf::Subflow &subflow);
 			void __resetPipelines() noexcept;
 			void __recordMainCommand(const size_t imageIdx) noexcept;
+
 			constexpr void __resetFrameCursor() noexcept;
-
-			void __waitDeviceIdle() noexcept;
-
-			VkResult __acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept;
 			constexpr void __advanceFrameCursor() noexcept;
 		};
 

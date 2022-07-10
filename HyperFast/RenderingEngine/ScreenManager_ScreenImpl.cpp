@@ -96,7 +96,11 @@ namespace HyperFast
 
 		if (!__imageAcquired)
 		{
-			const VkResult acquirementResult{ __acquireNextImage(presentCompleteSemaphore, __imageIdx) };
+			const VkResult acquirementResult
+			{
+				__pSwapchain->vkAcquireNextImageKHR(
+					0ULL, presentCompleteSemaphore, VK_NULL_HANDLE, &__imageIdx)
+			};
 
 			if (acquirementResult == VkResult::VK_NOT_READY)
 				return false;
@@ -165,7 +169,7 @@ namespace HyperFast
 			.waitSemaphoreCount = 1U,
 			.pWaitSemaphores = &renderCompleteSemaphore,
 			.swapchainCount = 1U,
-			.pSwapchains = &__swapchain,
+			.pSwapchains = &(__pSwapchain->getHandle()),
 			.pImageIndices = &__imageIdx
 		};
 
@@ -186,14 +190,14 @@ namespace HyperFast
 		if (__destroyed)
 			return;
 
-		__waitDeviceIdle();
+		__device.vkDeviceWaitIdle();
 		__resetPipelines();
 		__destroyFramebuffer();
 		__destroyRenderPasses();
 		__destroySyncObjects();
 		__destroySwapchainImageViews();
 		__destroyMainCommandBufferManagers();
-		__destroySwapchain(__swapchain);
+		__pSwapchain = nullptr;
 		__destroySurface();
 	
 		__destroyed = true;
@@ -263,16 +267,16 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
 	{
-		const VkSwapchainKHR oldSwapchain{ __swapchain };
+		std::unique_ptr<Vulkan::Swapchain> pOldSwapchain{ std::move(__pSwapchain) };
 
 		tf::Taskflow taskflow;
 		tf::Task t1
 		{
-			taskflow.emplace([this, oldSwapchain](tf::Subflow &subflow)
+			taskflow.emplace([this, &pOldSwapchain](tf::Subflow &subflow)
 			{
-				if (oldSwapchain)
+				if (pOldSwapchain)
 				{
-					__waitDeviceIdle();
+					__device.vkDeviceWaitIdle();
 					__resetPipelines();
 					__destroyFramebuffer();
 					__destroyRenderPasses();
@@ -283,7 +287,7 @@ namespace HyperFast
 				__querySurfaceCapabilities();
 				__querySupportedSurfaceFormats();
 				__querySupportedSurfacePresentModes();
-				__createSwapchain(oldSwapchain);
+				__createSwapchain(pOldSwapchain.get());
 				__retrieveSwapchainImages();
 				__reserveSwapchainImageDependencyPlaceholers();
 				__resetFrameCursor();
@@ -322,7 +326,10 @@ namespace HyperFast
 			taskflow.emplace([this](tf::Subflow &subflow)
 			{
 				const size_t numSwapchainImages{ __swapChainImages.size() };
-				for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+				for (
+					size_t swapchainImageIter = 0ULL;
+					swapchainImageIter < numSwapchainImages;
+					swapchainImageIter++)
 				{
 					subflow.emplace([this, imageIdx = swapchainImageIter]
 					{
@@ -336,9 +343,9 @@ namespace HyperFast
 		};
 		t2.succeed(t1);
 
-		taskflow.emplace([this, oldSwapchain]()
+		taskflow.emplace([this, &pOldSwapchain]()
 		{
-			__destroySwapchain(oldSwapchain);
+			pOldSwapchain = nullptr;
 		}).succeed(t1);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
@@ -350,7 +357,7 @@ namespace HyperFast
 		tf::Taskflow taskflow;
 		taskflow.emplace([this](tf::Subflow &subflow)
 		{
-			__waitDeviceIdle();
+			__device.vkDeviceWaitIdle();
 			__resetPipelines();
 			__resetFrameCursor();
 			__populatePipelineBuildParam();
@@ -366,7 +373,10 @@ namespace HyperFast
 			subflow.emplace([this](tf::Subflow &subflow)
 			{
 				const size_t numSwapchainImages{ __swapChainImages.size() };
-				for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+				for (
+					size_t swapchainImageIter = 0ULL;
+					swapchainImageIter < numSwapchainImages;
+					swapchainImageIter++)
 				{
 					subflow.emplace([this, imageIdx = swapchainImageIter]
 					{
@@ -385,13 +395,16 @@ namespace HyperFast
 		tf::Taskflow taskflow;
 		taskflow.emplace([this](tf::Subflow &subflow)
 		{
-			__waitDeviceIdle();
+			__device.vkDeviceWaitIdle();
 			__resetFrameCursor();
 
 			subflow.emplace([this](tf::Subflow &subflow)
 			{
 				const size_t numSwapchainImages{ __swapChainImages.size() };
-				for (size_t swapchainImageIter = 0ULL; swapchainImageIter < numSwapchainImages; swapchainImageIter++)
+				for (
+					size_t swapchainImageIter = 0ULL;
+					swapchainImageIter < numSwapchainImages;
+					swapchainImageIter++)
 				{
 					subflow.emplace([this, imageIdx = swapchainImageIter]
 					{
@@ -442,7 +455,7 @@ namespace HyperFast
 			__surface, &numModes, __supportedSurfacePresentModes.data());
 	}
 
-	void ScreenManager::ScreenImpl::__createSwapchain(const VkSwapchainKHR oldSwapchain)
+	void ScreenManager::ScreenImpl::__createSwapchain(Vulkan::Swapchain *const pOldSwapchain)
 	{
 		uint32_t numDesiredImages{ std::max(3U, __surfaceCapabilities.minImageCount) };
 		if (__surfaceCapabilities.maxImageCount)
@@ -512,29 +525,21 @@ namespace HyperFast
 			.compositeAlpha = compositeAlpha,
 			.presentMode = desiredPresentMode,
 			.clipped = VK_TRUE,
-			.oldSwapchain = oldSwapchain
+			.oldSwapchain = (pOldSwapchain ? pOldSwapchain->getHandle() : VK_NULL_HANDLE)
 		};
 
-		__device.vkCreateSwapchainKHR(&createInfo, nullptr, &__swapchain);
-		if (!__swapchain)
-			throw std::exception{ "Cannot create a VkSwapchainKHR." };
-
+		__pSwapchain = std::make_unique<Vulkan::Swapchain>(__device, createInfo);
 		__swapchainFormat = createInfo.imageFormat;
 		__swapchainExtent = createInfo.imageExtent;
-	}
-
-	void ScreenManager::ScreenImpl::__destroySwapchain(const VkSwapchainKHR swapchain) noexcept
-	{
-		__device.vkDestroySwapchainKHR(swapchain, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__retrieveSwapchainImages() noexcept
 	{
 		uint32_t numImages{};
-		__device.vkGetSwapchainImagesKHR(__swapchain, &numImages, nullptr);
+		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, nullptr);
 
 		__swapChainImages.resize(numImages);
-		__device.vkGetSwapchainImagesKHR(__swapchain, &numImages, __swapChainImages.data());
+		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, __swapChainImages.data());
 	}
 
 	void ScreenManager::ScreenImpl::__reserveSwapchainImageDependencyPlaceholers() noexcept
@@ -856,16 +861,5 @@ namespace HyperFast
 
 		__device.vkCmdEndRenderPass(commandBuffer);
 		__device.vkEndCommandBuffer(commandBuffer);
-	}
-
-	void ScreenManager::ScreenImpl::__waitDeviceIdle() noexcept
-	{
-		__device.vkDeviceWaitIdle();
-	}
-
-	VkResult ScreenManager::ScreenImpl::__acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept
-	{
-		return __device.vkAcquireNextImageKHR(
-			__swapchain, 0ULL, semaphore, VK_NULL_HANDLE, &imageIdx);
 	}
 }

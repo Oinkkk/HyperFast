@@ -33,7 +33,7 @@ namespace HyperFast
 			.queueFamilyIndex = __queueFamilyIndex
 		};
 
-		__pCommandPool = std::make_unique<Vulkan::CommandPool>(device, &createInfo);
+		__pCommandPool = std::make_unique<Vulkan::CommandPool>(device, createInfo);
 	}
 
 	void CommandBufferManager::__allocateCommandBuffers()
