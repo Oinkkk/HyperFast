@@ -75,7 +75,8 @@ namespace HyperFast
 	{
 		reset();
 		__destroyPipelineCache();
-		__destroyShaderModules();
+		__pFragShader = nullptr;
+		__pVertexShader = nullptr;
 	}
 
 	void PipelineFactory::PipelineResource::build(const BuildParam &buildParam)
@@ -126,20 +127,8 @@ namespace HyperFast
 			.pCode = fragShader.data()
 		};
 
-		__device.vkCreateShaderModule(&vertexShaderCreateInfo, nullptr, &__vertexShader);
-		__device.vkCreateShaderModule(&fragShaderCreateInfo, nullptr, &__fragShader);
-
-		if (!__vertexShader)
-			throw std::exception{ "Cannot create the vertex shader." };
-
-		if (!__fragShader)
-			throw std::exception{ "Cannot create the fragment shader." };
-	}
-
-	void PipelineFactory::PipelineResource::__destroyShaderModules() noexcept
-	{
-		__device.vkDestroyShaderModule(__fragShader, nullptr);
-		__device.vkDestroyShaderModule(__vertexShader, nullptr);
+		__pVertexShader = std::make_unique<Vulkan::ShaderModule>(__device, vertexShaderCreateInfo);
+		__pFragShader = std::make_unique<Vulkan::ShaderModule>(__device, fragShaderCreateInfo);
 	}
 
 	void PipelineFactory::PipelineResource::__createPipelineCache()
@@ -167,13 +156,13 @@ namespace HyperFast
 		VkPipelineShaderStageCreateInfo &vsStageInfo{ shaderStageInfos.emplace_back() };
 		vsStageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-		vsStageInfo.module = __vertexShader;
+		vsStageInfo.module = __pVertexShader->getHandle();
 		vsStageInfo.pName = "main";
 
 		VkPipelineShaderStageCreateInfo &fsStageInfo{ shaderStageInfos.emplace_back() };
 		fsStageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		fsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
-		fsStageInfo.module = __fragShader;
+		fsStageInfo.module = __pFragShader->getHandle();
 		fsStageInfo.pName = "main";
 
 		std::vector<VkVertexInputBindingDescription> vertexBindingDescs;

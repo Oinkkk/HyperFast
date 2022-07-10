@@ -31,6 +31,12 @@
     <Filter Include="Framebuffer">
       <UniqueIdentifier>{cab85a57-a079-488b-94b3-21d3cfc06173}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ShaderModule">
+      <UniqueIdentifier>{064efc5e-e0d5-4ffc-9826-a5a2114f4f2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass">
+      <UniqueIdentifier>{6e394a3c-cfd1-4d2d-8dd8-e35dbee7c060}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -66,6 +72,9 @@
     <ClInclude Include="Framebuffer.h">
       <Filter>Framebuffer</Filter>
     </ClInclude>
+    <ClInclude Include="ShaderModule.h">
+      <Filter>ShaderModule</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -94,6 +103,9 @@
     </ClCompile>
     <ClCompile Include="Framebuffer.cpp">
       <Filter>Framebuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderModule.cpp">
+      <Filter>ShaderModule</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

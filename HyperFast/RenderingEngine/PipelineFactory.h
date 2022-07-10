@@ -1,9 +1,9 @@
 #pragma once
 
 #include "ShaderCompiler.h"
-#include "../Vulkan/Device.h"
 #include "../Infrastructure/Environment.h"
 #include "VertexAttribute.h"
+#include "../Vulkan/ShaderModule.h"
 
 namespace HyperFast
 {
@@ -51,14 +51,12 @@ namespace HyperFast
 			const VkPipelineLayout __pipelineLayout;
 			const VertexAttributeFlag __attribFlag;
 
-			VkShaderModule __vertexShader{};
-			VkShaderModule __fragShader{};
+			std::unique_ptr<Vulkan::ShaderModule> __pVertexShader;
+			std::unique_ptr<Vulkan::ShaderModule> __pFragShader;
 			VkPipelineCache __pipelineCache{};
 			VkPipeline __pipeline{};
 
 			void __createShaderModules();
-			void __destroyShaderModules() noexcept;
-
 			void __createPipelineCache();
 			void __destroyPipelineCache() noexcept;
 
