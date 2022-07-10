@@ -25,6 +25,9 @@
     <Filter Include="Swapchain">
       <UniqueIdentifier>{5330a2ac-7bc6-41b0-9840-bcddc116e71c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ImageView">
+      <UniqueIdentifier>{58412926-16f2-47bd-8ce5-d8f35eadebd3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -54,6 +57,9 @@
     <ClInclude Include="Swapchain.h">
       <Filter>Swapchain</Filter>
     </ClInclude>
+    <ClInclude Include="ImageView.h">
+      <Filter>ImageView</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -76,6 +82,9 @@
     </ClCompile>
     <ClCompile Include="Swapchain.cpp">
       <Filter>Swapchain</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageView.cpp">
+      <Filter>ImageView</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

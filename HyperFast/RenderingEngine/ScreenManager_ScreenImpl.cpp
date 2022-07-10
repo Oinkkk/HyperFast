@@ -195,7 +195,7 @@ namespace HyperFast
 		__destroyFramebuffer();
 		__destroyRenderPasses();
 		__destroySyncObjects();
-		__destroySwapchainImageViews();
+		__swapChainImageViews.clear();
 		__destroyMainCommandBufferManagers();
 		__pSwapchain = nullptr;
 		__destroySurface();
@@ -280,7 +280,7 @@ namespace HyperFast
 					__resetPipelines();
 					__destroyFramebuffer();
 					__destroyRenderPasses();
-					__destroySwapchainImageViews();
+					__swapChainImageViews.clear();
 				}
 
 				__checkSurfaceSupport();
@@ -594,19 +594,8 @@ namespace HyperFast
 			}
 		};
 
-		VkImageView swapchainImageView{};
-		__device.vkCreateImageView(&createInfo, nullptr, &swapchainImageView);
-
-		if (!swapchainImageView)
-			throw std::exception{ "Cannot create a VkImageView for the swapchain." };
-
-		__swapChainImageViews[imageIdx] = swapchainImageView;
-	}
-
-	void ScreenManager::ScreenImpl::__destroySwapchainImageViews() noexcept
-	{
-		for (const VkImageView swapchainImageView: __swapChainImageViews)
-			__device.vkDestroyImageView(swapchainImageView, nullptr);
+		__swapChainImageViews[imageIdx] =
+			std::make_unique<Vulkan::ImageView>(__device, createInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__createRenderPasses()
@@ -816,7 +805,7 @@ namespace HyperFast
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO,
 			.attachmentCount = 1U,
-			.pAttachments = &(__swapChainImageViews[imageIdx])
+			.pAttachments = &(__swapChainImageViews[imageIdx]->getHandle())
 		};
 
 		const VkClearValue clearColor

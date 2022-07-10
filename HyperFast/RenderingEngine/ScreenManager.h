@@ -8,6 +8,7 @@
 #include "Drawcall.h"
 #include "../Vulkan/Queue.h"
 #include "../Vulkan/Swapchain.h"
+#include "../Vulkan/ImageView.h"
 
 namespace HyperFast
 {
@@ -61,7 +62,7 @@ namespace HyperFast
 			VkExtent2D __swapchainExtent{};
 
 			std::vector<VkImage> __swapChainImages;
-			std::vector<VkImageView> __swapChainImageViews;
+			std::vector<std::unique_ptr<Vulkan::ImageView>> __swapChainImageViews;
 
 			VkRenderPass __renderPass{};
 			VkFramebuffer __framebuffer{};
@@ -101,7 +102,6 @@ namespace HyperFast
 			void __createMainCommandBufferManager(const size_t imageIdx);
 			void __destroyMainCommandBufferManagers() noexcept;
 			void __createSwapchainImageView(const size_t imageIdx);
-			void __destroySwapchainImageViews() noexcept;
 			void __createRenderPasses();
 			void __destroyRenderPasses() noexcept;
 			void __createFramebuffer();
