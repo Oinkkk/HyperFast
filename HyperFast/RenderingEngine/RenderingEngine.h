@@ -2,7 +2,7 @@
 
 #include <string>
 #include "../Infrastructure/Logger.h"
-#include "../Vulkan/Device.h"
+#include "../Vulkan/Queue.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
 #include "Screen.h"
@@ -53,7 +53,7 @@ namespace HyperFast
 
 		uint32_t __graphicsQueueFamilyIndex{};
 		std::unique_ptr<Vulkan::Device> __pDevice;
-		VkQueue __graphicsQueue{};
+		std::unique_ptr<Vulkan::Queue> __pQueue;
 
 		std::unique_ptr<ScreenManager> __pScreenManager;
 		std::unique_ptr<MemoryManager> __pMemoryManager;
@@ -71,7 +71,7 @@ namespace HyperFast
 		void __queryPhysicalDeviceProps() noexcept;
 		void __pickGraphicsQueueFamily() noexcept;
 		void __createDevice();
-		void __queryGraphicsQueue();
+		void __makeQueue() noexcept;
 
 		void __createScreenManager() noexcept;
 		void __destroyScreenManager() noexcept;

@@ -5,10 +5,10 @@ namespace HyperFast
 	ScreenManager::ScreenImpl::ScreenImpl(
 		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 		const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device,
-		const VkQueue graphicsQueue, Win::Window &window) :
+		Vulkan::Queue &queue, Win::Window &window) :
 		__instance{ instance }, __physicalDevice{ physicalDevice },
 		__graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
-		__device{ device }, __graphicsQueue{ graphicsQueue },
+		__device{ device }, __queue{ queue },
 		__window{ window }, __pipelineFactory{ device }
 	{
 		__initListeners();
@@ -157,7 +157,7 @@ namespace HyperFast
 			.pSignalSemaphoreInfos = &signalInfo
 		};
 
-		__device.vkQueueSubmit2(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
+		__queue.vkQueueSubmit2(1U, &submitInfo, renderCompleteFence);
 
 		const VkPresentInfoKHR presentInfo
 		{
@@ -169,7 +169,7 @@ namespace HyperFast
 			.pImageIndices = &__imageIdx
 		};
 
-		const VkResult presentResult{ __device.vkQueuePresentKHR(__graphicsQueue, &presentInfo) };
+		const VkResult presentResult{ __queue.vkQueuePresentKHR(&presentInfo) };
 		__imageAcquired = false;
 
 		if ((presentResult == VkResult::VK_SUBOPTIMAL_KHR) ||

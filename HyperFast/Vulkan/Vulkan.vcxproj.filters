@@ -16,6 +16,9 @@
     <Filter Include="Device">
       <UniqueIdentifier>{4801bfa6-58c2-4293-89a9-5b7ca4985139}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Queue">
+      <UniqueIdentifier>{9b776196-b24d-44af-bd99-ac937ca61bf3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -36,6 +39,9 @@
     <ClInclude Include="Device.h">
       <Filter>Device</Filter>
     </ClInclude>
+    <ClInclude Include="Queue.h">
+      <Filter>Queue</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -49,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="Device.cpp">
       <Filter>Device</Filter>
+    </ClCompile>
+    <ClCompile Include="Queue.cpp">
+      <Filter>Queue</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

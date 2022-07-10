@@ -28,7 +28,7 @@ namespace HyperFast
 		__queryPhysicalDeviceProps();
 		__pickGraphicsQueueFamily();
 		__createDevice();
-		__queryGraphicsQueue();
+		__makeQueue();
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
@@ -342,18 +342,16 @@ namespace HyperFast
 		__pDevice = std::make_unique<Vulkan::Device>(*__pInstance, *__pPhysicalDevice, createInfo);
 	}
 
-	void RenderingEngine::__queryGraphicsQueue()
+	void RenderingEngine::__makeQueue() noexcept
 	{
-		__pDevice->vkGetDeviceQueue(__graphicsQueueFamilyIndex, 0U, &__graphicsQueue);
-		if (!__graphicsQueue)
-			throw std::exception{ "Cannot retrieve the graphics queue." };
+		__pQueue = std::make_unique<Vulkan::Queue>(*__pDevice, __graphicsQueueFamilyIndex, 0U);
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
-			*__pInstance, *__pPhysicalDevice, __graphicsQueueFamilyIndex,
-			*__pDevice, __graphicsQueue);
+			*__pInstance, *__pPhysicalDevice,
+			__graphicsQueueFamilyIndex, *__pDevice, *__pQueue);
 	}
 
 	void RenderingEngine::__destroyScreenManager() noexcept

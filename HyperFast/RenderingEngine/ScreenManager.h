@@ -6,7 +6,7 @@
 #include "CommandBufferManager.h"
 #include "../Infrastructure/Environment.h"
 #include "Drawcall.h"
-#include "../Vulkan/Device.h"
+#include "../Vulkan/Queue.h"
 
 namespace HyperFast
 {
@@ -19,7 +19,7 @@ namespace HyperFast
 			ScreenImpl(
 				Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 				const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device,
-				const VkQueue graphicsQueue, Win::Window &window);
+				Vulkan::Queue &queue, Win::Window &window);
 
 			~ScreenImpl() noexcept;
 
@@ -32,7 +32,7 @@ namespace HyperFast
 			Vulkan::Device &__device;
 
 			const uint32_t __graphicsQueueFamilyIndex;
-			const VkQueue __graphicsQueue;
+			Vulkan::Queue &__queue;
 
 			Win::Window &__window;
 			std::shared_ptr<Infra::EventListener<Win::Window &, Win::Window::ResizingType>> __pResizeEventListener;
@@ -124,7 +124,7 @@ namespace HyperFast
 		ScreenManager(
 			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 			const uint32_t graphicsQueueFamilyIndex,
-			Vulkan::Device &device, const VkQueue graphicsQueue) noexcept;
+			Vulkan::Device &device, Vulkan::Queue &queue) noexcept;
 
 		~ScreenManager() noexcept = default;
 
@@ -137,7 +137,7 @@ namespace HyperFast
 		Vulkan::Device &__device;
 
 		const uint32_t __graphicsQueueFamilyIndex;
-		const VkQueue __graphicsQueue;
+		Vulkan::Queue &__queue;
 	};
 
 	constexpr void ScreenManager::ScreenImpl::__resetFrameCursor() noexcept

@@ -15,6 +15,7 @@
     <ClInclude Include="Handle.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="PhysicalDevice.h" />
+    <ClInclude Include="Queue.h" />
     <ClInclude Include="VulkanLoader.h" />
     <ClInclude Include="Procedure.h" />
   </ItemGroup>
@@ -22,6 +23,7 @@
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="PhysicalDevice.cpp" />
+    <ClCompile Include="Queue.cpp" />
     <ClCompile Include="VulkanLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
