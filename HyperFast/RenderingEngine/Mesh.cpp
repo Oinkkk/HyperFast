@@ -2,8 +2,8 @@
 
 namespace HyperFast
 {
-	Mesh::Mesh(const Vulkan::DeviceProcedure &deviceProc) noexcept :
-		__deviceProc{ deviceProc }
+	Mesh::Mesh(Vulkan::Device &device) noexcept :
+		__device{ device }
 	{}
 
 	void Mesh::setPositionBuffer(const std::shared_ptr<Buffer> &pBuffer) noexcept
@@ -28,10 +28,10 @@ namespace HyperFast
 
 	void Mesh::bind(const VkCommandBuffer commandBuffer) const noexcept
 	{
-		__deviceProc.vkCmdBindVertexBuffers(
+		__device.vkCmdBindVertexBuffers(
 			commandBuffer, 0U, VERTEX_ATTRIB_LOCATION_MAX, __handles, __offsets);
 
-		__deviceProc.vkCmdBindIndexBuffer(
+		__device.vkCmdBindIndexBuffer(
 			commandBuffer, __pIndexBuffer->getHandle(), 0ULL, __indexType);
 	}
 

@@ -27,7 +27,8 @@ namespace Jin
 		std::shared_ptr<HyperFast::Mesh> _createMesh() noexcept;
 
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Submesh> _createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept;
+		std::shared_ptr<HyperFast::Submesh> _createSubmesh(
+			const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept;
 
 		void _bindScreen(HyperFast::Screen &screen) noexcept;
 

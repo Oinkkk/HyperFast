@@ -2,7 +2,7 @@
 
 #include <string>
 #include "../Infrastructure/Logger.h"
-#include "../Vulkan/PhysicalDevice.h"
+#include "../Vulkan/Device.h"
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
 #include "Screen.h"
@@ -34,9 +34,6 @@ namespace HyperFast
 		[[nodiscard]]
 		std::shared_ptr<Mesh> createMesh() noexcept;
 
-		[[nodiscard]]
-		std::shared_ptr<Submesh> createSubmesh(const std::shared_ptr<Mesh> &pMesh) noexcept;
-
 	private:
 		Infra::Logger &__logger;
 		const std::string __appName;
@@ -54,12 +51,8 @@ namespace HyperFast
 		VkPhysicalDeviceVulkan12Properties __physicalDevice12Prop{};
 		VkPhysicalDeviceVulkan13Properties __physicalDevice13Prop{};
 
-		std::vector<VkQueueFamilyProperties> __queueFamilyProps;
 		uint32_t __graphicsQueueFamilyIndex{};
-
-		VkDevice __device{};
-		Vulkan::DeviceProcedure __deviceProc;
-		
+		std::unique_ptr<Vulkan::Device> __pDevice;
 		VkQueue __graphicsQueue{};
 
 		std::unique_ptr<ScreenManager> __pScreenManager;
@@ -76,10 +69,8 @@ namespace HyperFast
 		void __destroyDebugMessenger() noexcept;
 		void __pickPhysicalDevice();
 		void __queryPhysicalDeviceProps() noexcept;
-		void __retrieveQueueFamilies() noexcept;
+		void __pickGraphicsQueueFamily() noexcept;
 		void __createDevice();
-		void __destroyDevice() noexcept;
-		void __queryDeviceProc() noexcept;
 		void __queryGraphicsQueue();
 
 		void __createScreenManager() noexcept;
@@ -90,8 +81,6 @@ namespace HyperFast
 
 		void __createBufferManager() noexcept;
 		void __destroyBufferManager() noexcept;
-
-		void __waitDeviceIdle() const noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

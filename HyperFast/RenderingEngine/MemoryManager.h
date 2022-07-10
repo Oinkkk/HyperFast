@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Vulkan/PhysicalDevice.h"
+#include "../Vulkan/Device.h"
 #include <unordered_map>
 #include <memory>
 #include <optional>
@@ -24,9 +24,9 @@ namespace HyperFast
 			};
 
 			MemoryBank(
-				const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
+				Vulkan::Device &device,
 				const uint32_t memoryTypeIndex, const VkDeviceSize size);
-
+			
 			~MemoryBank() noexcept;
 
 			[[nodiscard]]
@@ -45,8 +45,7 @@ namespace HyperFast
 			void *map();
 
 		private:
-			const VkDevice __device;
-			const Vulkan::DeviceProcedure &__deviceProc;
+			Vulkan::Device &__device;
 			const uint32_t __memoryTypeIndex;
 			const VkDeviceSize __size;
 
@@ -86,8 +85,8 @@ namespace HyperFast
 		};
 
 		MemoryManager(
-			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept;
+			Vulkan::Instance &instance,
+			Vulkan::PhysicalDevice &physicalDevice, Vulkan::Device &device) noexcept;
 
 		[[nodiscard]]
 		MemoryImpl *create(
@@ -99,9 +98,7 @@ namespace HyperFast
 	private:
 		Vulkan::Instance &__instance;
 		Vulkan::PhysicalDevice &__physicalDevice;
-
-		const VkDevice __device;
-		const Vulkan::DeviceProcedure &__deviceProc;
+		Vulkan::Device &__device;
 
 		VkPhysicalDeviceMemoryProperties2 __deviceMemProps2{};
 		VkPhysicalDeviceMemoryBudgetPropertiesEXT __deviceMemBudget{};

@@ -3,10 +3,9 @@
 namespace HyperFast
 {
 	MemoryManager::MemoryManager(
-		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept :
-		__instance{ instance }, __physicalDevice{ physicalDevice },
-		__device{ device }, __deviceProc{ deviceProc }
+		Vulkan::Instance &instance,
+		Vulkan::PhysicalDevice &physicalDevice, Vulkan::Device &device) noexcept :
+		__instance{ instance }, __physicalDevice{ physicalDevice }, __device{ device }
 	{
 		__setupDeviceMemProps();
 	}
@@ -49,7 +48,7 @@ namespace HyperFast
 				std::unique_ptr<MemoryBank> pNewBank
 				{
 					std::make_unique<MemoryBank>(
-						__device, __deviceProc, memoryTypeIndex,
+						__device, memoryTypeIndex,
 						std::max(targetBankSize, memRequirements.size))
 				};
 

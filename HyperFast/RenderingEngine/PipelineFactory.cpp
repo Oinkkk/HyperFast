@@ -3,8 +3,8 @@
 
 namespace HyperFast
 {
-	PipelineFactory::PipelineFactory(const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept :
-		__device{ device }, __deviceProc{ deviceProc }
+	PipelineFactory::PipelineFactory(Vulkan::Device &device) noexcept :
+		__device{ device }
 	{
 		__createPipelineLayouts();
 	}
@@ -24,7 +24,7 @@ namespace HyperFast
 			PipelineResource &pipelineResource
 			{
 				__attribFlag2ResourceMap.try_emplace(
-					attribFlag, __device, __deviceProc, __pipelineLayout, attribFlag).first->second
+					attribFlag, __device, __pipelineLayout, attribFlag).first->second
 			};
 
 			subflow.emplace([&pipelineResource, &buildParam]
@@ -52,21 +52,20 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
 		};
 
-		__deviceProc.vkCreatePipelineLayout(__device, &createInfo, nullptr, &__pipelineLayout);
+		__device.vkCreatePipelineLayout(&createInfo, nullptr, &__pipelineLayout);
 		if (!__pipelineLayout)
 			throw std::exception{ "Cannot create a VkPipelineLayout." };
 	}
 
 	void PipelineFactory::__destroyPipelineLayouts() noexcept
 	{
-		__deviceProc.vkDestroyPipelineLayout(__device, __pipelineLayout, nullptr);
+		__device.vkDestroyPipelineLayout(__pipelineLayout, nullptr);
 	}
 
 	PipelineFactory::PipelineResource::PipelineResource(
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
-		const VkPipelineLayout pipelineLayout, const VertexAttributeFlag attribFlag) noexcept :
-		__device{ device }, __deviceProc{ deviceProc },
-		__pipelineLayout{ pipelineLayout }, __attribFlag{ attribFlag }
+		Vulkan::Device &device, const VkPipelineLayout pipelineLayout,
+		const VertexAttributeFlag attribFlag) noexcept :
+		__device{ device }, __pipelineLayout{ pipelineLayout }, __attribFlag{ attribFlag }
 	{
 		__createShaderModules();
 		__createPipelineCache();
@@ -127,8 +126,8 @@ namespace HyperFast
 			.pCode = fragShader.data()
 		};
 
-		__deviceProc.vkCreateShaderModule(__device, &vertexShaderCreateInfo, nullptr, &__vertexShader);
-		__deviceProc.vkCreateShaderModule(__device, &fragShaderCreateInfo, nullptr, &__fragShader);
+		__device.vkCreateShaderModule(&vertexShaderCreateInfo, nullptr, &__vertexShader);
+		__device.vkCreateShaderModule(&fragShaderCreateInfo, nullptr, &__fragShader);
 
 		if (!__vertexShader)
 			throw std::exception{ "Cannot create the vertex shader." };
@@ -139,8 +138,8 @@ namespace HyperFast
 
 	void PipelineFactory::PipelineResource::__destroyShaderModules() noexcept
 	{
-		__deviceProc.vkDestroyShaderModule(__device, __fragShader, nullptr);
-		__deviceProc.vkDestroyShaderModule(__device, __vertexShader, nullptr);
+		__device.vkDestroyShaderModule(__fragShader, nullptr);
+		__device.vkDestroyShaderModule(__vertexShader, nullptr);
 	}
 
 	void PipelineFactory::PipelineResource::__createPipelineCache()
@@ -151,14 +150,14 @@ namespace HyperFast
 			.flags = VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT
 		};
 
-		__deviceProc.vkCreatePipelineCache(__device, &createInfo, nullptr, &__pipelineCache);
+		__device.vkCreatePipelineCache(&createInfo, nullptr, &__pipelineCache);
 		if (!__pipelineCache)
 			throw std::exception{ "Cannot create a VkPipelineCache." };
 	}
 
 	void PipelineFactory::PipelineResource::__destroyPipelineCache() noexcept
 	{
-		__deviceProc.vkDestroyPipelineCache(__device, __pipelineCache, nullptr);
+		__device.vkDestroyPipelineCache(__pipelineCache, nullptr);
 	}
 
 	void PipelineFactory::PipelineResource::__createPipeline(const BuildParam &buildParam)
@@ -307,16 +306,14 @@ namespace HyperFast
 			.basePipelineIndex = -1
 		};
 
-		__deviceProc.vkCreateGraphicsPipelines(
-			__device, __pipelineCache, 1U, &createInfo, nullptr, &__pipeline);
-
+		__device.vkCreateGraphicsPipelines(__pipelineCache, 1U, &createInfo, nullptr, &__pipeline);
 		if (!__pipeline)
 			throw std::exception{ "Cannot create a graphics pipeline." };
 	}
 
 	void PipelineFactory::PipelineResource::__destroyPipeline() noexcept
 	{
-		__deviceProc.vkDestroyPipeline(__device, __pipeline, nullptr);
+		__device.vkDestroyPipeline(__pipeline, nullptr);
 		__pipeline = VK_NULL_HANDLE;
 	}
 }

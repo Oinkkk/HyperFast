@@ -12,7 +12,7 @@ namespace HyperFast
 		{
 		public:
 			BufferImpl(
-				const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
+				Vulkan::Device &device,
 				const VkDeviceSize size, const VkBufferUsageFlags usage);
 
 			~BufferImpl() noexcept;
@@ -37,8 +37,7 @@ namespace HyperFast
 			constexpr VkDeviceAddress getMemoryOffset() const noexcept;
 
 		private:
-			const VkDevice __device;
-			const Vulkan::DeviceProcedure &__deviceProc;
+			Vulkan::Device &__device;
 			const VkDeviceSize __size;
 			const VkBufferUsageFlags __usage;
 
@@ -53,16 +52,14 @@ namespace HyperFast
 			void __queryMemoryRequirements() noexcept;
 		};
 
-		BufferManager(
-			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept;
+		BufferManager(Vulkan::Device &device) noexcept;
 
 		[[nodiscard]]
 		BufferImpl *create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 		void destroy(BufferImpl *const pImpl) noexcept;
 
 	private:
-		const VkDevice __device;
-		const Vulkan::DeviceProcedure &__deviceProc;
+		Vulkan::Device &__device;
 	};
 
 	constexpr VkDeviceSize BufferManager::BufferImpl::getSize() const noexcept

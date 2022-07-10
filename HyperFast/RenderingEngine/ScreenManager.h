@@ -6,7 +6,7 @@
 #include "CommandBufferManager.h"
 #include "../Infrastructure/Environment.h"
 #include "Drawcall.h"
-#include "../Vulkan/PhysicalDevice.h"
+#include "../Vulkan/Device.h"
 
 namespace HyperFast
 {
@@ -18,9 +18,8 @@ namespace HyperFast
 		public:
 			ScreenImpl(
 				Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-				const uint32_t graphicsQueueFamilyIndex,
-				const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
-				Win::Window &window);
+				const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device,
+				const VkQueue graphicsQueue, Win::Window &window);
 
 			~ScreenImpl() noexcept;
 
@@ -30,11 +29,9 @@ namespace HyperFast
 		private:
 			Vulkan::Instance &__instance;
 			Vulkan::PhysicalDevice &__physicalDevice;
+			Vulkan::Device &__device;
 
 			const uint32_t __graphicsQueueFamilyIndex;
-
-			const VkDevice __device;
-			const Vulkan::DeviceProcedure &__deviceProc;
 			const VkQueue __graphicsQueue;
 
 			Win::Window &__window;
@@ -119,7 +116,6 @@ namespace HyperFast
 			constexpr void __resetFrameCursor() noexcept;
 
 			void __waitDeviceIdle() noexcept;
-			void __onDeviceIdle() noexcept;
 
 			VkResult __acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept;
 			constexpr void __advanceFrameCursor() noexcept;
@@ -127,8 +123,8 @@ namespace HyperFast
 
 		ScreenManager(
 			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-			const uint32_t graphicsQueueFamilyIndex, const VkDevice device,
-			const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue) noexcept;
+			const uint32_t graphicsQueueFamilyIndex,
+			Vulkan::Device &device, const VkQueue graphicsQueue) noexcept;
 
 		~ScreenManager() noexcept = default;
 
@@ -138,11 +134,9 @@ namespace HyperFast
 	private:
 		Vulkan::Instance &__instance;
 		Vulkan::PhysicalDevice &__physicalDevice;
+		Vulkan::Device &__device;
 
 		const uint32_t __graphicsQueueFamilyIndex;
-
-		const VkDevice __device;
-		const Vulkan::DeviceProcedure &__deviceProc;
 		const VkQueue __graphicsQueue;
 	};
 

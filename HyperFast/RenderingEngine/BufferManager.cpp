@@ -2,15 +2,15 @@
 
 namespace HyperFast
 {
-	BufferManager::BufferManager(
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc) noexcept :
-		__device{ device }, __deviceProc{ deviceProc }
+	BufferManager::BufferManager(Vulkan::Device &device) noexcept :
+		__device{ device }
 	{}
 
 	[[nodiscard]]
-	BufferManager::BufferImpl *BufferManager::create(const VkDeviceSize size, const VkBufferUsageFlags usage)
+	BufferManager::BufferImpl *BufferManager::create(
+		const VkDeviceSize size, const VkBufferUsageFlags usage)
 	{
-		return new BufferManager::BufferImpl{ __device, __deviceProc, size, usage };
+		return new BufferManager::BufferImpl{ __device, size, usage };
 	}
 
 	void BufferManager::destroy(BufferImpl *const pImpl) noexcept

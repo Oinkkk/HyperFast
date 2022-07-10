@@ -8,7 +8,7 @@ namespace HyperFast
 	class Submesh : public Infra::Unique
 	{
 	public:
-		Submesh(const std::shared_ptr<Mesh> &pMesh, const Vulkan::DeviceProcedure &deviceProc) noexcept;
+		Submesh(const std::shared_ptr<Mesh> &pMesh) noexcept;
 		~Submesh() noexcept;
 
 		[[nodiscard]]
@@ -40,8 +40,7 @@ namespace HyperFast
 		constexpr Infra::EventView<Submesh &> &getDestroyEvent() noexcept;
 
 	private:
-		std::shared_ptr<Mesh> __pMesh;
-		const Vulkan::DeviceProcedure &__deviceProc;
+		const std::shared_ptr<Mesh> __pMesh;
 
 		VkDrawIndexedIndirectCommand __drawCommand{};
 		bool __visible{ true };

@@ -4,10 +4,8 @@
 namespace HyperFast
 {
 	MemoryManager::MemoryBank::MemoryBank(
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
-		const uint32_t memoryTypeIndex, const VkDeviceSize size) :
-		__device{ device }, __deviceProc{ deviceProc },
-		__memoryTypeIndex{ memoryTypeIndex }, __size{ size }
+		Vulkan::Device &device, const uint32_t memoryTypeIndex, const VkDeviceSize size) :
+		__device{ device }, __memoryTypeIndex{ memoryTypeIndex }, __size{ size }
 	{
 		__allocateBank();
 	}
@@ -62,7 +60,7 @@ namespace HyperFast
 		if (!__mapped)
 		{
 			// there is no requirement that memory be unmapped before it can be used
-			__deviceProc.vkMapMemory(__device, __handle, 0ULL, VK_WHOLE_SIZE, 0U, &__mapped);
+			__device.vkMapMemory(__handle, 0ULL, VK_WHOLE_SIZE, 0U, &__mapped);
 			if (!__mapped)
 				throw std::exception{ "Cannot map a memory." };
 		}
@@ -79,14 +77,14 @@ namespace HyperFast
 			.memoryTypeIndex = __memoryTypeIndex
 		};
 
-		__deviceProc.vkAllocateMemory(__device, &allocInfo, nullptr, &__handle);
+		__device.vkAllocateMemory(&allocInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::exception{ "Cannot create a VkDeviceMemory." };
 	}
 
 	void MemoryManager::MemoryBank::__freeBank() noexcept
 	{
-		__deviceProc.vkFreeMemory(__device, __handle, nullptr);
+		__device.vkFreeMemory(__handle, nullptr);
 	}
 
 	void MemoryManager::MemoryBank::__unmap() noexcept
@@ -94,6 +92,6 @@ namespace HyperFast
 		if (!__mapped)
 			return;
 
-		__deviceProc.vkUnmapMemory(__device, __handle);
+		__device.vkUnmapMemory(__handle);
 	}
 }

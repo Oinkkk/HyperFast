@@ -4,13 +4,12 @@ namespace HyperFast
 {
 	ScreenManager::ScreenImpl::ScreenImpl(
 		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-		const uint32_t graphicsQueueFamilyIndex,
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc, const VkQueue graphicsQueue,
-		Win::Window &window) :
+		const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device,
+		const VkQueue graphicsQueue, Win::Window &window) :
 		__instance{ instance }, __physicalDevice{ physicalDevice },
 		__graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
-		__device{ device }, __deviceProc{ deviceProc }, __graphicsQueue{ graphicsQueue },
-		__window{ window }, __pipelineFactory{ device, deviceProc }
+		__device{ device }, __graphicsQueue{ graphicsQueue },
+		__window{ window }, __pipelineFactory{ device }
 	{
 		__initListeners();
 		__createSurface();
@@ -116,14 +115,13 @@ namespace HyperFast
 		const VkFence renderCompleteFence{ __renderCompleteFences[__imageIdx] };
 		const VkResult waitResult
 		{
-			__deviceProc.vkWaitForFences(
-				__device, 1U, &renderCompleteFence, VK_TRUE, 0ULL)
+			__device.vkWaitForFences(1U, &renderCompleteFence, VK_TRUE, 0ULL)
 		};
 
 		if (waitResult == VkResult::VK_TIMEOUT)
 			return false;
 
-		__deviceProc.vkResetFences(__device, 1U, &renderCompleteFence);
+		__device.vkResetFences(1U, &renderCompleteFence);
 
 		const VkCommandBuffer mainCommandBuffer{ __mainCommandBuffers[__imageIdx] };
 		const VkSemaphore renderCompleteSemaphore{ __renderCompleteSemaphores[__imageIdx] };
@@ -159,7 +157,7 @@ namespace HyperFast
 			.pSignalSemaphoreInfos = &signalInfo
 		};
 
-		__deviceProc.vkQueueSubmit2(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
+		__device.vkQueueSubmit2(__graphicsQueue, 1U, &submitInfo, renderCompleteFence);
 
 		const VkPresentInfoKHR presentInfo
 		{
@@ -171,7 +169,7 @@ namespace HyperFast
 			.pImageIndices = &__imageIdx
 		};
 
-		const VkResult presentResult{ __deviceProc.vkQueuePresentKHR(__graphicsQueue, &presentInfo) };
+		const VkResult presentResult{ __device.vkQueuePresentKHR(__graphicsQueue, &presentInfo) };
 		__imageAcquired = false;
 
 		if ((presentResult == VkResult::VK_SUBOPTIMAL_KHR) ||
@@ -517,7 +515,7 @@ namespace HyperFast
 			.oldSwapchain = oldSwapchain
 		};
 
-		__deviceProc.vkCreateSwapchainKHR(__device, &createInfo, nullptr, &__swapchain);
+		__device.vkCreateSwapchainKHR(&createInfo, nullptr, &__swapchain);
 		if (!__swapchain)
 			throw std::exception{ "Cannot create a VkSwapchainKHR." };
 
@@ -527,16 +525,16 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__destroySwapchain(const VkSwapchainKHR swapchain) noexcept
 	{
-		__deviceProc.vkDestroySwapchainKHR(__device, swapchain, nullptr);
+		__device.vkDestroySwapchainKHR(swapchain, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__retrieveSwapchainImages() noexcept
 	{
 		uint32_t numImages{};
-		__deviceProc.vkGetSwapchainImagesKHR(__device, __swapchain, &numImages, nullptr);
+		__device.vkGetSwapchainImagesKHR(__swapchain, &numImages, nullptr);
 
 		__swapChainImages.resize(numImages);
-		__deviceProc.vkGetSwapchainImagesKHR(__device, __swapchain, &numImages, __swapChainImages.data());
+		__device.vkGetSwapchainImagesKHR(__swapchain, &numImages, __swapChainImages.data());
 	}
 
 	void ScreenManager::ScreenImpl::__reserveSwapchainImageDependencyPlaceholers() noexcept
@@ -557,7 +555,7 @@ namespace HyperFast
 		if (pManager)
 			return;
 
-		pManager = new CommandBufferManager{ __device, __deviceProc, __graphicsQueueFamilyIndex, 8ULL };
+		pManager = new CommandBufferManager{ __device, __graphicsQueueFamilyIndex, 8ULL };
 	}
 
 	void ScreenManager::ScreenImpl::__destroyMainCommandBufferManagers() noexcept
@@ -592,7 +590,7 @@ namespace HyperFast
 		};
 
 		VkImageView swapchainImageView{};
-		__deviceProc.vkCreateImageView(__device, &createInfo, nullptr, &swapchainImageView);
+		__device.vkCreateImageView(&createInfo, nullptr, &swapchainImageView);
 
 		if (!swapchainImageView)
 			throw std::exception{ "Cannot create a VkImageView for the swapchain." };
@@ -603,7 +601,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__destroySwapchainImageViews() noexcept
 	{
 		for (const VkImageView swapchainImageView: __swapChainImageViews)
-			__deviceProc.vkDestroyImageView(__device, swapchainImageView, nullptr);
+			__device.vkDestroyImageView(swapchainImageView, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__createRenderPasses()
@@ -672,14 +670,14 @@ namespace HyperFast
 			.pDependencies = dependencies.data()
 		};
 
-		__deviceProc.vkCreateRenderPass2(__device, &createInfo, nullptr, &__renderPass);
+		__device.vkCreateRenderPass2(&createInfo, nullptr, &__renderPass);
 		if (!__renderPass)
 			throw std::exception{ "Cannot create a VkRenderPass." };
 	}
 
 	void ScreenManager::ScreenImpl::__destroyRenderPasses() noexcept
 	{
-		__deviceProc.vkDestroyRenderPass(__device, __renderPass, nullptr);
+		__device.vkDestroyRenderPass(__renderPass, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__createFramebuffer()
@@ -714,14 +712,14 @@ namespace HyperFast
 			.layers = 1U
 		};
 
-		__deviceProc.vkCreateFramebuffer(__device, &createInfo, nullptr, &__framebuffer);
+		__device.vkCreateFramebuffer(&createInfo, nullptr, &__framebuffer);
 		if (!__framebuffer)
 			throw std::exception{ "Cannot create a VkFramebuffer." };
 	}
 
 	void ScreenManager::ScreenImpl::__destroyFramebuffer() noexcept
 	{
-		__deviceProc.vkDestroyFramebuffer(__device, __framebuffer, nullptr);
+		__device.vkDestroyFramebuffer(__framebuffer, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__createSyncObject(const size_t imageIdx)
@@ -744,9 +742,9 @@ namespace HyperFast
 		VkSemaphore renderCompleteSemaphore{};
 		VkFence renderCompleteFence{};
 
-		__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
-		__deviceProc.vkCreateSemaphore(__device, &semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
-		__deviceProc.vkCreateFence(__device, &fenceCreateInfo, nullptr, &renderCompleteFence);
+		__device.vkCreateSemaphore(&semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+		__device.vkCreateSemaphore(&semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
+		__device.vkCreateFence(&fenceCreateInfo, nullptr, &renderCompleteFence);
 
 		if (!(presentCompleteSemaphore && renderCompleteSemaphore && renderCompleteFence))
 			throw std::exception{ "Error occurred while create sync objects." };
@@ -759,13 +757,13 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__destroySyncObjects() noexcept
 	{
 		for (const VkFence renderCompleteFence : __renderCompleteFences)
-			__deviceProc.vkDestroyFence(__device, renderCompleteFence, nullptr);
+			__device.vkDestroyFence(renderCompleteFence, nullptr);
 
 		for (const VkSemaphore renderCompleteSemaphore :__renderCompleteSemaphores)
-			__deviceProc.vkDestroySemaphore(__device, renderCompleteSemaphore, nullptr);
+			__device.vkDestroySemaphore(renderCompleteSemaphore, nullptr);
 
 		for (const VkSemaphore presentCompleteSemaphore :__presentCompleteSemaphores)
-			__deviceProc.vkDestroySemaphore(__device, presentCompleteSemaphore, nullptr);
+			__device.vkDestroySemaphore(presentCompleteSemaphore, nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
@@ -839,8 +837,8 @@ namespace HyperFast
 		const VkCommandBuffer commandBuffer{ __mainCommandBufferManagers[imageIdx]->getNextBuffer() };
 		__mainCommandBuffers[imageIdx] = commandBuffer;
 
-		__deviceProc.vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
-		__deviceProc.vkCmdBeginRenderPass(
+		__device.vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+		__device.vkCmdBeginRenderPass(
 			commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
 		if (__pDrawcall)
@@ -849,31 +847,25 @@ namespace HyperFast
 			{
 				const VkPipeline pipeline{ __pipelineFactory.get(attribFlag) };
 
-				__deviceProc.vkCmdBindPipeline(
+				__device.vkCmdBindPipeline(
 					commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
 				__pDrawcall->draw(attribFlag, commandBuffer);
 			}
 		}
 
-		__deviceProc.vkCmdEndRenderPass(commandBuffer);
-		__deviceProc.vkEndCommandBuffer(commandBuffer);
+		__device.vkCmdEndRenderPass(commandBuffer);
+		__device.vkEndCommandBuffer(commandBuffer);
 	}
 
 	void ScreenManager::ScreenImpl::__waitDeviceIdle() noexcept
 	{
-		__deviceProc.vkDeviceWaitIdle(__device);
-		__onDeviceIdle();
-	}
-
-	void ScreenManager::ScreenImpl::__onDeviceIdle() noexcept
-	{
-		// TODO: process pending tasks
+		__device.vkDeviceWaitIdle();
 	}
 
 	VkResult ScreenManager::ScreenImpl::__acquireNextImage(const VkSemaphore semaphore, uint32_t &imageIdx) noexcept
 	{
-		return __deviceProc.vkAcquireNextImageKHR(
-			__device, __swapchain, 0ULL, semaphore, VK_NULL_HANDLE, &imageIdx);
+		return __device.vkAcquireNextImageKHR(
+			__swapchain, 0ULL, semaphore, VK_NULL_HANDLE, &imageIdx);
 	}
 }

@@ -37,7 +37,11 @@ namespace Jin
 	std::shared_ptr<HyperFast::Submesh>
 		Scene::_createSubmesh(const std::shared_ptr<HyperFast::Mesh> &pMesh) noexcept
 	{
-		std::shared_ptr<HyperFast::Submesh> pRetVal{ __renderingEngine.createSubmesh(pMesh) };
+		std::shared_ptr<HyperFast::Submesh> pRetVal
+		{
+			std::make_shared<HyperFast::Submesh>(pMesh)
+		};
+
 		__pDrawcall->addSubmesh(*pRetVal);
 
 		return pRetVal;

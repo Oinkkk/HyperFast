@@ -9,8 +9,8 @@ namespace HyperFast
 	{
 	public:
 		IndirectBufferBuilder(
-			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
-			HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept;
+			Vulkan::Device &device, HyperFast::BufferManager &bufferManager,
+			HyperFast::MemoryManager &memoryManager) noexcept;
 
 		void addSubmesh(Submesh &submesh) noexcept;
 		void removeSubmesh(Submesh &submesh) noexcept;
@@ -28,8 +28,7 @@ namespace HyperFast
 		constexpr Infra::EventView<IndirectBufferBuilder &> &getIndirectBufferCreateEvent() noexcept;
 
 	private:
-		const VkDevice __device;
-		const Vulkan::DeviceProcedure &__deviceProc;
+		Vulkan::Device &__device;
 		HyperFast::BufferManager &__bufferManager;
 		HyperFast::MemoryManager &__memoryManager;
 

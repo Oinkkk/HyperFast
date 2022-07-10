@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Device.h" />
     <ClInclude Include="Handle.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="PhysicalDevice.h" />
@@ -18,6 +19,7 @@
     <ClInclude Include="Procedure.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Device.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="PhysicalDevice.cpp" />
     <ClCompile Include="VulkanLoader.cpp" />

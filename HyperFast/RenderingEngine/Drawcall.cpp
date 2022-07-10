@@ -4,10 +4,10 @@
 namespace HyperFast
 {
 	Drawcall::Drawcall(
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
-		BufferManager &bufferManager, MemoryManager &memoryManager) noexcept :
-		__device{ device }, __deviceProc{ deviceProc },
-		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }
+		Vulkan::Device &device, BufferManager &bufferManager,
+		MemoryManager &memoryManager) noexcept :
+		__device{ device }, __bufferManager{ bufferManager },
+		__memoryManager{ memoryManager }
 	{
 		__initEventListeners();
 	}
@@ -28,7 +28,7 @@ namespace HyperFast
 			pIndirectBufferBuilder =
 				indirectBufferBuilderMap.emplace(
 					&mesh, std::make_unique<IndirectBufferBuilder>(
-						__device, __deviceProc, __bufferManager, __memoryManager)).first->second.get();
+						__device, __bufferManager, __memoryManager)).first->second.get();
 
 			pIndirectBufferBuilder->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateEventListener;
 			pIndirectBufferBuilder->getIndirectBufferCreateEvent() += __pIndirectBufferCreateEventListener;

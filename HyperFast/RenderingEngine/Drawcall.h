@@ -11,8 +11,8 @@ namespace HyperFast
 	{
 	public:
 		Drawcall(
-			const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
-			BufferManager &bufferManager, MemoryManager &memoryManager) noexcept;
+			Vulkan::Device &device, BufferManager &bufferManager,
+			MemoryManager &memoryManager) noexcept;
 
 		void addSubmesh(Submesh &submesh) noexcept;
 		void removeSubmesh(Submesh &submesh) noexcept;
@@ -38,8 +38,7 @@ namespace HyperFast
 		using IndirectBufferBuilderMap = std::unordered_map<Mesh *, std::unique_ptr<IndirectBufferBuilder>>;
 		using AttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
 
-		const VkDevice __device;
-		const Vulkan::DeviceProcedure &__deviceProc;
+		Vulkan::Device &__device;
 		BufferManager &__bufferManager;
 		MemoryManager &__memoryManager;
 

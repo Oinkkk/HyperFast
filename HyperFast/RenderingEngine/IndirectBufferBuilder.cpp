@@ -4,10 +4,10 @@
 namespace HyperFast
 {
 	IndirectBufferBuilder::IndirectBufferBuilder(
-		const VkDevice device, const Vulkan::DeviceProcedure &deviceProc,
-		HyperFast::BufferManager &bufferManager, HyperFast::MemoryManager &memoryManager) noexcept :
-		__device{ device }, __deviceProc{ deviceProc },
-		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }
+		Vulkan::Device &device, HyperFast::BufferManager &bufferManager,
+		HyperFast::MemoryManager &memoryManager) noexcept :
+		__device{ device }, __bufferManager{ bufferManager },
+		__memoryManager{ memoryManager }
 	{
 		__initEventListeners();
 		__createCountResources();
@@ -51,7 +51,7 @@ namespace HyperFast
 		if (!__pIndirectBuffer)
 			return;
 
-		__deviceProc.vkCmdDrawIndexedIndirectCount(
+		__device.vkCmdDrawIndexedIndirectCount(
 			commandBuffer,
 			__pIndirectBuffer->getHandle(), 0ULL,
 			__pCountBuffer->getHandle(), 0ULL,
