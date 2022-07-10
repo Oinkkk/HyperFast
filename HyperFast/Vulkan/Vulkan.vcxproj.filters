@@ -52,6 +52,9 @@
     <Filter Include="Fence">
       <UniqueIdentifier>{d1c70fc6-eb9f-43ac-97d5-5b57833902f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Buffer">
+      <UniqueIdentifier>{37cd1f77-1371-4f70-8dc1-c52eb4b16a4d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -108,6 +111,9 @@
     <ClInclude Include="Fence.h">
       <Filter>Fence</Filter>
     </ClInclude>
+    <ClInclude Include="Buffer.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -157,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="Fence.cpp">
       <Filter>Fence</Filter>
+    </ClCompile>
+    <ClCompile Include="Buffer.cpp">
+      <Filter>Buffer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

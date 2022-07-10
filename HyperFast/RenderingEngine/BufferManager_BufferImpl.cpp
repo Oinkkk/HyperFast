@@ -11,9 +11,9 @@ namespace HyperFast
 		__queryMemoryRequirements();
 	}
 
-	BufferManager::BufferImpl::~BufferImpl() noexcept
+	VkBuffer BufferManager::BufferImpl::getHandle() const noexcept
 	{
-		__destroyBuffer();
+		return __pBuffer->getHandle();
 	}
 
 	void BufferManager::BufferImpl::bindMemory(
@@ -24,8 +24,8 @@ namespace HyperFast
 
 		if (pMemory)
 		{
-			__device.vkBindBufferMemory(
-				__buffer, pMemory->getBank(), pMemory->getOffset() + offset);
+			__pBuffer->vkBindBufferMemory(
+				pMemory->getBank(), pMemory->getOffset() + offset);
 		}
 	}
 
@@ -39,18 +39,11 @@ namespace HyperFast
 			.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE
 		};
 
-		__device.vkCreateBuffer(&createInfo, nullptr, &__buffer);
-		if (!__buffer)
-			throw std::exception{ "Cannot create a VkBuffer." };
-	}
-
-	void BufferManager::BufferImpl::__destroyBuffer() noexcept
-	{
-		__device.vkDestroyBuffer(__buffer, nullptr);
+		__pBuffer = std::make_unique<Vulkan::Buffer>(__device, createInfo);
 	}
 
 	void BufferManager::BufferImpl::__queryMemoryRequirements() noexcept
 	{
-		__device.vkGetBufferMemoryRequirements(__buffer, &__memRequirements);
+		__pBuffer->vkGetBufferMemoryRequirements(&__memRequirements);
  	}
 }

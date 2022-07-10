@@ -17,7 +17,7 @@ namespace HyperFast
 		constexpr VkBufferUsageFlags getUsage() const noexcept;
 
 		[[nodiscard]]
-		constexpr VkBuffer getHandle() const noexcept;
+		VkBuffer getHandle() const noexcept;
 
 		[[nodiscard]]
 		constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
@@ -42,11 +42,6 @@ namespace HyperFast
 	constexpr VkBufferUsageFlags Buffer::getUsage() const noexcept
 	{
 		return __pImpl->getUsage();
-	}
-
-	constexpr VkBuffer Buffer::getHandle() const noexcept
-	{
-		return __pImpl->getHandle();
 	}
 
 	constexpr const VkMemoryRequirements &Buffer::getMemoryRequirements() const noexcept

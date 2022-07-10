@@ -11,6 +11,11 @@ namespace HyperFast
 		__manager.destroy(__pImpl);
 	}
 
+	VkBuffer Buffer::getHandle() const noexcept
+	{
+		return __pImpl->getHandle();
+	}
+
 	void Buffer::bindMemory(const std::shared_ptr<Memory> &pMemory, const VkDeviceAddress offset) noexcept
 	{
 		__pImpl->bindMemory(pMemory, offset);

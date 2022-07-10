@@ -2,6 +2,7 @@
 
 #include "Memory.h"
 #include <memory>
+#include "../Vulkan/Buffer.h"
 
 namespace HyperFast
 {
@@ -15,8 +16,6 @@ namespace HyperFast
 				Vulkan::Device &device,
 				const VkDeviceSize size, const VkBufferUsageFlags usage);
 
-			~BufferImpl() noexcept;
-
 			[[nodiscard]]
 			constexpr VkDeviceSize getSize() const noexcept;
 
@@ -24,7 +23,7 @@ namespace HyperFast
 			constexpr VkBufferUsageFlags getUsage() const noexcept;
 
 			[[nodiscard]]
-			constexpr VkBuffer getHandle() const noexcept;
+			VkBuffer getHandle() const noexcept;
 
 			[[nodiscard]]
 			constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
@@ -41,14 +40,13 @@ namespace HyperFast
 			const VkDeviceSize __size;
 			const VkBufferUsageFlags __usage;
 
-			VkBuffer __buffer{};
+			std::unique_ptr<Vulkan::Buffer> __pBuffer;
 			VkMemoryRequirements __memRequirements{};
 
 			std::shared_ptr<Memory> __pMemory;
 			VkDeviceAddress __memoryOffset{};
 
 			void __createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
-			void __destroyBuffer() noexcept;
 			void __queryMemoryRequirements() noexcept;
 		};
 
@@ -70,11 +68,6 @@ namespace HyperFast
 	constexpr VkBufferUsageFlags BufferManager::BufferImpl::getUsage() const noexcept
 	{
 		return __usage;
-	}
-
-	constexpr VkBuffer BufferManager::BufferImpl::getHandle() const noexcept
-	{
-		return __buffer;
 	}
 
 	constexpr const VkMemoryRequirements &BufferManager::BufferImpl::getMemoryRequirements() const noexcept
