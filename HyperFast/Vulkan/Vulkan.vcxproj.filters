@@ -75,6 +75,9 @@
     <ClInclude Include="ShaderModule.h">
       <Filter>ShaderModule</Filter>
     </ClInclude>
+    <ClInclude Include="RenderPass.h">
+      <Filter>RenderPass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -106,6 +109,9 @@
     </ClCompile>
     <ClCompile Include="ShaderModule.cpp">
       <Filter>ShaderModule</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass.cpp">
+      <Filter>RenderPass</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

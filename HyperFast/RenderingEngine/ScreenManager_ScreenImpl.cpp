@@ -193,7 +193,7 @@ namespace HyperFast
 		__device.vkDeviceWaitIdle();
 		__resetPipelines();
 		__pFramebuffer = nullptr;
-		__destroyRenderPasses();
+		__pRenderPass = nullptr;
 		__destroySyncObjects();
 		__swapChainImageViews.clear();
 		__destroyMainCommandBufferManagers();
@@ -279,7 +279,7 @@ namespace HyperFast
 					__device.vkDeviceWaitIdle();
 					__resetPipelines();
 					__pFramebuffer = nullptr;
-					__destroyRenderPasses();
+					__pRenderPass = nullptr;
 					__swapChainImageViews.clear();
 				}
 
@@ -664,14 +664,7 @@ namespace HyperFast
 			.pDependencies = dependencies.data()
 		};
 
-		__device.vkCreateRenderPass2(&createInfo, nullptr, &__renderPass);
-		if (!__renderPass)
-			throw std::exception{ "Cannot create a VkRenderPass." };
-	}
-
-	void ScreenManager::ScreenImpl::__destroyRenderPasses() noexcept
-	{
-		__device.vkDestroyRenderPass(__renderPass, nullptr);
+		__pRenderPass = std::make_unique<Vulkan::RenderPass>(__device, createInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__createFramebuffer()
@@ -699,7 +692,7 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 			.pNext = &attachmentInfo,
 			.flags = VkFramebufferCreateFlagBits::VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT,
-			.renderPass = __renderPass,
+			.renderPass = __pRenderPass->getHandle(),
 			.attachmentCount = 1U,
 			.width = __swapchainExtent.width,
 			.height = __swapchainExtent.height,
@@ -755,7 +748,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
 	{
-		__pipelineBuildParam.renderPass = __renderPass;
+		__pipelineBuildParam.renderPass = __pRenderPass->getHandle();
 		__pipelineBuildParam.viewport =
 		{
 			.x = 0.0f,
@@ -810,7 +803,7 @@ namespace HyperFast
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 			.pNext = &renderPassAttachmentInfo,
-			.renderPass = __renderPass,
+			.renderPass = __pRenderPass->getHandle(),
 			.framebuffer = __pFramebuffer->getHandle(),
 			.renderArea =
 			{

@@ -9,6 +9,7 @@
 #include "../Vulkan/Queue.h"
 #include "../Vulkan/Swapchain.h"
 #include "../Vulkan/ImageView.h"
+#include "../Vulkan/RenderPass.h"
 #include "../Vulkan/Framebuffer.h"
 
 namespace HyperFast
@@ -65,7 +66,7 @@ namespace HyperFast
 			std::vector<VkImage> __swapChainImages;
 			std::vector<std::unique_ptr<Vulkan::ImageView>> __swapChainImageViews;
 
-			VkRenderPass __renderPass{};
+			std::unique_ptr<Vulkan::RenderPass> __pRenderPass;
 			std::unique_ptr<Vulkan::Framebuffer> __pFramebuffer;
 
 			std::vector<VkSemaphore> __presentCompleteSemaphores;
@@ -104,7 +105,6 @@ namespace HyperFast
 			void __destroyMainCommandBufferManagers() noexcept;
 			void __createSwapchainImageView(const size_t imageIdx);
 			void __createRenderPasses();
-			void __destroyRenderPasses() noexcept;
 			void __createFramebuffer();
 			void __createSyncObject(const size_t imageIdx);
 			void __destroySyncObjects() noexcept;
