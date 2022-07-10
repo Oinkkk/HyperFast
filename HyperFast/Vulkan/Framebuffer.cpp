@@ -23,7 +23,7 @@ namespace Vulkan
 		device.vkCreateFramebuffer(&createInfo, nullptr, &retVal);
 
 		if (!retVal)
-			throw std::exception{ "Cannot create a VkImageView." };
+			throw std::exception{ "Cannot create a VkFramebuffer." };
 
 		return retVal;
 	}

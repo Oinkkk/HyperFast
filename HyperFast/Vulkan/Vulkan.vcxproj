@@ -14,6 +14,7 @@
     <ClInclude Include="Device.h" />
     <ClInclude Include="Handle.h" />
     <ClInclude Include="Framebuffer.h" />
+    <ClInclude Include="PipelineLayout.h" />
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="ShaderModule.h" />
     <ClInclude Include="Instance.h" />
@@ -28,6 +29,7 @@
   <ItemGroup>
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
+    <ClCompile Include="PipelineLayout.cpp" />
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="ShaderModule.cpp" />
     <ClCompile Include="Instance.cpp" />

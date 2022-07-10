@@ -4,6 +4,8 @@
 #include "../Infrastructure/Environment.h"
 #include "VertexAttribute.h"
 #include "../Vulkan/ShaderModule.h"
+#include "../Vulkan/PipelineLayout.h"
+#include "../Vulkan/PipelineCache.h"
 
 namespace HyperFast
 {
@@ -53,24 +55,21 @@ namespace HyperFast
 
 			std::unique_ptr<Vulkan::ShaderModule> __pVertexShader;
 			std::unique_ptr<Vulkan::ShaderModule> __pFragShader;
-			VkPipelineCache __pipelineCache{};
-			VkPipeline __pipeline{};
+			std::unique_ptr<Vulkan::PipelineCache> __pPipelineCache;
+			std::unique_ptr<Vulkan::Pipeline> __pPipeline;
 
 			void __createShaderModules();
 			void __createPipelineCache();
-			void __destroyPipelineCache() noexcept;
-
 			void __createPipeline(const BuildParam &buildParam);
 			void __destroyPipeline() noexcept;
 		};
 
 		Vulkan::Device &__device;
 
-		VkPipelineLayout __pipelineLayout{};
+		std::unique_ptr<Vulkan::PipelineLayout> __pPipelineLayout;
 		std::unordered_map<VertexAttributeFlag, PipelineResource> __attribFlag2ResourceMap;
 
 		void __createPipelineLayouts();
-		void __destroyPipelineLayouts() noexcept;
 	};
 
 	constexpr VkPipeline PipelineFactory::PipelineResource::getPipeline() noexcept

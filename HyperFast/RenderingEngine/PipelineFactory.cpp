@@ -12,7 +12,7 @@ namespace HyperFast
 	PipelineFactory::~PipelineFactory() noexcept
 	{
 		__attribFlag2ResourceMap.clear();
-		__destroyPipelineLayouts();
+		__pPipelineLayout = nullptr;
 	}
 
 	void PipelineFactory::build(
@@ -24,7 +24,8 @@ namespace HyperFast
 			PipelineResource &pipelineResource
 			{
 				__attribFlag2ResourceMap.try_emplace(
-					attribFlag, __device, __pipelineLayout, attribFlag).first->second
+					attribFlag, __device,
+					__pPipelineLayout->getHandle(), attribFlag).first->second
 			};
 
 			subflow.emplace([&pipelineResource, &buildParam]
@@ -52,14 +53,7 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
 		};
 
-		__device.vkCreatePipelineLayout(&createInfo, nullptr, &__pipelineLayout);
-		if (!__pipelineLayout)
-			throw std::exception{ "Cannot create a VkPipelineLayout." };
-	}
-
-	void PipelineFactory::__destroyPipelineLayouts() noexcept
-	{
-		__device.vkDestroyPipelineLayout(__pipelineLayout, nullptr);
+		__pPipelineLayout = std::make_unique<Vulkan::PipelineLayout>(__device, createInfo);
 	}
 
 	PipelineFactory::PipelineResource::PipelineResource(
@@ -74,7 +68,7 @@ namespace HyperFast
 	PipelineFactory::PipelineResource::~PipelineResource() noexcept
 	{
 		reset();
-		__destroyPipelineCache();
+		__pPipelineCache = nullptr;
 		__pFragShader = nullptr;
 		__pVertexShader = nullptr;
 	}
@@ -86,10 +80,10 @@ namespace HyperFast
 
 	void PipelineFactory::PipelineResource::reset() noexcept
 	{
-		if (!__pipeline)
+		if (!__pPipeline)
 			return;
 
-		__destroyPipeline();
+		__pPipeline = nullptr;
 	}
 
 	void PipelineFactory::PipelineResource::__createShaderModules()
@@ -139,14 +133,7 @@ namespace HyperFast
 			.flags = VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT
 		};
 
-		__device.vkCreatePipelineCache(&createInfo, nullptr, &__pipelineCache);
-		if (!__pipelineCache)
-			throw std::exception{ "Cannot create a VkPipelineCache." };
-	}
-
-	void PipelineFactory::PipelineResource::__destroyPipelineCache() noexcept
-	{
-		__device.vkDestroyPipelineCache(__pipelineCache, nullptr);
+		__pPipelineCache = std::make_unique<Vulkan::PipelineCache>(__device, createInfo);
 	}
 
 	void PipelineFactory::PipelineResource::__createPipeline(const BuildParam &buildParam)
@@ -295,14 +282,6 @@ namespace HyperFast
 			.basePipelineIndex = -1
 		};
 
-		__device.vkCreateGraphicsPipelines(__pipelineCache, 1U, &createInfo, nullptr, &__pipeline);
-		if (!__pipeline)
-			throw std::exception{ "Cannot create a graphics pipeline." };
-	}
-
-	void PipelineFactory::PipelineResource::__destroyPipeline() noexcept
-	{
-		__device.vkDestroyPipeline(__pipeline, nullptr);
-		__pipeline = VK_NULL_HANDLE;
+		__pPipeline = std::make_unique<Vulkan::Pipeline>(__pPipelineCache->getHandle(), createInfo);
 	}
 }

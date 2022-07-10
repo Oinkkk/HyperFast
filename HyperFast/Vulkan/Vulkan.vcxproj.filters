@@ -37,6 +37,9 @@
     <Filter Include="RenderPass">
       <UniqueIdentifier>{6e394a3c-cfd1-4d2d-8dd8-e35dbee7c060}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PipelineLayout">
+      <UniqueIdentifier>{2dacd3a6-6d36-4cb5-a0b5-6d4e481ebd42}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -78,6 +81,9 @@
     <ClInclude Include="RenderPass.h">
       <Filter>RenderPass</Filter>
     </ClInclude>
+    <ClInclude Include="PipelineLayout.h">
+      <Filter>PipelineLayout</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -112,6 +118,9 @@
     </ClCompile>
     <ClCompile Include="RenderPass.cpp">
       <Filter>RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="PipelineLayout.cpp">
+      <Filter>PipelineLayout</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
