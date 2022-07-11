@@ -104,15 +104,12 @@ namespace HyperFast
 		if (!validAcquire)
 			return;
 
-		Vulkan::CommandBuffer &renderCommandBuffer{ *__renderCommandBuffers[__imageIdx] };
-		const VkSemaphore renderCompleteSemaphore
-		{
-			__renderCompleteSemaphores[__imageIdx]->getHandle()
-		};
+		Vulkan::CommandBuffer &renderCommandBuffer{ __getCurrentRenderCommandBuffer() };
+		Vulkan::Semaphore &renderCompleteSemaphore{ __getCurrentRenderCompleteSemaphore() };
 
 		 __submitWaitInfo.semaphore = imageAcquireSemaphore.getHandle();
 		__submitCommandBufferInfo.commandBuffer = renderCommandBuffer.getHandle();
-		__submitSignalInfo.semaphore = renderCompleteSemaphore;
+		__submitSignalInfo.semaphore = renderCompleteSemaphore.getHandle();
 
 		__renderingEngine.enqueueSubmit(
 			1U, &__submitWaitInfo,
@@ -125,16 +122,13 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__present() noexcept
 	{
-		const VkSemaphore renderCompleteSemaphore
-		{
-			__renderCompleteSemaphores[__imageIdx]->getHandle()
-		};
+		Vulkan::Semaphore &renderCompleteSemaphore{ __getCurrentRenderCompleteSemaphore() };
 
 		const VkPresentInfoKHR presentInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.waitSemaphoreCount = 1U,
-			.pWaitSemaphores = &renderCompleteSemaphore,
+			.pWaitSemaphores = &(renderCompleteSemaphore.getHandle()),
 			.swapchainCount = 1U,
 			.pSwapchains = &(__pSwapchain->getHandle()),
 			.pImageIndices = &__imageIdx
@@ -786,6 +780,16 @@ namespace HyperFast
 	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentImageAcquireSemaphore() noexcept
 	{
 		return *__imageAcquireSemaphores[__frameCursor];
+	}
+
+	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__getCurrentRenderCommandBuffer() noexcept
+	{
+		return *__renderCommandBuffers[__imageIdx];
+	}
+
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompleteSemaphore() noexcept
+	{
+		return *__renderCompleteSemaphores[__imageIdx];
 	}
 
 	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept

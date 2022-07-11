@@ -139,6 +139,12 @@ namespace HyperFast
 			Vulkan::Semaphore &__getCurrentImageAcquireSemaphore() noexcept;
 
 			[[nodiscard]]
+			Vulkan::CommandBuffer &__getCurrentRenderCommandBuffer() noexcept;
+
+			[[nodiscard]]
+			Vulkan::Semaphore &__getCurrentRenderCompleteSemaphore() noexcept;
+
+			[[nodiscard]]
 			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;
 		};
 
