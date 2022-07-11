@@ -40,6 +40,9 @@
     <Filter Include="Memory">
       <UniqueIdentifier>{55e8d6e0-095e-492e-97a6-c88f654cc0b9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CommandSubmitter">
+      <UniqueIdentifier>{6d40464d-8545-4298-ac20-14470728f2c8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">

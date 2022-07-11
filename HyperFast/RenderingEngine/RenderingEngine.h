@@ -40,7 +40,7 @@ namespace HyperFast
 			const uint32_t commandBufferInfoCount,
 			const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
 			const uint32_t signalSemaphoreInfoCount,
-			const VkSemaphoreSubmitInfo *pSignalSemaphoreInfos) noexcept;
+			const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
 
 		void submit();
 
