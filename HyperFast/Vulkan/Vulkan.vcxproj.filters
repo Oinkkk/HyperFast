@@ -132,6 +132,9 @@
     <ClInclude Include="CommandBuffer.h">
       <Filter>CommandBuffer</Filter>
     </ClInclude>
+    <ClInclude Include="DebugUtilsMessenger.h">
+      <Filter>DebugUtilsMessenger</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -190,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="CommandBuffer.cpp">
       <Filter>CommandBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugUtilsMessenger.cpp">
+      <Filter>DebugUtilsMessenger</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

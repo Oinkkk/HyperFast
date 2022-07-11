@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="Device.h" />
     <ClInclude Include="CommandBuffer.h" />
+    <ClInclude Include="DebugUtilsMessenger.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="Fence.h" />
     <ClInclude Include="Buffer.h" />
@@ -36,6 +37,7 @@
   <ItemGroup>
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="CommandBuffer.cpp" />
+    <ClCompile Include="DebugUtilsMessenger.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="Fence.cpp" />
     <ClCompile Include="Buffer.cpp" />

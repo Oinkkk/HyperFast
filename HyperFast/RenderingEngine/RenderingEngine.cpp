@@ -44,11 +44,7 @@ namespace HyperFast
 		__destroyScreenManager();
 		__submitFences.clear();
 		__pDevice = nullptr;
-
-#ifndef NDEBUG
-		__destroyDebugMessenger();
-#endif
-
+		__pDebugMessenger = nullptr;
 		__pInstance = nullptr;
 	}
 
@@ -243,15 +239,8 @@ namespace HyperFast
 
 	void RenderingEngine::__createDebugMessenger()
 	{
-		__pInstance->vkCreateDebugUtilsMessengerEXT(&__debugMessengerCreateInfo, nullptr, &__debugMessenger);
-		if (!__debugMessenger)
-			throw std::exception{ "Cannot create a VkDebugUtilsMessengerEXT." };
-	}
-
-	void RenderingEngine::__destroyDebugMessenger() noexcept
-	{
-		__pInstance->vkDestroyDebugUtilsMessengerEXT(__debugMessenger, nullptr);
-		__debugMessenger = VK_NULL_HANDLE;
+		__pDebugMessenger =
+			std::make_unique<Vulkan::DebugUtilsMessenger>(*__pInstance, __debugMessengerCreateInfo);
 	}
 
 	void RenderingEngine::__pickPhysicalDevice()

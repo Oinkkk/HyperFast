@@ -7,6 +7,7 @@
 #include "../Infrastructure/Environment.h"
 #include "Screen.h"
 #include "Drawcall.h"
+#include "../Vulkan/DebugUtilsMessenger.h"
 
 namespace HyperFast
 {
@@ -53,7 +54,7 @@ namespace HyperFast
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{};
 
 		std::unique_ptr<Vulkan::Instance> __pInstance;
-		VkDebugUtilsMessengerEXT __debugMessenger{};
+		std::unique_ptr<Vulkan::DebugUtilsMessenger> __pDebugMessenger;
 
 		std::unique_ptr<Vulkan::PhysicalDevice> __pPhysicalDevice;
 		VkPhysicalDeviceProperties2 __physicalDeviceProp2{};
@@ -82,7 +83,6 @@ namespace HyperFast
 		void __populateDebugMessengerCreateInfo() noexcept;
 		void __createInstance();
 		void __createDebugMessenger();
-		void __destroyDebugMessenger() noexcept;
 		void __pickPhysicalDevice();
 		void __queryPhysicalDeviceProps() noexcept;
 		void __pickGraphicsQueueFamily() noexcept;
