@@ -24,7 +24,7 @@ namespace HyperFast
 		constexpr const std::vector<VertexAttributeFlag> &getAttributeFlags() const noexcept;
 
 		// TODO: secondary buffer recording¿∫ attribFlag ∫∞∑Œ
-		void draw(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept;
+		void render(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept;
 
 		[[nodiscard]]
 		constexpr Infra::EventView<Drawcall &> &getAttributeFlagsUpdateEvent() noexcept;

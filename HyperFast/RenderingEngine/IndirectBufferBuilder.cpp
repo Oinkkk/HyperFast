@@ -46,7 +46,7 @@ namespace HyperFast
 		__needToUpdate = false;
 	}
 
-	void IndirectBufferBuilder::draw(Vulkan::CommandBuffer &commandBuffer) noexcept
+	void IndirectBufferBuilder::render(Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
 		if (!__pIndirectBuffer)
 			return;

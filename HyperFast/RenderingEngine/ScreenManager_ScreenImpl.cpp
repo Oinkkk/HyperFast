@@ -1,18 +1,22 @@
 #include "ScreenManager.h"
+#include "RenderingEngine.h"
 
 namespace HyperFast
 {
 	ScreenManager::ScreenImpl::ScreenImpl(
+		RenderingEngine &renderingEngine,
 		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 		const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device,
 		Vulkan::Queue &queue, Win::Window &window) :
-		__instance{ instance }, __physicalDevice{ physicalDevice },
+		__renderingEngine{ renderingEngine }, __instance { instance },
+		__physicalDevice{ physicalDevice },
 		__graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __queue{ queue },
 		__window{ window }, __pipelineFactory{ device }
 	{
 		__initListeners();
 		__createSurface();
+		__initSubmitInfo();
 		__updateSurfaceDependencies();
 	}
 
@@ -45,22 +49,24 @@ namespace HyperFast
 		__needToUpdatePipelineDependencies = true;
 	}
 
-	void ScreenManager::ScreenImpl::draw()
+	void ScreenManager::ScreenImpl::render()
 	{
-		if (__destroyed)
-			return;
-
-		const bool validSize{ __window.getWidth() && __window.getHeight() };
-		if (!validSize)
+		if(!__isValid())
 			return;
 
 		__update();
 
-		if (__needToDraw)
-		{
-			__draw();
-			__needToDraw = false;
-		}
+		if (__needToRender)
+			__render();
+	}
+
+	void ScreenManager::ScreenImpl::present() noexcept
+	{
+		if (!__isValid())
+			return;
+
+		if (__needToPresent)
+			__present();
 	}
 
 	void ScreenManager::ScreenImpl::__update()
@@ -71,7 +77,7 @@ namespace HyperFast
 			__needToUpdateSurfaceDependencies = false;
 			__needToUpdatePipelineDependencies = false;
 			__needToUpdateMainCommands = false;
-			__needToDraw = true;
+			__needToRender = true;
 		}
 
 		if (__needToUpdatePipelineDependencies)
@@ -79,53 +85,31 @@ namespace HyperFast
 			__updatePipelineDependencies();
 			__needToUpdatePipelineDependencies = false;
 			__needToUpdateMainCommands = false;
-			__needToDraw = true;
+			__needToRender = true;
 		}
 
 		if (__needToUpdateMainCommands)
 		{
 			__updateMainCommands();
 			__needToUpdateMainCommands = false;
-			__needToDraw = true;
+			__needToRender = true;
 		}
 	}
 
-	bool ScreenManager::ScreenImpl::__draw() noexcept
+	void ScreenManager::ScreenImpl::__render() noexcept
 	{
-		const VkSemaphore presentCompleteSemaphore
-		{
-			__presentCompleteSemaphores[__frameCursor]->getHandle()
-		};
+		Vulkan::Fence &imageAcquireFence{ *__imageAcquireFences[__frameCursor] };
 
-		if (!__imageAcquired)
-		{
-			const VkResult acquirementResult
-			{
-				__pSwapchain->vkAcquireNextImageKHR(
-					0ULL, presentCompleteSemaphore, VK_NULL_HANDLE, &__imageIdx)
-			};
+		const bool validAcquire{ __acquireNextSwapchainImageIdx(imageAcquireFence) };
+		if (!validAcquire)
+			return;
 
-			if (acquirementResult == VkResult::VK_NOT_READY)
-				return false;
-
-			if ((acquirementResult == VkResult::VK_SUBOPTIMAL_KHR) ||
-				(acquirementResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
-			{
-				__needToUpdateSurfaceDependencies = true;
-				return false;
-			}
-
-			__advanceFrameCursor();
-			__imageAcquired = true;
-		}
-		
-		Vulkan::Fence &renderCompleteFence{ *(__renderCompleteFences[__imageIdx]) };
-		const VkResult waitResult{ renderCompleteFence.wait(0ULL) };
-
+		const VkResult waitResult{ imageAcquireFence.wait(0ULL) };
 		if (waitResult == VkResult::VK_TIMEOUT)
-			return false;
+			return;
 
-		renderCompleteFence.reset();
+		imageAcquireFence.reset();
+		__advanceFrameCursor();
 
 		Vulkan::CommandBuffer &mainCommandBuffer{ *__mainCommandBuffers[__imageIdx] };
 		const VkSemaphore renderCompleteSemaphore
@@ -133,38 +117,25 @@ namespace HyperFast
 			__renderCompleteSemaphores[__imageIdx]->getHandle()
 		};
 
-		const VkSemaphoreSubmitInfo waitInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-			.semaphore = presentCompleteSemaphore,
-			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
-		};
+		// __submitWaitInfo.semaphore = imageAcquireFence;
+		__submitCommandBufferInfo.commandBuffer = mainCommandBuffer.getHandle();
+		__submitSignalInfo.semaphore = renderCompleteSemaphore;
 
-		const VkCommandBufferSubmitInfo commandBufferInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
-			.commandBuffer = mainCommandBuffer.getHandle()
-		};
+		__renderingEngine.enqueueSubmit(
+			0U, &__submitWaitInfo,
+			1U, &__submitCommandBufferInfo,
+			1U, &__submitSignalInfo);
 
-		const VkSemaphoreSubmitInfo signalInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-			.semaphore = renderCompleteSemaphore,
-			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT
-		};
+		__needToRender = false;
+		__needToPresent = true;
+	}
 
-		const VkSubmitInfo2 submitInfo
+	void ScreenManager::ScreenImpl::__present() noexcept
+	{
+		const VkSemaphore renderCompleteSemaphore
 		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
-			.waitSemaphoreInfoCount = 1U,
-			.pWaitSemaphoreInfos = &waitInfo,
-			.commandBufferInfoCount = 1U,
-			.pCommandBufferInfos = &commandBufferInfo,
-			.signalSemaphoreInfoCount = 1U,
-			.pSignalSemaphoreInfos = &signalInfo
+			__renderCompleteSemaphores[__imageIdx]->getHandle()
 		};
-
-		__queue.vkQueueSubmit2(1U, &submitInfo, renderCompleteFence.getHandle());
 
 		const VkPresentInfoKHR presentInfo
 		{
@@ -183,9 +154,11 @@ namespace HyperFast
 			(presentResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
 			__needToUpdateSurfaceDependencies = true;
+			__needToRender = true;
 		}
 
-		return (presentResult == VkResult::VK_SUCCESS);
+		if (presentResult == VkResult::VK_SUCCESS)
+			__needToPresent = false;
 	}
 
 	void ScreenManager::ScreenImpl::__destroy() noexcept
@@ -197,9 +170,8 @@ namespace HyperFast
 		__resetPipelines();
 		__pFramebuffer = nullptr;
 		__pRenderPass = nullptr;
-		__renderCompleteFences.clear();
 		__renderCompleteSemaphores.clear();
-		__presentCompleteSemaphores.clear();
+		__imageAcquireFences.clear();
 		__swapChainImageViews.clear();
 		__destroyMainCommandBufferManagers();
 		__pSwapchain = nullptr;
@@ -221,7 +193,7 @@ namespace HyperFast
 
 		__pDrawEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &window)
 		{
-			__needToDraw = true;
+			__needToRender = true;
 		});
 
 		__pDestroyEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &)
@@ -236,7 +208,7 @@ namespace HyperFast
 
 		__pIndirectBufferUpdateListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
 		{
-			__needToDraw = true;
+			__needToRender = true;
 		});
 
 		__pIndirectBufferCreateListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
@@ -554,9 +526,8 @@ namespace HyperFast
 		__mainCommandBufferManagers.resize(numSwapchainImages, nullptr);
 		__mainCommandBuffers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
-		__presentCompleteSemaphores.resize(numSwapchainImages);
+		__imageAcquireFences.resize(numSwapchainImages);
 		__renderCompleteSemaphores.resize(numSwapchainImages);
-		__renderCompleteFences.resize(numSwapchainImages);
 	}
 
 	void ScreenManager::ScreenImpl::__createMainCommandBufferManager(const size_t imageIdx)
@@ -709,28 +680,24 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__createSyncObject(const size_t imageIdx)
 	{
-		if (__presentCompleteSemaphores[imageIdx])
+		if (__imageAcquireFences[imageIdx])
 			return;
+
+		const VkFenceCreateInfo fenceCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+		};
 
 		const VkSemaphoreCreateInfo semaphoreCreateInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
 		};
 
-		const VkFenceCreateInfo fenceCreateInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-			.flags = VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT
-		};
-
-		__presentCompleteSemaphores[imageIdx] =
-			std::make_unique<Vulkan::Semaphore>(__device, semaphoreCreateInfo);
+		__imageAcquireFences[imageIdx] =
+			std::make_unique<Vulkan::Fence>(__device, fenceCreateInfo);
 
 		__renderCompleteSemaphores[imageIdx] =
 			std::make_unique<Vulkan::Semaphore>(__device, semaphoreCreateInfo);
-
-		__renderCompleteFences[imageIdx] =
-			std::make_unique<Vulkan::Fence>(__device, fenceCreateInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
@@ -817,11 +784,46 @@ namespace HyperFast
 				commandBuffer.vkCmdBindPipeline(
 					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-				__pDrawcall->draw(attribFlag, commandBuffer);
+				__pDrawcall->render(attribFlag, commandBuffer);
 			}
 		}
 
 		commandBuffer.vkCmdEndRenderPass();
 		commandBuffer.vkEndCommandBuffer();
+	}
+
+	bool ScreenManager::ScreenImpl::__isValid() const noexcept
+	{
+		if (__destroyed)
+			return false;
+
+		const bool validSize{ __window.getWidth() && __window.getHeight() };
+		return validSize;
+	}
+
+	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Fence &fence) noexcept
+	{
+		if (!__imageAcquired)
+		{
+			const VkResult acquireResult
+			{
+				__pSwapchain->vkAcquireNextImageKHR(
+					0ULL, VK_NULL_HANDLE, fence.getHandle(), &__imageIdx)
+			};
+
+			if (acquireResult == VkResult::VK_NOT_READY)
+				return false;
+
+			if ((acquireResult == VkResult::VK_SUBOPTIMAL_KHR) ||
+				(acquireResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
+			{
+				__needToUpdateSurfaceDependencies = true;
+				return false;
+			}
+
+			__imageAcquired = true;
+		}
+
+		return true;
 	}
 }

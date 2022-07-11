@@ -34,7 +34,18 @@ namespace HyperFast
 		[[nodiscard]]
 		std::shared_ptr<Mesh> createMesh() noexcept;
 
-		void submit() noexcept;
+		void enqueueSubmit(
+			const uint32_t waitSemaphoreInfoCount,
+			const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
+			const uint32_t commandBufferInfoCount,
+			const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
+			const uint32_t signalSemaphoreInfoCount,
+			const VkSemaphoreSubmitInfo *pSignalSemaphoreInfos) noexcept;
+
+		[[nodiscard]]
+		Vulkan::Fence &getCurrentSubmitFence() noexcept;
+
+		void submit();
 
 	private:
 		Infra::Logger &__logger;
@@ -57,9 +68,15 @@ namespace HyperFast
 		std::unique_ptr<Vulkan::Device> __pDevice;
 		std::unique_ptr<Vulkan::Queue> __pQueue;
 
+		std::vector<std::unique_ptr<Vulkan::Fence>> __submitFences;
+
 		std::unique_ptr<ScreenManager> __pScreenManager;
 		std::unique_ptr<MemoryManager> __pMemoryManager;
 		std::unique_ptr<BufferManager> __pBufferManager;
+
+		std::vector<VkSubmitInfo2> __submitInfoPlaceholders;
+		uint32_t __submitInfoCursor{};
+		size_t __currentSubmitFenceIdx{};
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
@@ -83,6 +100,12 @@ namespace HyperFast
 
 		void __createBufferManager() noexcept;
 		void __destroyBufferManager() noexcept;
+
+		[[nodiscard]]
+		VkSubmitInfo2 &__nextSubmitInfoPlaceholder() noexcept;
+
+		void __appendSubmitFence();
+		void __retrieveNextSubmitFenceIdx();
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

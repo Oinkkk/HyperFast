@@ -29,6 +29,7 @@ namespace HyperFast
 		__pickGraphicsQueueFamily();
 		__createDevice();
 		__makeQueue();
+		__appendSubmitFence();
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
@@ -41,6 +42,7 @@ namespace HyperFast
 		__destroyBufferManager();
 		__destroyMemoryManager();
 		__destroyScreenManager();
+		__submitFences.clear();
 		__pDevice = nullptr;
 
 #ifndef NDEBUG
@@ -80,9 +82,40 @@ namespace HyperFast
 		return std::make_shared<Mesh>(*__pDevice);
 	}
 
-	void RenderingEngine::submit() noexcept
+	void RenderingEngine::enqueueSubmit(
+		const uint32_t waitSemaphoreInfoCount,
+		const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
+		const uint32_t commandBufferInfoCount,
+		const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
+		const uint32_t signalSemaphoreInfoCount,
+		const VkSemaphoreSubmitInfo *pSignalSemaphoreInfos) noexcept
 	{
+		VkSubmitInfo2 &infoPlaceholder{ __nextSubmitInfoPlaceholder() };
+		infoPlaceholder.waitSemaphoreInfoCount = waitSemaphoreInfoCount;
+		infoPlaceholder.pWaitSemaphoreInfos = pWaitSemaphoreInfos;
+		infoPlaceholder.commandBufferInfoCount = commandBufferInfoCount;
+		infoPlaceholder.pCommandBufferInfos = pCommandBufferInfos;
+		infoPlaceholder.signalSemaphoreInfoCount = signalSemaphoreInfoCount;
+		infoPlaceholder.pSignalSemaphoreInfos = pSignalSemaphoreInfos;
+	}
 
+	Vulkan::Fence &RenderingEngine::getCurrentSubmitFence() noexcept
+	{
+		return *__submitFences[__currentSubmitFenceIdx];
+	}
+
+	void RenderingEngine::submit()
+	{
+		if (!__submitInfoCursor)
+			return;
+
+		Vulkan::Fence &submitFence{ getCurrentSubmitFence() };
+
+		__pQueue->vkQueueSubmit2(
+			__submitInfoCursor, __submitInfoPlaceholders.data(), submitFence.getHandle());
+		
+		__submitInfoCursor = 0U;
+		__retrieveNextSubmitFenceIdx();
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -360,7 +393,7 @@ namespace HyperFast
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
-			*__pInstance, *__pPhysicalDevice,
+			*this, *__pInstance, *__pPhysicalDevice,
 			__graphicsQueueFamilyIndex, *__pDevice, *__pQueue);
 	}
 
@@ -388,6 +421,60 @@ namespace HyperFast
 	void RenderingEngine::__destroyBufferManager() noexcept
 	{
 		__pBufferManager = nullptr;
+	}
+
+	VkSubmitInfo2 &RenderingEngine::__nextSubmitInfoPlaceholder() noexcept
+	{
+		if (__submitInfoPlaceholders.size() <= size_t(__submitInfoCursor))
+		{
+			VkSubmitInfo2 &newElement{ __submitInfoPlaceholders.emplace_back() };
+			newElement.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+		}
+
+		VkSubmitInfo2 &retVal{ __submitInfoPlaceholders[__submitInfoCursor] };
+		__submitInfoCursor++;
+
+		return retVal;
+	}
+
+	void RenderingEngine::__appendSubmitFence()
+	{
+		const VkFenceCreateInfo createInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+		};
+
+		__submitFences.emplace_back(
+			std::make_unique<Vulkan::Fence>(*__pDevice, createInfo));
+	}
+
+	void RenderingEngine::__retrieveNextSubmitFenceIdx()
+	{
+		const size_t numFences{ __submitFences.size() };
+		bool found{};
+
+		for (
+			size_t fenceIter = ((__currentSubmitFenceIdx + 1ULL) % numFences);
+			fenceIter != __currentSubmitFenceIdx;
+			fenceIter = ((fenceIter + 1ULL) % numFences))
+		{
+			const VkResult waitResult{ __submitFences[fenceIter]->wait(0ULL) };
+			if (waitResult == VkResult::VK_TIMEOUT)
+				continue;
+
+			__currentSubmitFenceIdx = fenceIter;
+			found = true;
+			break;
+		}
+
+		if (found)
+		{
+			getCurrentSubmitFence().reset();
+			return;
+		}
+
+		__currentSubmitFenceIdx = __submitFences.size();
+		__appendSubmitFence();
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

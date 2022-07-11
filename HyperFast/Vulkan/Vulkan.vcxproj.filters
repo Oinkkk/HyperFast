@@ -61,6 +61,12 @@
     <Filter Include="CommandBuffer">
       <UniqueIdentifier>{47664e01-c185-4c72-ba22-044d488e3cd1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DebugUtilsMessenger">
+      <UniqueIdentifier>{7c60043e-104c-4485-bbdb-fd18afac6d54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Surface">
+      <UniqueIdentifier>{5034ff35-2ff0-4979-9bc0-25905b189342}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">

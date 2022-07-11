@@ -11,7 +11,8 @@ namespace HyperFast
 		~Screen() noexcept = default;
 
 		void setDrawcall(Drawcall *const pDrawcall) noexcept;
-		void draw();
+		void render();
+		void present() noexcept;
 
 	private:
 		ScreenManager &__screenManager;

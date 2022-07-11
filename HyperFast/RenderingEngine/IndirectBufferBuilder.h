@@ -19,7 +19,7 @@ namespace HyperFast
 		constexpr bool isEmpty() const noexcept;
 
 		void validate();
-		void draw(Vulkan::CommandBuffer &commandBuffer) noexcept;
+		void render(Vulkan::CommandBuffer &commandBuffer) noexcept;
 
 		[[nodiscard]]
 		constexpr Infra::EventView<IndirectBufferBuilder &> &getIndirectBufferUpdateEvent() noexcept;

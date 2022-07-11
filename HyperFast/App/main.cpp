@@ -48,8 +48,12 @@ int main()
 				pBufferTestScene = std::make_unique<BufferTestScene>(*pRenderingEngine, *pScreen1, *pScreen2);
 
 			pBufferTestScene->process(deltaTime);
-			pScreen1->draw();
-			pScreen2->draw();
+			pScreen1->render();
+			pScreen2->render();
+
+			pRenderingEngine->submit();
+			pScreen1->present();
+			pScreen2->present();
 		})
 	};
 
