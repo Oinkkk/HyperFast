@@ -84,7 +84,7 @@ namespace HyperFast
 		}
 	}
 
-	void Drawcall::draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept
+	void Drawcall::draw(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
 		for (const auto &[pMesh, indirectBufferBuilder] : indirectBufferBuilderMap)

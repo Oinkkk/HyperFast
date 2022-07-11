@@ -46,13 +46,12 @@ namespace HyperFast
 		__needToUpdate = false;
 	}
 
-	void IndirectBufferBuilder::draw(VkCommandBuffer commandBuffer) noexcept
+	void IndirectBufferBuilder::draw(Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
 		if (!__pIndirectBuffer)
 			return;
 
-		__device.vkCmdDrawIndexedIndirectCount(
-			commandBuffer,
+		commandBuffer.vkCmdDrawIndexedIndirectCount(
 			__pIndirectBuffer->getHandle(), 0ULL,
 			__pCountBuffer->getHandle(), 0ULL,
 			__maxDrawCount, sizeof(VkDrawIndexedIndirectCommand));

@@ -127,7 +127,7 @@ namespace HyperFast
 
 		renderCompleteFence.reset();
 
-		const VkCommandBuffer mainCommandBuffer{ __mainCommandBuffers[__imageIdx] };
+		Vulkan::CommandBuffer &mainCommandBuffer{ *__mainCommandBuffers[__imageIdx] };
 		const VkSemaphore renderCompleteSemaphore
 		{
 			__renderCompleteSemaphores[__imageIdx]->getHandle()
@@ -143,7 +143,7 @@ namespace HyperFast
 		const VkCommandBufferSubmitInfo commandBufferInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
-			.commandBuffer = mainCommandBuffer
+			.commandBuffer = mainCommandBuffer.getHandle()
 		};
 
 		const VkSemaphoreSubmitInfo signalInfo
@@ -801,12 +801,12 @@ namespace HyperFast
 			.pClearValues = &clearColor
 		};
 
-		const VkCommandBuffer commandBuffer{ __mainCommandBufferManagers[imageIdx]->getNextBuffer() };
-		__mainCommandBuffers[imageIdx] = commandBuffer;
+		Vulkan::CommandBuffer &commandBuffer{ __mainCommandBufferManagers[imageIdx]->getNextBuffer() };
+		__mainCommandBuffers[imageIdx] = &commandBuffer;
 
-		__device.vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
-		__device.vkCmdBeginRenderPass(
-			commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
+		commandBuffer.vkCmdBeginRenderPass(
+			&renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
 		if (__pDrawcall)
 		{
@@ -814,14 +814,14 @@ namespace HyperFast
 			{
 				const VkPipeline pipeline{ __pipelineFactory.get(attribFlag) };
 
-				__device.vkCmdBindPipeline(
-					commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				commandBuffer.vkCmdBindPipeline(
+					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
 				__pDrawcall->draw(attribFlag, commandBuffer);
 			}
 		}
 
-		__device.vkCmdEndRenderPass(commandBuffer);
-		__device.vkEndCommandBuffer(commandBuffer);
+		commandBuffer.vkCmdEndRenderPass();
+		commandBuffer.vkEndCommandBuffer();
 	}
 }

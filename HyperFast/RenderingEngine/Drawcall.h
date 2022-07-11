@@ -3,6 +3,7 @@
 #include "IndirectBufferBuilder.h"
 #include <unordered_map>
 #include <unordered_set>
+#include "../Vulkan/CommandBuffer.h"
 
 namespace HyperFast
 {
@@ -23,7 +24,7 @@ namespace HyperFast
 		constexpr const std::vector<VertexAttributeFlag> &getAttributeFlags() const noexcept;
 
 		// TODO: secondary buffer recording¿∫ attribFlag ∫∞∑Œ
-		void draw(const VertexAttributeFlag attribFlag, VkCommandBuffer commandBuffer) noexcept;
+		void draw(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept;
 
 		[[nodiscard]]
 		constexpr Infra::EventView<Drawcall &> &getAttributeFlagsUpdateEvent() noexcept;

@@ -3,6 +3,7 @@
 #include "Buffer.h"
 #include "VertexAttribute.h"
 #include "../Infrastructure/Event.h"
+#include "../Vulkan/CommandBuffer.h"
 
 namespace HyperFast
 {
@@ -25,10 +26,11 @@ namespace HyperFast
 
 		[[nodiscard]]
 		constexpr VertexAttributeFlag getVertexAttributeFlag() const noexcept;
-		void bind(const VkCommandBuffer commandBuffer) const noexcept;
+		void bind(Vulkan::CommandBuffer &commandBuffer) const noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Mesh &, VertexAttributeFlag, VertexAttributeFlag> &getAttributeFlagChangeEvent() noexcept;
+		constexpr Infra::EventView<Mesh &, VertexAttributeFlag, VertexAttributeFlag> &
+			getAttributeFlagChangeEvent() noexcept;
 
 	private:
 		Vulkan::Device &__device;

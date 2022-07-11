@@ -55,7 +55,7 @@ namespace HyperFast
 
 			VkSurfaceKHR __surface{};
 			std::vector<CommandBufferManager *> __mainCommandBufferManagers;
-			std::vector<VkCommandBuffer> __mainCommandBuffers;
+			std::vector<Vulkan::CommandBuffer *> __mainCommandBuffers;
 
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;

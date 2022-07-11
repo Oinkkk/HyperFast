@@ -5,13 +5,14 @@ namespace HyperFast
 	CommandBufferManager::CommandBufferManager(
 		Vulkan::Device &device, const uint32_t queueFamilyIndex,
 		const size_t numMaxBuffers) noexcept :
-		__queueFamilyIndex{ queueFamilyIndex }, __numMaxBuffers{ numMaxBuffers }
+		__device{ device }, __queueFamilyIndex { queueFamilyIndex },
+		__numMaxBuffers{numMaxBuffers}
 	{
-		__createCommandPool(device);
+		__createCommandPool();
 		__allocateCommandBuffers();
 	}
 
-	VkCommandBuffer CommandBufferManager::getNextBuffer()
+	Vulkan::CommandBuffer &CommandBufferManager::getNextBuffer() noexcept
 	{
 		if (__cursor >= __numMaxBuffers)
 		{
@@ -19,13 +20,13 @@ namespace HyperFast
 			__cursor = 0ULL;
 		}
 
-		const VkCommandBuffer retVal{ __commandBuffers[__cursor] };
+		Vulkan::CommandBuffer &retVal{ *__commandBuffers[__cursor] };
 		__cursor++;
 
 		return retVal;
 	}
 
-	void CommandBufferManager::__createCommandPool(Vulkan::Device &device)
+	void CommandBufferManager::__createCommandPool()
 	{
 		const VkCommandPoolCreateInfo createInfo
 		{
@@ -33,21 +34,28 @@ namespace HyperFast
 			.queueFamilyIndex = __queueFamilyIndex
 		};
 
-		__pCommandPool = std::make_unique<Vulkan::CommandPool>(device, createInfo);
+		__pCommandPool = std::make_unique<Vulkan::CommandPool>(__device, createInfo);
 	}
 
 	void CommandBufferManager::__allocateCommandBuffers()
 	{
-		__commandBuffers.resize(__numMaxBuffers);
+		std::vector<VkCommandBuffer> handles;
+		handles.resize(__numMaxBuffers);
 
 		const VkResult result
 		{
 			__pCommandPool->vkAllocateCommandBuffers(
 				nullptr, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-				uint32_t(__numMaxBuffers), __commandBuffers.data())
+				uint32_t(__numMaxBuffers), handles.data())
 		};
 
 		if (result != VK_SUCCESS)
 			throw std::exception{ "Cannot allocate command buffers." };
+
+		for (const VkCommandBuffer handle : handles)
+		{
+			__commandBuffers.emplace_back(
+				std::make_unique<Vulkan::CommandBuffer>(__device, handle));
+		}
 	}
 }

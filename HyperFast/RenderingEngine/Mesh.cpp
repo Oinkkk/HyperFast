@@ -26,13 +26,13 @@ namespace HyperFast
 		__indexType = indexType;
 	}
 
-	void Mesh::bind(const VkCommandBuffer commandBuffer) const noexcept
+	void Mesh::bind(Vulkan::CommandBuffer &commandBuffer) const noexcept
 	{
-		__device.vkCmdBindVertexBuffers(
-			commandBuffer, 0U, VERTEX_ATTRIB_LOCATION_MAX, __handles, __offsets);
+		commandBuffer.vkCmdBindVertexBuffers(
+			0U, VERTEX_ATTRIB_LOCATION_MAX, __handles, __offsets);
 
-		__device.vkCmdBindIndexBuffer(
-			commandBuffer, __pIndexBuffer->getHandle(), 0ULL, __indexType);
+		commandBuffer.vkCmdBindIndexBuffer(
+			__pIndexBuffer->getHandle(), 0ULL, __indexType);
 	}
 
 	void Mesh::__setBuffer(

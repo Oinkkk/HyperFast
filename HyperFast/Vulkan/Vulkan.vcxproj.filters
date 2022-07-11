@@ -58,6 +58,9 @@
     <Filter Include="Memory">
       <UniqueIdentifier>{fa02d8eb-4105-4328-9f8f-b902baa6a1da}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CommandBuffer">
+      <UniqueIdentifier>{47664e01-c185-4c72-ba22-044d488e3cd1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -120,6 +123,9 @@
     <ClInclude Include="Memory.h">
       <Filter>Memory</Filter>
     </ClInclude>
+    <ClInclude Include="CommandBuffer.h">
+      <Filter>CommandBuffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -175,6 +181,9 @@
     </ClCompile>
     <ClCompile Include="Memory.cpp">
       <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandBuffer.cpp">
+      <Filter>CommandBuffer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
