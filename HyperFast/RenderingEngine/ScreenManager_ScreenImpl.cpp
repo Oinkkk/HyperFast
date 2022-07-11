@@ -98,31 +98,24 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__render() noexcept
 	{
-		Vulkan::Fence &imageAcquireFence{ *__imageAcquireFences[__frameCursor] };
+		Vulkan::Semaphore &imageAcquireSemaphore{ __getCurrentImageAcquireSemaphore() };
 
-		const bool validAcquire{ __acquireNextSwapchainImageIdx(imageAcquireFence) };
+		const bool validAcquire{ __acquireNextSwapchainImageIdx(imageAcquireSemaphore) };
 		if (!validAcquire)
 			return;
 
-		const VkResult waitResult{ imageAcquireFence.wait(0ULL) };
-		if (waitResult == VkResult::VK_TIMEOUT)
-			return;
-
-		imageAcquireFence.reset();
-		__advanceFrameCursor();
-
-		Vulkan::CommandBuffer &mainCommandBuffer{ *__mainCommandBuffers[__imageIdx] };
+		Vulkan::CommandBuffer &renderCommandBuffer{ *__renderCommandBuffers[__imageIdx] };
 		const VkSemaphore renderCompleteSemaphore
 		{
 			__renderCompleteSemaphores[__imageIdx]->getHandle()
 		};
 
-		// __submitWaitInfo.semaphore = imageAcquireFence;
-		__submitCommandBufferInfo.commandBuffer = mainCommandBuffer.getHandle();
+		 __submitWaitInfo.semaphore = imageAcquireSemaphore.getHandle();
+		__submitCommandBufferInfo.commandBuffer = renderCommandBuffer.getHandle();
 		__submitSignalInfo.semaphore = renderCompleteSemaphore;
 
 		__renderingEngine.enqueueSubmit(
-			0U, &__submitWaitInfo,
+			1U, &__submitWaitInfo,
 			1U, &__submitCommandBufferInfo,
 			1U, &__submitSignalInfo);
 
@@ -171,9 +164,9 @@ namespace HyperFast
 		__pFramebuffer = nullptr;
 		__pRenderPass = nullptr;
 		__renderCompleteSemaphores.clear();
-		__imageAcquireFences.clear();
+		__imageAcquireSemaphores.clear();
 		__swapChainImageViews.clear();
-		__destroyMainCommandBufferManagers();
+		__renderCommandBufferManagers.clear();
 		__pSwapchain = nullptr;
 		__destroySurface();
 	
@@ -310,10 +303,10 @@ namespace HyperFast
 				{
 					subflow.emplace([this, imageIdx = swapchainImageIter]
 					{
-						__createMainCommandBufferManager(imageIdx);
+						__createRenderCommandBufferManager(imageIdx);
 						__createSwapchainImageView(imageIdx);
-						__createSyncObject(imageIdx);
-						__recordMainCommand(imageIdx);
+						__createRenderSemaphores(imageIdx);
+						__recordRenderCommand(imageIdx);
 					});
 				}
 			})
@@ -357,7 +350,7 @@ namespace HyperFast
 				{
 					subflow.emplace([this, imageIdx = swapchainImageIter]
 					{
-						__recordMainCommand(imageIdx);
+						__recordRenderCommand(imageIdx);
 					});
 				}
 			}).succeed(t1);
@@ -385,7 +378,7 @@ namespace HyperFast
 				{
 					subflow.emplace([this, imageIdx = swapchainImageIter]
 					{
-						__recordMainCommand(imageIdx);
+						__recordRenderCommand(imageIdx);
 					});
 				}
 			});
@@ -523,26 +516,20 @@ namespace HyperFast
 	{
 		const size_t numSwapchainImages{ __swapChainImages.size() };
 
-		__mainCommandBufferManagers.resize(numSwapchainImages, nullptr);
-		__mainCommandBuffers.resize(numSwapchainImages);
+		__renderCommandBufferManagers.resize(numSwapchainImages);
+		__renderCommandBuffers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
-		__imageAcquireFences.resize(numSwapchainImages);
+		__imageAcquireSemaphores.resize(numSwapchainImages);
 		__renderCompleteSemaphores.resize(numSwapchainImages);
 	}
 
-	void ScreenManager::ScreenImpl::__createMainCommandBufferManager(const size_t imageIdx)
+	void ScreenManager::ScreenImpl::__createRenderCommandBufferManager(const size_t imageIdx)
 	{
-		CommandBufferManager *&pManager{ __mainCommandBufferManagers[imageIdx] };
+		auto &pManager{ __renderCommandBufferManagers[imageIdx] };
 		if (pManager)
 			return;
 
-		pManager = new CommandBufferManager{ __device, __graphicsQueueFamilyIndex, 8ULL };
-	}
-
-	void ScreenManager::ScreenImpl::__destroyMainCommandBufferManagers() noexcept
-	{
-		for (CommandBufferManager *const pManager : __mainCommandBufferManagers)
-			delete pManager;
+		pManager = std::make_unique<CommandBufferManager>(__device, __graphicsQueueFamilyIndex, 8ULL);
 	}
 
 	void ScreenManager::ScreenImpl::__createSwapchainImageView(const size_t imageIdx)
@@ -678,26 +665,21 @@ namespace HyperFast
 		__pFramebuffer = std::make_unique<Vulkan::Framebuffer>(__device, createInfo);
 	}
 
-	void ScreenManager::ScreenImpl::__createSyncObject(const size_t imageIdx)
+	void ScreenManager::ScreenImpl::__createRenderSemaphores(const size_t imageIdx)
 	{
-		if (__imageAcquireFences[imageIdx])
+		if (__imageAcquireSemaphores[imageIdx])
 			return;
 
-		const VkFenceCreateInfo fenceCreateInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
-		};
-
-		const VkSemaphoreCreateInfo semaphoreCreateInfo
+		const VkSemaphoreCreateInfo createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
 		};
 
-		__imageAcquireFences[imageIdx] =
-			std::make_unique<Vulkan::Fence>(__device, fenceCreateInfo);
+		__imageAcquireSemaphores[imageIdx] =
+			std::make_unique<Vulkan::Semaphore>(__device, createInfo);
 
 		__renderCompleteSemaphores[imageIdx] =
-			std::make_unique<Vulkan::Semaphore>(__device, semaphoreCreateInfo);
+			std::make_unique<Vulkan::Semaphore>(__device, createInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
@@ -734,7 +716,7 @@ namespace HyperFast
 		__pipelineFactory.reset();
 	}
 
-	void ScreenManager::ScreenImpl::__recordMainCommand(const size_t imageIdx) noexcept
+	void ScreenManager::ScreenImpl::__recordRenderCommand(const size_t imageIdx) noexcept
 	{
 		static const VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
@@ -768,8 +750,8 @@ namespace HyperFast
 			.pClearValues = &clearColor
 		};
 
-		Vulkan::CommandBuffer &commandBuffer{ __mainCommandBufferManagers[imageIdx]->getNextBuffer() };
-		__mainCommandBuffers[imageIdx] = &commandBuffer;
+		Vulkan::CommandBuffer &commandBuffer{ __renderCommandBufferManagers[imageIdx]->getNextBuffer() };
+		__renderCommandBuffers[imageIdx] = &commandBuffer;
 
 		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
 		commandBuffer.vkCmdBeginRenderPass(
@@ -801,29 +783,36 @@ namespace HyperFast
 		return validSize;
 	}
 
-	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Fence &fence) noexcept
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentImageAcquireSemaphore() noexcept
 	{
-		if (!__imageAcquired)
+		return *__imageAcquireSemaphores[__frameCursor];
+	}
+
+	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept
+	{
+		if (__imageAcquired)
+			return true;
+
+		const VkResult acquireResult
 		{
-			const VkResult acquireResult
-			{
-				__pSwapchain->vkAcquireNextImageKHR(
-					0ULL, VK_NULL_HANDLE, fence.getHandle(), &__imageIdx)
-			};
+			__pSwapchain->vkAcquireNextImageKHR(
+				0ULL, semaphore.getHandle(), VK_NULL_HANDLE, &__imageIdx)
+		};
 
-			if (acquireResult == VkResult::VK_NOT_READY)
-				return false;
-
-			if ((acquireResult == VkResult::VK_SUBOPTIMAL_KHR) ||
-				(acquireResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
-			{
-				__needToUpdateSurfaceDependencies = true;
-				return false;
-			}
-
+		const bool valid{ acquireResult == VkResult::VK_SUCCESS };
+		if (valid)
+		{
 			__imageAcquired = true;
+			__advanceFrameCursor();
+			return true;
 		}
 
-		return true;
+		if ((acquireResult == VkResult::VK_SUBOPTIMAL_KHR) ||
+			(acquireResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
+		{
+			__needToUpdateSurfaceDependencies = true;
+		}
+
+		return false;
 	}
 }

@@ -42,9 +42,6 @@ namespace HyperFast
 			const uint32_t signalSemaphoreInfoCount,
 			const VkSemaphoreSubmitInfo *pSignalSemaphoreInfos) noexcept;
 
-		[[nodiscard]]
-		Vulkan::Fence &getCurrentSubmitFence() noexcept;
-
 		void submit();
 
 	private:
@@ -103,6 +100,9 @@ namespace HyperFast
 
 		[[nodiscard]]
 		VkSubmitInfo2 &__nextSubmitInfoPlaceholder() noexcept;
+
+		[[nodiscard]]
+		Vulkan::Fence &__getCurrentSubmitFence() noexcept;
 
 		void __appendSubmitFence();
 		void __retrieveNextSubmitFenceIdx();

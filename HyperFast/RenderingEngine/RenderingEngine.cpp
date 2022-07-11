@@ -99,17 +99,12 @@ namespace HyperFast
 		infoPlaceholder.pSignalSemaphoreInfos = pSignalSemaphoreInfos;
 	}
 
-	Vulkan::Fence &RenderingEngine::getCurrentSubmitFence() noexcept
-	{
-		return *__submitFences[__currentSubmitFenceIdx];
-	}
-
 	void RenderingEngine::submit()
 	{
 		if (!__submitInfoCursor)
 			return;
 
-		Vulkan::Fence &submitFence{ getCurrentSubmitFence() };
+		Vulkan::Fence &submitFence{ __getCurrentSubmitFence() };
 
 		__pQueue->vkQueueSubmit2(
 			__submitInfoCursor, __submitInfoPlaceholders.data(), submitFence.getHandle());
@@ -437,6 +432,11 @@ namespace HyperFast
 		return retVal;
 	}
 
+	Vulkan::Fence &RenderingEngine::__getCurrentSubmitFence() noexcept
+	{
+		return *__submitFences[__currentSubmitFenceIdx];
+	}
+
 	void RenderingEngine::__appendSubmitFence()
 	{
 		const VkFenceCreateInfo createInfo
@@ -469,7 +469,7 @@ namespace HyperFast
 
 		if (found)
 		{
-			getCurrentSubmitFence().reset();
+			__getCurrentSubmitFence().reset();
 			return;
 		}
 

@@ -60,8 +60,8 @@ namespace HyperFast
 			PipelineFactory __pipelineFactory;
 
 			VkSurfaceKHR __surface{};
-			std::vector<CommandBufferManager *> __mainCommandBufferManagers;
-			std::vector<Vulkan::CommandBuffer *> __mainCommandBuffers;
+			std::vector<std::unique_ptr<CommandBufferManager>> __renderCommandBufferManagers;
+			std::vector<Vulkan::CommandBuffer *> __renderCommandBuffers;
 
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
 			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
@@ -81,7 +81,7 @@ namespace HyperFast
 			VkCommandBufferSubmitInfo __submitCommandBufferInfo{};
 			VkSemaphoreSubmitInfo __submitSignalInfo{};
 
-			std::vector<std::unique_ptr<Vulkan::Fence>> __imageAcquireFences;
+			std::vector<std::unique_ptr<Vulkan::Semaphore>> __imageAcquireSemaphores;
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompleteSemaphores;
 
 			size_t __frameCursor{};
@@ -118,17 +118,16 @@ namespace HyperFast
 			void __createSwapchain(Vulkan::Swapchain *const pOldSwapchain);
 			void __retrieveSwapchainImages() noexcept;
 			void __reserveSwapchainImageDependencyPlaceholers() noexcept;
-			void __createMainCommandBufferManager(const size_t imageIdx);
-			void __destroyMainCommandBufferManagers() noexcept;
+			void __createRenderCommandBufferManager(const size_t imageIdx);
 			void __createSwapchainImageView(const size_t imageIdx);
 			void __createRenderPasses();
 			void __createFramebuffer();
-			void __createSyncObject(const size_t imageIdx);
+			void __createRenderSemaphores(const size_t imageIdx);
 
 			void __populatePipelineBuildParam() noexcept;
 			void __buildPipelines(tf::Subflow &subflow);
 			void __resetPipelines() noexcept;
-			void __recordMainCommand(const size_t imageIdx) noexcept;
+			void __recordRenderCommand(const size_t imageIdx) noexcept;
 
 			[[nodiscard]]
 			bool __isValid() const noexcept;
@@ -137,7 +136,10 @@ namespace HyperFast
 			constexpr void __advanceFrameCursor() noexcept;
 
 			[[nodiscard]]
-			bool __acquireNextSwapchainImageIdx(Vulkan::Fence &fence) noexcept;
+			Vulkan::Semaphore &__getCurrentImageAcquireSemaphore() noexcept;
+
+			[[nodiscard]]
+			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;
 		};
 
 		ScreenManager(
@@ -179,7 +181,7 @@ namespace HyperFast
 
 	constexpr void ScreenManager::ScreenImpl::__advanceFrameCursor() noexcept
 	{
-		const size_t numCommandBuffers{ __mainCommandBuffers.size() };
+		const size_t numCommandBuffers{ __renderCommandBuffers.size() };
 		__frameCursor = ((__frameCursor + 1ULL) % numCommandBuffers);
 	}
 }
