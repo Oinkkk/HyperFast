@@ -55,6 +55,9 @@
     <Filter Include="Buffer">
       <UniqueIdentifier>{37cd1f77-1371-4f70-8dc1-c52eb4b16a4d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{fa02d8eb-4105-4328-9f8f-b902baa6a1da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -114,6 +117,9 @@
     <ClInclude Include="Buffer.h">
       <Filter>Buffer</Filter>
     </ClInclude>
+    <ClInclude Include="Memory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -166,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="Buffer.cpp">
       <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory.cpp">
+      <Filter>Memory</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

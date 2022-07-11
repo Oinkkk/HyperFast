@@ -5,7 +5,7 @@ namespace Vulkan
 	void PhysicalDevice::vkGetPhysicalDeviceProperties2(
 		VkPhysicalDeviceProperties2 *const pProperties) const noexcept
 	{
-		__instance.vkGetPhysicalDeviceProperties2(getHandle(), pProperties);
+		__instance.vkGetPhysicalDeviceProperties2(_getConstHandle(), pProperties);
 	}
 
 	void PhysicalDevice::vkGetPhysicalDeviceQueueFamilyProperties(
@@ -13,19 +13,20 @@ namespace Vulkan
 		VkQueueFamilyProperties *const pQueueFamilyProperties) const noexcept
 	{
 		__instance.vkGetPhysicalDeviceQueueFamilyProperties(
-			getHandle(), pQueueFamilyPropertyCount, pQueueFamilyProperties);
+			_getConstHandle(), pQueueFamilyPropertyCount, pQueueFamilyProperties);
 	}
 
 	void PhysicalDevice::vkGetPhysicalDeviceMemoryProperties2(
 		VkPhysicalDeviceMemoryProperties2 *const pMemoryProperties) const noexcept
 	{
-		__instance.vkGetPhysicalDeviceMemoryProperties2(getHandle(), pMemoryProperties);
+		__instance.vkGetPhysicalDeviceMemoryProperties2(_getConstHandle(), pMemoryProperties);
 	}
 
 	VkBool32 PhysicalDevice::vkGetPhysicalDeviceWin32PresentationSupportKHR(
 		const uint32_t queueFamilyIndex) const noexcept
 	{
-		return __instance.vkGetPhysicalDeviceWin32PresentationSupportKHR(getHandle(), queueFamilyIndex);
+		return __instance.vkGetPhysicalDeviceWin32PresentationSupportKHR(
+			_getConstHandle(), queueFamilyIndex);
 	}
 
 	VkResult PhysicalDevice::vkGetPhysicalDeviceSurfaceSupportKHR(
@@ -33,7 +34,7 @@ namespace Vulkan
 		VkBool32 *const pSupported) const noexcept
 	{
 		return __instance.vkGetPhysicalDeviceSurfaceSupportKHR(
-			getHandle(), queueFamilyIndex, surface, pSupported);
+			_getConstHandle(), queueFamilyIndex, surface, pSupported);
 	}
 
 	VkResult PhysicalDevice::vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
@@ -41,7 +42,7 @@ namespace Vulkan
 		VkSurfaceCapabilitiesKHR *const pSurfaceCapabilities) const noexcept
 	{
 		return __instance.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-			getHandle(), surface, pSurfaceCapabilities);
+			_getConstHandle(), surface, pSurfaceCapabilities);
 	}
 
 	VkResult PhysicalDevice::vkGetPhysicalDeviceSurfaceFormatsKHR(
@@ -49,7 +50,7 @@ namespace Vulkan
 		VkSurfaceFormatKHR *const pSurfaceFormats) const noexcept
 	{
 		return __instance.vkGetPhysicalDeviceSurfaceFormatsKHR(
-			getHandle(), surface, pSurfaceFormatCount, pSurfaceFormats);
+			_getConstHandle(), surface, pSurfaceFormatCount, pSurfaceFormats);
 	}
 
 	VkResult PhysicalDevice::vkGetPhysicalDeviceSurfacePresentModesKHR(
@@ -57,7 +58,7 @@ namespace Vulkan
 		VkPresentModeKHR *const pPresentModes) const noexcept
 	{
 		return __instance.vkGetPhysicalDeviceSurfacePresentModesKHR(
-			getHandle(), surface, pPresentModeCount, pPresentModes);
+			_getConstHandle(), surface, pPresentModeCount, pPresentModes);
 	}
 
 	VkResult PhysicalDevice::vkCreateDevice(

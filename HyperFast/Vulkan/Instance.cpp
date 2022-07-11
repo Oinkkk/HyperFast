@@ -30,7 +30,8 @@ namespace Vulkan
 	VkResult Instance::vkEnumeratePhysicalDevices(
 		uint32_t *const pPhysicalDeviceCount, VkPhysicalDevice *const pPhysicalDevices) const noexcept
 	{
-		return __proc.vkEnumeratePhysicalDevices(getHandle(), pPhysicalDeviceCount, pPhysicalDevices);
+		return __proc.vkEnumeratePhysicalDevices(
+			_getConstHandle(), pPhysicalDeviceCount, pPhysicalDevices);
 	}
 
 	void Instance::vkGetPhysicalDeviceProperties(

@@ -11,7 +11,7 @@ namespace HyperFast
 		__manager.destroy(__pImpl);
 	}
 
-	VkBuffer Buffer::getHandle() const noexcept
+	VkBuffer Buffer::getHandle() noexcept
 	{
 		return __pImpl->getHandle();
 	}

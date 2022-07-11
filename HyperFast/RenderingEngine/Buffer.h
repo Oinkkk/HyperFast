@@ -17,7 +17,7 @@ namespace HyperFast
 		constexpr VkBufferUsageFlags getUsage() const noexcept;
 
 		[[nodiscard]]
-		VkBuffer getHandle() const noexcept;
+		VkBuffer getHandle() noexcept;
 
 		[[nodiscard]]
 		constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;

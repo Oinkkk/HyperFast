@@ -12,6 +12,11 @@ namespace HyperFast
 		__bank.free(__offset);
 	}
 
+	VkDeviceMemory MemoryManager::MemoryImpl::getBank() noexcept
+	{
+		return __bank.getHandle();
+	}
+
 	void *MemoryManager::MemoryImpl::map()
 	{
 		return (reinterpret_cast<std::byte *>(__bank.map()) + __offset);

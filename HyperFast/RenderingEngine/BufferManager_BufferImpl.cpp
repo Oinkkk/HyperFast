@@ -11,7 +11,7 @@ namespace HyperFast
 		__queryMemoryRequirements();
 	}
 
-	VkBuffer BufferManager::BufferImpl::getHandle() const noexcept
+	VkBuffer BufferManager::BufferImpl::getHandle() noexcept
 	{
 		return __pBuffer->getHandle();
 	}

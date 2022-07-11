@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../Vulkan/Device.h"
 #include <unordered_map>
 #include <memory>
 #include <optional>
 #include <map>
+#include "../Vulkan/Memory.h"
 
 namespace HyperFast
 {
@@ -30,7 +30,7 @@ namespace HyperFast
 			~MemoryBank() noexcept;
 
 			[[nodiscard]]
-			constexpr VkDeviceMemory getHandle() const noexcept;
+			VkDeviceMemory getHandle() noexcept;
 
 			[[nodiscard]]
 			std::optional<MemorySegment> findSegment(
@@ -49,13 +49,12 @@ namespace HyperFast
 			const uint32_t __memoryTypeIndex;
 			const VkDeviceSize __size;
 
-			VkDeviceMemory __handle{};
+			std::unique_ptr<Vulkan::Memory> __pBank{};
 			std::map<VkDeviceAddress, VkDeviceSize> __segmentMap;
 
 			void *__mapped{};
 
 			void __allocateBank();
-			void __freeBank() noexcept;
 			void __unmap() noexcept;
 		};
 
@@ -66,7 +65,7 @@ namespace HyperFast
 			~MemoryImpl() noexcept;
 
 			[[nodiscard]]
-			constexpr VkDeviceMemory getBank() const noexcept;
+			VkDeviceMemory getBank() noexcept;
 
 			[[nodiscard]]
 			constexpr VkDeviceSize getSize() const noexcept;
@@ -127,11 +126,6 @@ namespace HyperFast
 		__deviceMemBudget.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT;
 	}
 
-	constexpr VkDeviceMemory MemoryManager::MemoryImpl::getBank() const noexcept
-	{
-		return __bank.getHandle();
-	}
-
 	constexpr VkDeviceSize MemoryManager::MemoryImpl::getSize() const noexcept
 	{
 		return __size;
@@ -140,10 +134,5 @@ namespace HyperFast
 	constexpr VkDeviceAddress MemoryManager::MemoryImpl::getOffset() const noexcept
 	{
 		return __offset;
-	}
-
-	constexpr VkDeviceMemory MemoryManager::MemoryBank::getHandle() const noexcept
-	{
-		return __handle;
 	}
 }

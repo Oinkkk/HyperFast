@@ -13,7 +13,11 @@ namespace HyperFast
 	MemoryManager::MemoryBank::~MemoryBank() noexcept
 	{
 		__unmap();
-		__freeBank();
+	}
+
+	VkDeviceMemory MemoryManager::MemoryBank::getHandle() noexcept
+	{
+		return __pBank->getHandle();
 	}
 
 	std::optional<MemoryManager::MemoryBank::MemorySegment> MemoryManager::MemoryBank::findSegment(
@@ -60,7 +64,7 @@ namespace HyperFast
 		if (!__mapped)
 		{
 			// there is no requirement that memory be unmapped before it can be used
-			__device.vkMapMemory(__handle, 0ULL, VK_WHOLE_SIZE, 0U, &__mapped);
+			__pBank->vkMapMemory(0ULL, VK_WHOLE_SIZE, 0U, &__mapped);
 			if (!__mapped)
 				throw std::exception{ "Cannot map a memory." };
 		}
@@ -77,14 +81,7 @@ namespace HyperFast
 			.memoryTypeIndex = __memoryTypeIndex
 		};
 
-		__device.vkAllocateMemory(&allocInfo, nullptr, &__handle);
-		if (!__handle)
-			throw std::exception{ "Cannot create a VkDeviceMemory." };
-	}
-
-	void MemoryManager::MemoryBank::__freeBank() noexcept
-	{
-		__device.vkFreeMemory(__handle, nullptr);
+		__pBank = std::make_unique<Vulkan::Memory>(__device, allocInfo);
 	}
 
 	void MemoryManager::MemoryBank::__unmap() noexcept
@@ -92,6 +89,6 @@ namespace HyperFast
 		if (!__mapped)
 			return;
 
-		__device.vkUnmapMemory(__handle);
+		__pBank->vkUnmapMemory();
 	}
 }

@@ -14,6 +14,11 @@ namespace HyperFast
 		__manager.destroy(__pImpl);
 	}
 
+	VkDeviceMemory Memory::getBank() const noexcept
+	{
+		return __pImpl->getBank();
+	}
+
 	void *Memory::map()
 	{
 		return __pImpl->map();

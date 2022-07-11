@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Device.h" />
+    <ClInclude Include="Memory.h" />
     <ClInclude Include="Fence.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Semaphore.h" />
@@ -33,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Device.cpp" />
+    <ClCompile Include="Memory.cpp" />
     <ClCompile Include="Fence.cpp" />
     <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="Semaphore.cpp" />

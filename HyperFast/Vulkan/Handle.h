@@ -11,7 +11,11 @@ namespace Vulkan
 		constexpr Handle(const $Type handle) noexcept;
 
 		[[nodiscard]]
-		constexpr const $Type &getHandle() const noexcept;
+		constexpr const $Type &getHandle() noexcept;
+
+	protected:
+		[[nodiscard]]
+		constexpr const $Type &_getConstHandle() const noexcept;
 
 	private:
 		const $Type __handle;
@@ -23,7 +27,13 @@ namespace Vulkan
 	{}
 
 	template <typename $Type>
-	constexpr const $Type &Handle<$Type>::getHandle() const noexcept
+	constexpr const $Type &Handle<$Type>::getHandle() noexcept
+	{
+		return __handle;
+	}
+
+	template <typename $Type>
+	constexpr const $Type &Handle<$Type>::_getConstHandle() const noexcept
 	{
 		return __handle;
 	}
