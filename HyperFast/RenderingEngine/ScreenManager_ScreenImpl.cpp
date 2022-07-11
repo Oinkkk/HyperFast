@@ -162,7 +162,7 @@ namespace HyperFast
 		__swapChainImageViews.clear();
 		__renderCommandBufferManagers.clear();
 		__pSwapchain = nullptr;
-		__destroySurface();
+		__pSurface = nullptr;
 	
 		__destroyed = true;
 	}
@@ -219,14 +219,7 @@ namespace HyperFast
 			.hwnd = __window.getHandle()
 		};
 
-		__instance.vkCreateWin32SurfaceKHR(&createInfo, nullptr, &__surface);
-		if (!__surface)
-			throw std::exception{ "Cannot create a surface." };
-	}
-
-	void ScreenManager::ScreenImpl::__destroySurface() noexcept
-	{
-		__instance.vkDestroySurfaceKHR(__surface, nullptr);
+		__pSurface = std::make_unique<Vulkan::Surface>(__instance, createInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
@@ -386,7 +379,7 @@ namespace HyperFast
 	{
 		VkBool32 surfaceSupported{};
 		__physicalDevice.vkGetPhysicalDeviceSurfaceSupportKHR(
-			__graphicsQueueFamilyIndex, __surface, &surfaceSupported);
+			__graphicsQueueFamilyIndex, __pSurface->getHandle(), &surfaceSupported);
 
 		if (!surfaceSupported)
 			throw std::exception{ "The physical device doesn't support the surface." };
@@ -394,29 +387,30 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__querySurfaceCapabilities() noexcept
 	{
-		__physicalDevice.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(__surface, &__surfaceCapabilities);
+		__physicalDevice.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+			__pSurface->getHandle(), &__surfaceCapabilities);
 	}
 
 	void ScreenManager::ScreenImpl::__querySupportedSurfaceFormats() noexcept
 	{
 		uint32_t numFormats{};
 		__physicalDevice.vkGetPhysicalDeviceSurfaceFormatsKHR(
-			__surface, &numFormats, nullptr);
+			__pSurface->getHandle(), &numFormats, nullptr);
 
 		__supportedSurfaceFormats.resize(numFormats);
 		__physicalDevice.vkGetPhysicalDeviceSurfaceFormatsKHR(
-			__surface, &numFormats, __supportedSurfaceFormats.data());
+			__pSurface->getHandle(), &numFormats, __supportedSurfaceFormats.data());
 	}
 
 	void ScreenManager::ScreenImpl::__querySupportedSurfacePresentModes() noexcept
 	{
 		uint32_t numModes{};
 		__physicalDevice.vkGetPhysicalDeviceSurfacePresentModesKHR(
-			__surface, &numModes, nullptr);
+			__pSurface->getHandle(), &numModes, nullptr);
 
 		__supportedSurfacePresentModes.resize(numModes);
 		__physicalDevice.vkGetPhysicalDeviceSurfacePresentModesKHR(
-			__surface, &numModes, __supportedSurfacePresentModes.data());
+			__pSurface->getHandle(), &numModes, __supportedSurfacePresentModes.data());
 	}
 
 	void ScreenManager::ScreenImpl::__createSwapchain(Vulkan::Swapchain *const pOldSwapchain)
@@ -461,6 +455,7 @@ namespace HyperFast
 		VkCompositeAlphaFlagBitsKHR compositeAlpha{};
 		if (__surfaceCapabilities.supportedCompositeAlpha & VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
 			compositeAlpha = VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		
 		else if (__surfaceCapabilities.supportedCompositeAlpha & VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR)
 			compositeAlpha = VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
 
@@ -477,7 +472,7 @@ namespace HyperFast
 		const VkSwapchainCreateInfoKHR createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-			.surface = __surface,
+			.surface = __pSurface->getHandle(),
 			.minImageCount = numDesiredImages,
 			.imageFormat = pDesiredFormat->format,
 			.imageColorSpace = pDesiredFormat->colorSpace,

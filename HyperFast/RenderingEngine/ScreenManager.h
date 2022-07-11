@@ -13,6 +13,7 @@
 #include "../Vulkan/Framebuffer.h"
 #include "../Vulkan/Semaphore.h"
 #include "../Vulkan/Fence.h"
+#include "../Vulkan/Surface.h"
 
 namespace HyperFast
 {
@@ -59,7 +60,7 @@ namespace HyperFast
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			PipelineFactory __pipelineFactory;
 
-			VkSurfaceKHR __surface{};
+			std::unique_ptr<Vulkan::Surface> __pSurface;
 			std::vector<std::unique_ptr<CommandBufferManager>> __renderCommandBufferManagers;
 			std::vector<Vulkan::CommandBuffer *> __renderCommandBuffers;
 
@@ -104,7 +105,6 @@ namespace HyperFast
 
 			void __initListeners() noexcept;
 			void __createSurface();
-			void __destroySurface() noexcept;
 			constexpr void __initSubmitInfo() noexcept;
 
 			void __updateSurfaceDependencies();

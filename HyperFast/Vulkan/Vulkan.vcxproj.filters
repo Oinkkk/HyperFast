@@ -135,6 +135,9 @@
     <ClInclude Include="DebugUtilsMessenger.h">
       <Filter>DebugUtilsMessenger</Filter>
     </ClInclude>
+    <ClInclude Include="Surface.h">
+      <Filter>Surface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -196,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="DebugUtilsMessenger.cpp">
       <Filter>DebugUtilsMessenger</Filter>
+    </ClCompile>
+    <ClCompile Include="Surface.cpp">
+      <Filter>Surface</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
