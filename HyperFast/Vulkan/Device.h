@@ -60,10 +60,13 @@ namespace Vulkan
 		VkResult vkGetSwapchainImagesKHR(
 			const VkSwapchainKHR swapchain, uint32_t *const pSwapchainImageCount,
 			VkImage *const pSwapchainImages) noexcept;
-		
+
 		VkResult vkAcquireNextImageKHR(
 			const VkSwapchainKHR swapchain, const uint64_t timeout,
 			const VkSemaphore semaphore, const VkFence fence, uint32_t *const pImageIndex) noexcept;
+
+		VkResult vkAcquireNextImage2KHR(
+			const VkAcquireNextImageInfoKHR *const pAcquireInfo, uint32_t *const pImageIndex) noexcept;
 
 		// ImageView
 		VkResult vkCreateImageView(
@@ -129,6 +132,15 @@ namespace Vulkan
 
 		void vkDestroySemaphore(
 			const VkSemaphore semaphore, const VkAllocationCallbacks *const pAllocator) noexcept;
+
+		VkResult vkSignalSemaphore(
+			const VkSemaphoreSignalInfo *const pSignalInfo) noexcept;
+
+		VkResult vkWaitSemaphores(
+			const VkSemaphoreWaitInfo *const pWaitInfo, const uint64_t timeout) noexcept;
+
+		VkResult vkGetSemaphoreCounterValue(
+			const VkSemaphore semaphore, uint64_t *const pValue) noexcept;
 
 		// Fence
 		VkResult vkCreateFence(

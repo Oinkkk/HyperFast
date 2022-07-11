@@ -80,6 +80,11 @@ namespace HyperFast
 		return std::make_shared<Mesh>(*__pDevice);
 	}
 
+	void RenderingEngine::submit() noexcept
+	{
+
+	}
+
 	void RenderingEngine::__getInstanceVersion() noexcept
 	{
 		const Vulkan::GlobalProcedure &globalProcedure
@@ -297,7 +302,8 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
 			.pNext = &device13Features,
 			.drawIndirectCount = VK_TRUE,
-			.imagelessFramebuffer = VK_TRUE
+			.imagelessFramebuffer = VK_TRUE,
+			.timelineSemaphore = VK_TRUE
 		};
 
 		VkPhysicalDeviceVulkan11Features device11Features
@@ -306,13 +312,17 @@ namespace HyperFast
 			.pNext = &device12Features
 		};
 
+		VkPhysicalDeviceFeatures device10Features
+		{
+			.multiDrawIndirect = VK_TRUE
+		};
+
 		VkPhysicalDeviceFeatures2 deviceFeatures2
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 			.pNext = &device11Features,
+			.features = device10Features
 		};
-
-		deviceFeatures2.features.multiDrawIndirect = VK_TRUE;
 
 		pNext = &deviceFeatures2;
 

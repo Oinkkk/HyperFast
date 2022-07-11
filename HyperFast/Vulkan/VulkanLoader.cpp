@@ -204,6 +204,10 @@ namespace Vulkan
 			reinterpret_cast<PFN_vkAcquireNextImageKHR>(
 				vkGetDeviceProcAddr(device, "vkAcquireNextImageKHR"));
 
+		retVal.vkAcquireNextImage2KHR =
+			reinterpret_cast<PFN_vkAcquireNextImage2KHR>(
+				vkGetDeviceProcAddr(device, "vkAcquireNextImage2KHR"));
+
 		retVal.vkCreateImageView =
 			reinterpret_cast<PFN_vkCreateImageView>(
 				vkGetDeviceProcAddr(device, "vkCreateImageView"));
@@ -271,6 +275,18 @@ namespace Vulkan
 		retVal.vkDestroySemaphore =
 			reinterpret_cast<PFN_vkDestroySemaphore>(
 				vkGetDeviceProcAddr(device, "vkDestroySemaphore"));
+
+		retVal.vkSignalSemaphore =
+			reinterpret_cast<PFN_vkSignalSemaphore>(
+				vkGetDeviceProcAddr(device, "vkSignalSemaphore"));
+
+		retVal.vkWaitSemaphores =
+			reinterpret_cast<PFN_vkWaitSemaphores>(
+				vkGetDeviceProcAddr(device, "vkWaitSemaphores"));
+
+		retVal.vkGetSemaphoreCounterValue =
+			reinterpret_cast<PFN_vkGetSemaphoreCounterValue>(
+				vkGetDeviceProcAddr(device, "vkGetSemaphoreCounterValue"));
 
 		retVal.vkCreateFence =
 			reinterpret_cast<PFN_vkCreateFence>(

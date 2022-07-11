@@ -86,7 +86,7 @@ namespace HyperFast
 			bool __destroyed{};
 
 			void __update();
-			bool __draw();
+			bool __draw() noexcept;
 			void __destroy() noexcept;
 
 			void __initListeners() noexcept;

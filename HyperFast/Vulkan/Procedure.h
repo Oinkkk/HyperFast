@@ -58,6 +58,7 @@ namespace Vulkan
 		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{};
 		PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR{};
 		PFN_vkAcquireNextImageKHR vkAcquireNextImageKHR{};
+		PFN_vkAcquireNextImage2KHR vkAcquireNextImage2KHR{};
 		PFN_vkCreateImageView vkCreateImageView{};
 		PFN_vkDestroyImageView vkDestroyImageView{};
 		PFN_vkCreateFramebuffer vkCreateFramebuffer{};
@@ -75,6 +76,9 @@ namespace Vulkan
 		PFN_vkDestroyPipeline vkDestroyPipeline{};
 		PFN_vkCreateSemaphore vkCreateSemaphore{};
 		PFN_vkDestroySemaphore vkDestroySemaphore{};
+		PFN_vkSignalSemaphore vkSignalSemaphore{};
+		PFN_vkWaitSemaphores vkWaitSemaphores{};
+		PFN_vkGetSemaphoreCounterValue vkGetSemaphoreCounterValue{};
 		PFN_vkCreateFence vkCreateFence{};
 		PFN_vkDestroyFence vkDestroyFence{};
 		PFN_vkWaitForFences vkWaitForFences{};

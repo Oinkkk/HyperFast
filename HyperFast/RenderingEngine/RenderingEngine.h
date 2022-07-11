@@ -34,6 +34,8 @@ namespace HyperFast
 		[[nodiscard]]
 		std::shared_ptr<Mesh> createMesh() noexcept;
 
+		void submit() noexcept;
+
 	private:
 		Infra::Logger &__logger;
 		const std::string __appName;

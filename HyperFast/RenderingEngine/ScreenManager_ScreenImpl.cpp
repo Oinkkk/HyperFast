@@ -90,7 +90,7 @@ namespace HyperFast
 		}
 	}
 
-	bool ScreenManager::ScreenImpl::__draw()
+	bool ScreenManager::ScreenImpl::__draw() noexcept
 	{
 		const VkSemaphore presentCompleteSemaphore
 		{

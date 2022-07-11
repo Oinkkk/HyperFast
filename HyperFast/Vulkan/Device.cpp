@@ -108,6 +108,12 @@ namespace Vulkan
 			getHandle(), swapchain, timeout, semaphore, fence, pImageIndex);
 	}
 
+	VkResult Device::vkAcquireNextImage2KHR(
+		const VkAcquireNextImageInfoKHR *const pAcquireInfo, uint32_t *const pImageIndex) noexcept
+	{
+		return __proc.vkAcquireNextImage2KHR(getHandle(), pAcquireInfo, pImageIndex);
+	}
+
 	VkResult Device::vkCreateImageView(
 		const VkImageViewCreateInfo *const pCreateInfo,
 		const VkAllocationCallbacks *const pAllocator, VkImageView *const pView) noexcept
@@ -211,6 +217,24 @@ namespace Vulkan
 		const VkSemaphore semaphore, const VkAllocationCallbacks *const pAllocator) noexcept
 	{
 		__proc.vkDestroySemaphore(getHandle(), semaphore, pAllocator);
+	}
+
+	VkResult Device::vkSignalSemaphore(
+		const VkSemaphoreSignalInfo *const pSignalInfo) noexcept
+	{
+		return __proc.vkSignalSemaphore(getHandle(), pSignalInfo);
+	}
+
+	VkResult Device::vkWaitSemaphores(
+		const VkSemaphoreWaitInfo *const pWaitInfo, const uint64_t timeout) noexcept
+	{
+		return __proc.vkWaitSemaphores(getHandle(), pWaitInfo, timeout);
+	}
+
+	VkResult Device::vkGetSemaphoreCounterValue(
+		const VkSemaphore semaphore, uint64_t *const pValue) noexcept
+	{
+		return __proc.vkGetSemaphoreCounterValue(getHandle(), semaphore, pValue);
 	}
 
 	VkResult Device::vkCreateFence(
