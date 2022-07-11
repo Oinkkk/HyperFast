@@ -6,9 +6,10 @@ namespace HyperFast
 		__device{ device }, __queue { queue }
 	{
 		__appendSubmitFence();
+		__currentSubmitFuture = __fence2PromiseMap[__getCurrentSubmitFence()].get_future();
 	}
 
-	void CommandSubmitter::enqueue(
+	std::shared_future<void> CommandSubmitter::enqueue(
 		const SubmitLayerType layerType,
 		const uint32_t waitSemaphoreInfoCount,
 		const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
@@ -25,6 +26,8 @@ namespace HyperFast
 		infoPlaceholder.pCommandBufferInfos = pCommandBufferInfos;
 		infoPlaceholder.signalSemaphoreInfoCount = signalSemaphoreInfoCount;
 		infoPlaceholder.pSignalSemaphoreInfos = pSignalSemaphoreInfos;
+
+		return __currentSubmitFuture;
 	}
 
 	void CommandSubmitter::submit()
@@ -40,15 +43,15 @@ namespace HyperFast
 		if (__infoStream.empty())
 			return;
 
-		Vulkan::Fence &submitFence{ __getCurrentSubmitFence() };
-		__queue.vkQueueSubmit2(uint32_t(__infoStream.size()), __infoStream.data(), submitFence.getHandle());
+		Vulkan::Fence *const pSubmitFence{ __getCurrentSubmitFence() };
+		__queue.vkQueueSubmit2(uint32_t(__infoStream.size()), __infoStream.data(), pSubmitFence->getHandle());
 
-		__retrieveNextSubmitFenceIdx();
+		__nextSubmitFenceIdx();
 	}
 
-	Vulkan::Fence &CommandSubmitter::__getCurrentSubmitFence() noexcept
+	Vulkan::Fence *CommandSubmitter::__getCurrentSubmitFence() noexcept
 	{
-		return *__submitFences[__currentSubmitFenceIdx];
+		return __submitFences[__currentSubmitFenceIdx].get();
 	}
 
 	void CommandSubmitter::__appendSubmitFence()
@@ -61,7 +64,7 @@ namespace HyperFast
 		__submitFences.emplace_back(std::make_unique<Vulkan::Fence>(__device, createInfo));
 	}
 
-	void CommandSubmitter::__retrieveNextSubmitFenceIdx()
+	void CommandSubmitter::__nextSubmitFenceIdx()
 	{
 		const size_t numFences{ __submitFences.size() };
 		bool found{};
@@ -82,11 +85,16 @@ namespace HyperFast
 
 		if (found)
 		{
-			__getCurrentSubmitFence().reset();
-			return;
+			Vulkan::Fence *const pNextSubmitFence{ __getCurrentSubmitFence() };
+			pNextSubmitFence->reset();
+			__fence2PromiseMap.extract(pNextSubmitFence).mapped().set_value();
+		}
+		else
+		{
+			__currentSubmitFenceIdx = __submitFences.size();
+			__appendSubmitFence();
 		}
 
-		__currentSubmitFenceIdx = __submitFences.size();
-		__appendSubmitFence();
+		__currentSubmitFuture = __fence2PromiseMap[__getCurrentSubmitFence()].get_future();
 	}
 }

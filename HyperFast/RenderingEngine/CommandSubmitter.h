@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <future>
 
 namespace HyperFast
 {
@@ -14,7 +15,7 @@ namespace HyperFast
 	public:
 		CommandSubmitter(Vulkan::Device &device, Vulkan::Queue &queue) noexcept;
 
-		void enqueue(
+		std::shared_future<void> enqueue(
 			const SubmitLayerType layerType,
 			const uint32_t waitSemaphoreInfoCount,
 			const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
@@ -34,11 +35,14 @@ namespace HyperFast
 
 		std::vector<std::unique_ptr<Vulkan::Fence>> __submitFences;
 		size_t __currentSubmitFenceIdx{};
+		std::shared_future<void> __currentSubmitFuture;
+
+		std::unordered_map<Vulkan::Fence *, std::promise<void>> __fence2PromiseMap;
 
 		[[nodiscard]]
-		Vulkan::Fence &__getCurrentSubmitFence() noexcept;
+		Vulkan::Fence *__getCurrentSubmitFence() noexcept;
 
 		void __appendSubmitFence();
-		void __retrieveNextSubmitFenceIdx();
+		void __nextSubmitFenceIdx();
 	};
 }
