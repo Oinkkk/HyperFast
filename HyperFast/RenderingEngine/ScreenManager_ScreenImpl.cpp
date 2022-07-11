@@ -111,10 +111,9 @@ namespace HyperFast
 		__submitCommandBufferInfo.commandBuffer = renderCommandBuffer.getHandle();
 		__submitSignalInfo.semaphore = renderCompleteSemaphore.getHandle();
 
-		__renderingEngine.enqueueSubmit(
-			1U, &__submitWaitInfo,
-			1U, &__submitCommandBufferInfo,
-			1U, &__submitSignalInfo);
+		__renderingEngine.enqueueCommands(
+			SubmitLayerType::GRAPHICS,
+			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo, 1U, &__submitSignalInfo);
 
 		__needToRender = false;
 		__needToPresent = true;

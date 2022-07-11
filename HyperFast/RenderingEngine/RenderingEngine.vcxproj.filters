@@ -102,6 +102,9 @@
     <ClCompile Include="IndirectBufferBuilder.cpp">
       <Filter>Drawcall</Filter>
     </ClCompile>
+    <ClCompile Include="CommandSubmitter.cpp">
+      <Filter>CommandSubmitter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -160,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="IndirectBufferBuilder.h">
       <Filter>Drawcall</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandSubmitter.h">
+      <Filter>CommandSubmitter</Filter>
+    </ClInclude>
+    <ClInclude Include="SubmitLayerType.h">
+      <Filter>CommandSubmitter</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -8,6 +8,7 @@
 #include "Screen.h"
 #include "Drawcall.h"
 #include "../Vulkan/DebugUtilsMessenger.h"
+#include "CommandSubmitter.h"
 
 namespace HyperFast
 {
@@ -35,7 +36,8 @@ namespace HyperFast
 		[[nodiscard]]
 		std::shared_ptr<Mesh> createMesh() noexcept;
 
-		void enqueueSubmit(
+		void enqueueCommands(
+			const SubmitLayerType layerType,
 			const uint32_t waitSemaphoreInfoCount,
 			const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
 			const uint32_t commandBufferInfoCount,
@@ -66,15 +68,10 @@ namespace HyperFast
 		std::unique_ptr<Vulkan::Device> __pDevice;
 		std::unique_ptr<Vulkan::Queue> __pQueue;
 
-		std::vector<std::unique_ptr<Vulkan::Fence>> __submitFences;
-
 		std::unique_ptr<ScreenManager> __pScreenManager;
 		std::unique_ptr<MemoryManager> __pMemoryManager;
 		std::unique_ptr<BufferManager> __pBufferManager;
-
-		std::vector<VkSubmitInfo2> __submitInfoPlaceholders;
-		uint32_t __submitInfoCursor{};
-		size_t __currentSubmitFenceIdx{};
+		std::unique_ptr<CommandSubmitter> __pCommandSubmitter;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
@@ -90,22 +87,9 @@ namespace HyperFast
 		void __makeQueue() noexcept;
 
 		void __createScreenManager() noexcept;
-		void __destroyScreenManager() noexcept;
-
 		void __createMemoryManager() noexcept;
-		void __destroyMemoryManager() noexcept;
-
 		void __createBufferManager() noexcept;
-		void __destroyBufferManager() noexcept;
-
-		[[nodiscard]]
-		VkSubmitInfo2 &__nextSubmitInfoPlaceholder() noexcept;
-
-		[[nodiscard]]
-		Vulkan::Fence &__getCurrentSubmitFence() noexcept;
-
-		void __appendSubmitFence();
-		void __retrieveNextSubmitFenceIdx();
+		void __createCommandSubmitter() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

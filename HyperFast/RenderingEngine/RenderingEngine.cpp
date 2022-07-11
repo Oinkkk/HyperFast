@@ -29,20 +29,20 @@ namespace HyperFast
 		__pickGraphicsQueueFamily();
 		__createDevice();
 		__makeQueue();
-		__appendSubmitFence();
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
+		__createCommandSubmitter();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
 		// The only time you should wait for a device to idle is when you want to destroy the device.
 		__pDevice->vkDeviceWaitIdle();
-		__destroyBufferManager();
-		__destroyMemoryManager();
-		__destroyScreenManager();
-		__submitFences.clear();
+		__pCommandSubmitter = nullptr;
+		__pBufferManager = nullptr;
+		__pMemoryManager = nullptr;
+		__pScreenManager = nullptr;
 		__pDevice = nullptr;
 		__pDebugMessenger = nullptr;
 		__pInstance = nullptr;
@@ -78,7 +78,8 @@ namespace HyperFast
 		return std::make_shared<Mesh>(*__pDevice);
 	}
 
-	void RenderingEngine::enqueueSubmit(
+	void RenderingEngine::enqueueCommands(
+		const SubmitLayerType layerType,
 		const uint32_t waitSemaphoreInfoCount,
 		const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
 		const uint32_t commandBufferInfoCount,
@@ -86,27 +87,16 @@ namespace HyperFast
 		const uint32_t signalSemaphoreInfoCount,
 		const VkSemaphoreSubmitInfo *pSignalSemaphoreInfos) noexcept
 	{
-		VkSubmitInfo2 &infoPlaceholder{ __nextSubmitInfoPlaceholder() };
-		infoPlaceholder.waitSemaphoreInfoCount = waitSemaphoreInfoCount;
-		infoPlaceholder.pWaitSemaphoreInfos = pWaitSemaphoreInfos;
-		infoPlaceholder.commandBufferInfoCount = commandBufferInfoCount;
-		infoPlaceholder.pCommandBufferInfos = pCommandBufferInfos;
-		infoPlaceholder.signalSemaphoreInfoCount = signalSemaphoreInfoCount;
-		infoPlaceholder.pSignalSemaphoreInfos = pSignalSemaphoreInfos;
+		__pCommandSubmitter->enqueue(
+			layerType,
+			waitSemaphoreInfoCount, pWaitSemaphoreInfos,
+			commandBufferInfoCount, pCommandBufferInfos,
+			signalSemaphoreInfoCount, pSignalSemaphoreInfos);
 	}
 
 	void RenderingEngine::submit()
 	{
-		if (!__submitInfoCursor)
-			return;
-
-		Vulkan::Fence &submitFence{ __getCurrentSubmitFence() };
-
-		__pQueue->vkQueueSubmit2(
-			__submitInfoCursor, __submitInfoPlaceholders.data(), submitFence.getHandle());
-		
-		__submitInfoCursor = 0U;
-		__retrieveNextSubmitFenceIdx();
+		__pCommandSubmitter->submit();
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -381,20 +371,10 @@ namespace HyperFast
 			__graphicsQueueFamilyIndex, *__pDevice, *__pQueue);
 	}
 
-	void RenderingEngine::__destroyScreenManager() noexcept
-	{
-		__pScreenManager = nullptr;
-	}
-
 	void RenderingEngine::__createMemoryManager() noexcept
 	{
 		__pMemoryManager = std::make_unique<MemoryManager>(
 			*__pInstance, *__pPhysicalDevice, *__pDevice);
-	}
-
-	void RenderingEngine::__destroyMemoryManager() noexcept
-	{
-		__pMemoryManager = nullptr;
 	}
 
 	void RenderingEngine::__createBufferManager() noexcept
@@ -402,68 +382,9 @@ namespace HyperFast
 		__pBufferManager = std::make_unique<BufferManager>(*__pDevice);
 	}
 
-	void RenderingEngine::__destroyBufferManager() noexcept
+	void RenderingEngine::__createCommandSubmitter() noexcept
 	{
-		__pBufferManager = nullptr;
-	}
-
-	VkSubmitInfo2 &RenderingEngine::__nextSubmitInfoPlaceholder() noexcept
-	{
-		if (__submitInfoPlaceholders.size() <= size_t(__submitInfoCursor))
-		{
-			VkSubmitInfo2 &newElement{ __submitInfoPlaceholders.emplace_back() };
-			newElement.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
-		}
-
-		VkSubmitInfo2 &retVal{ __submitInfoPlaceholders[__submitInfoCursor] };
-		__submitInfoCursor++;
-
-		return retVal;
-	}
-
-	Vulkan::Fence &RenderingEngine::__getCurrentSubmitFence() noexcept
-	{
-		return *__submitFences[__currentSubmitFenceIdx];
-	}
-
-	void RenderingEngine::__appendSubmitFence()
-	{
-		const VkFenceCreateInfo createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
-		};
-
-		__submitFences.emplace_back(
-			std::make_unique<Vulkan::Fence>(*__pDevice, createInfo));
-	}
-
-	void RenderingEngine::__retrieveNextSubmitFenceIdx()
-	{
-		const size_t numFences{ __submitFences.size() };
-		bool found{};
-
-		for (
-			size_t fenceIter = ((__currentSubmitFenceIdx + 1ULL) % numFences);
-			fenceIter != __currentSubmitFenceIdx;
-			fenceIter = ((fenceIter + 1ULL) % numFences))
-		{
-			const VkResult waitResult{ __submitFences[fenceIter]->wait(0ULL) };
-			if (waitResult == VkResult::VK_TIMEOUT)
-				continue;
-
-			__currentSubmitFenceIdx = fenceIter;
-			found = true;
-			break;
-		}
-
-		if (found)
-		{
-			__getCurrentSubmitFence().reset();
-			return;
-		}
-
-		__currentSubmitFenceIdx = __submitFences.size();
-		__appendSubmitFence();
+		__pCommandSubmitter = std::make_unique<CommandSubmitter>(*__pDevice, *__pQueue);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

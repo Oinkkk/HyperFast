@@ -14,6 +14,7 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
+    <ClInclude Include="CommandSubmitter.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
@@ -28,6 +29,7 @@
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="SizeUtil.h" />
     <ClInclude Include="Submesh.h" />
+    <ClInclude Include="SubmitLayerType.h" />
     <ClInclude Include="VertexAttribute.h" />
     <ClInclude Include="VertexAttributeUtil.h" />
   </ItemGroup>
@@ -36,6 +38,7 @@
     <ClCompile Include="BufferManager_BufferImpl.cpp" />
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="CommandBufferManager.cpp" />
+    <ClCompile Include="CommandSubmitter.cpp" />
     <ClCompile Include="Drawcall.cpp" />
     <ClCompile Include="IndirectBufferBuilder.cpp" />
     <ClCompile Include="Memory.cpp" />
