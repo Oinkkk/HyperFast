@@ -83,8 +83,8 @@ namespace HyperFast
 			VkSemaphoreSubmitInfo __submitSignalInfos[2]{};
 
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __imageAcquireSemaphores;
-			std::vector<std::unique_ptr<Vulkan::Semaphore>> __attachmentOuputSemaphores;
-			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionSemaphores;
+			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionBinarySemaphores;
+			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionTimelineSemaphores;
 			std::vector<uint64_t> __renderCompletionSemaphoreValues;
 
 			size_t __frameCursor{};
@@ -144,10 +144,10 @@ namespace HyperFast
 			Vulkan::CommandBuffer &__getCurrentRenderCommandBuffer() noexcept;
 
 			[[nodiscard]]
-			Vulkan::Semaphore &__getCurrentAttachmentOuputSemaphore() noexcept;
+			Vulkan::Semaphore &__getCurrentRenderCompletionBinarySemaphore() noexcept;
 
 			[[nodiscard]]
-			Vulkan::Semaphore &__getCurrentRenderCompletionSemaphore() noexcept;
+			Vulkan::Semaphore &__getCurrentRenderCompletionTimelineSemaphore() noexcept;
 
 			[[nodiscard]]
 			uint64_t &__getCurrentRenderCompletionSemaphoreValue() noexcept;
@@ -184,10 +184,7 @@ namespace HyperFast
 
 		__submitCommandBufferInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
 
-		// binary for signal color attachment output
 		__submitSignalInfos[0].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-
-		// timeline for signal render completion
 		__submitSignalInfos[1].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 	}
 

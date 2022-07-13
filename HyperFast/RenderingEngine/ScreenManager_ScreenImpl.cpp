@@ -104,12 +104,12 @@ namespace HyperFast
 		if (!validAcquire)
 			return;
 
-		Vulkan::Semaphore &renderCompletionSemaphore{ __getCurrentRenderCompletionSemaphore() };
+		Vulkan::Semaphore &renderCompletionTimelineSemaphore{ __getCurrentRenderCompletionTimelineSemaphore() };
 		uint64_t &renderCompletionSemaphoreValue{ __getCurrentRenderCompletionSemaphoreValue() };
 
 		const VkResult waitResult
 		{
-			renderCompletionSemaphore.wait(renderCompletionSemaphoreValue, 0ULL)
+			renderCompletionTimelineSemaphore.wait(renderCompletionSemaphoreValue, 0ULL)
 		};
 
 		// 앞전에 submit된 command buffer가 아직 처리 중
@@ -118,18 +118,19 @@ namespace HyperFast
 
 		renderCompletionSemaphoreValue++;
 
-		Vulkan::CommandBuffer &renderCommandBuffer{ __getCurrentRenderCommandBuffer() };
-		Vulkan::Semaphore &attachmentOutputSemaphore{ __getCurrentAttachmentOuputSemaphore() };
-
 		 __submitWaitInfo.semaphore = imageAcquireSemaphore.getHandle();
+
+		Vulkan::CommandBuffer &renderCommandBuffer{ __getCurrentRenderCommandBuffer() };
 		__submitCommandBufferInfo.commandBuffer = renderCommandBuffer.getHandle();
 
-		VkSemaphoreSubmitInfo &infoForAttachment{ __submitSignalInfos[0] };
-		VkSemaphoreSubmitInfo &infoForCompletion{ __submitSignalInfos[1] };
+		VkSemaphoreSubmitInfo &binarySignalInfo{ __submitSignalInfos[0] };
+		VkSemaphoreSubmitInfo &timelineSignalInfo{ __submitSignalInfos[1] };
 
-		infoForAttachment.semaphore = attachmentOutputSemaphore.getHandle();
-		infoForCompletion.semaphore = renderCompletionSemaphore.getHandle();
-		infoForCompletion.value = renderCompletionSemaphoreValue;
+		Vulkan::Semaphore &renderCompletionBinarySemaphore{ __getCurrentRenderCompletionBinarySemaphore() };
+		binarySignalInfo.semaphore = renderCompletionBinarySemaphore.getHandle();
+
+		timelineSignalInfo.semaphore = renderCompletionTimelineSemaphore.getHandle();
+		timelineSignalInfo.value = renderCompletionSemaphoreValue;
 
 		__renderingEngine.enqueueCommands(
 			SubmitLayerType::GRAPHICS,
@@ -142,7 +143,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__present() noexcept
 	{
-		Vulkan::Semaphore &attachmentOutputSemaphore{ __getCurrentAttachmentOuputSemaphore() };
+		Vulkan::Semaphore &attachmentOutputSemaphore{ __getCurrentRenderCompletionBinarySemaphore() };
 
 		const VkPresentInfoKHR presentInfo
 		{
@@ -177,8 +178,8 @@ namespace HyperFast
 		__resetPipelines();
 		__pFramebuffer = nullptr;
 		__pRenderPass = nullptr;
-		__renderCompletionSemaphores.clear();
-		__attachmentOuputSemaphores.clear();
+		__renderCompletionTimelineSemaphores.clear();
+		__renderCompletionBinarySemaphores.clear();
 		__imageAcquireSemaphores.clear();
 		__swapChainImageViews.clear();
 		__renderCommandBufferManagers.clear();
@@ -530,8 +531,8 @@ namespace HyperFast
 		__renderCommandBuffers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
 		__imageAcquireSemaphores.resize(numSwapchainImages);
-		__attachmentOuputSemaphores.resize(numSwapchainImages);
-		__renderCompletionSemaphores.resize(numSwapchainImages);
+		__renderCompletionBinarySemaphores.resize(numSwapchainImages);
+		__renderCompletionTimelineSemaphores.resize(numSwapchainImages);
 		__renderCompletionSemaphoreValues.resize(numSwapchainImages);
 	}
 
@@ -702,10 +703,10 @@ namespace HyperFast
 		__imageAcquireSemaphores[imageIdx] =
 			std::make_unique<Vulkan::Semaphore>(__device, binaryCreateInfo);
 
-		__attachmentOuputSemaphores[imageIdx] =
+		__renderCompletionBinarySemaphores[imageIdx] =
 			std::make_unique<Vulkan::Semaphore>(__device, binaryCreateInfo);
 
-		__renderCompletionSemaphores[imageIdx] =
+		__renderCompletionTimelineSemaphores[imageIdx] =
 			std::make_unique<Vulkan::Semaphore>(__device, timelineCreateInfo);
 	}
 
@@ -820,14 +821,14 @@ namespace HyperFast
 		return *__renderCommandBuffers[__imageIdx];
 	}
 
-	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentAttachmentOuputSemaphore() noexcept
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionBinarySemaphore() noexcept
 	{
-		return *__attachmentOuputSemaphores[__imageIdx];
+		return *__renderCompletionBinarySemaphores[__imageIdx];
 	}
 
-	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionSemaphore() noexcept
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionTimelineSemaphore() noexcept
 	{
-		return *__renderCompletionSemaphores[__imageIdx];
+		return *__renderCompletionTimelineSemaphores[__imageIdx];
 	}
 
 	uint64_t &ScreenManager::ScreenImpl::__getCurrentRenderCompletionSemaphoreValue() noexcept
