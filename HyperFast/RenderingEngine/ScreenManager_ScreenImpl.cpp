@@ -1,4 +1,4 @@
-#include "ScreenManager.h"
+ï»¿#include "ScreenManager.h"
 #include "RenderingEngine.h"
 
 namespace HyperFast
@@ -104,16 +104,37 @@ namespace HyperFast
 		if (!validAcquire)
 			return;
 
+		Vulkan::Semaphore &renderCompletionSemaphore{ __getCurrentRenderCompletionSemaphore() };
+		uint64_t &renderCompletionSemaphoreValue{ __getCurrentRenderCompletionSemaphoreValue() };
+
+		const VkResult waitResult
+		{
+			renderCompletionSemaphore.wait(renderCompletionSemaphoreValue, 0ULL)
+		};
+
+		// ì•ì „ì— submitëœ command bufferê°€ ì•„ì§ ì²˜ë¦¬ ì¤‘
+		if (waitResult == VkResult::VK_TIMEOUT)
+			return;
+
+		renderCompletionSemaphoreValue++;
+
 		Vulkan::CommandBuffer &renderCommandBuffer{ __getCurrentRenderCommandBuffer() };
-		Vulkan::Semaphore &renderCompleteSemaphore{ __getCurrentRenderCompleteSemaphore() };
+		Vulkan::Semaphore &attachmentOutputSemaphore{ __getCurrentAttachmentOuputSemaphore() };
 
 		 __submitWaitInfo.semaphore = imageAcquireSemaphore.getHandle();
 		__submitCommandBufferInfo.commandBuffer = renderCommandBuffer.getHandle();
-		__submitSignalInfo.semaphore = renderCompleteSemaphore.getHandle();
+
+		VkSemaphoreSubmitInfo &infoForAttachment{ __submitSignalInfos[0] };
+		VkSemaphoreSubmitInfo &infoForCompletion{ __submitSignalInfos[1] };
+
+		infoForAttachment.semaphore = attachmentOutputSemaphore.getHandle();
+		infoForCompletion.semaphore = renderCompletionSemaphore.getHandle();
+		infoForCompletion.value = renderCompletionSemaphoreValue;
 
 		__renderingEngine.enqueueCommands(
 			SubmitLayerType::GRAPHICS,
-			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo, 1U, &__submitSignalInfo);
+			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo,
+			uint32_t(std::size(__submitSignalInfos)), __submitSignalInfos);
 
 		__needToRender = false;
 		__needToPresent = true;
@@ -121,13 +142,13 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__present() noexcept
 	{
-		Vulkan::Semaphore &renderCompleteSemaphore{ __getCurrentRenderCompleteSemaphore() };
+		Vulkan::Semaphore &attachmentOutputSemaphore{ __getCurrentAttachmentOuputSemaphore() };
 
 		const VkPresentInfoKHR presentInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.waitSemaphoreCount = 1U,
-			.pWaitSemaphores = &(renderCompleteSemaphore.getHandle()),
+			.pWaitSemaphores = &(attachmentOutputSemaphore.getHandle()),
 			.swapchainCount = 1U,
 			.pSwapchains = &(__pSwapchain->getHandle()),
 			.pImageIndices = &__imageIdx
@@ -156,7 +177,8 @@ namespace HyperFast
 		__resetPipelines();
 		__pFramebuffer = nullptr;
 		__pRenderPass = nullptr;
-		__renderCompleteSemaphores.clear();
+		__renderCompletionSemaphores.clear();
+		__attachmentOuputSemaphores.clear();
 		__imageAcquireSemaphores.clear();
 		__swapChainImageViews.clear();
 		__renderCommandBufferManagers.clear();
@@ -508,7 +530,9 @@ namespace HyperFast
 		__renderCommandBuffers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
 		__imageAcquireSemaphores.resize(numSwapchainImages);
-		__renderCompleteSemaphores.resize(numSwapchainImages);
+		__attachmentOuputSemaphores.resize(numSwapchainImages);
+		__renderCompletionSemaphores.resize(numSwapchainImages);
+		__renderCompletionSemaphoreValues.resize(numSwapchainImages);
 	}
 
 	void ScreenManager::ScreenImpl::__createRenderCommandBufferManager(const size_t imageIdx)
@@ -578,16 +602,16 @@ namespace HyperFast
 		subpass.pColorAttachments = &colorAttachmentRef;
 
 		/*
-			¼¼¸¶Æ÷¾î³ª Ææ½º´Â ½Ã±×³ÎÀÌ µé¾î¿À¸é ÇØ´ç Å¥°¡ ¸ğµç ÀÛ¾÷À» Ã³¸®ÇßÀ½À» º¸Àå
-			¶ÇÇÑ ¸ğµç ¸Ş¸ğ¸® access¿¡ ´ëÇØ availableÀ» º¸Àå (¾Ï¹¬Àû ¸Ş¸ğ¸® µğÆæ´ø½Ã)
-			vkQueueSubmit´Â host visible ¸Ş¸ğ¸®ÀÇ ¸ğµç access¿¡ ´ëÇØ visibleÇÔÀ» º¸Àå (¾Ï¹¬Àû ¸Ş¸ğ¸® µğÆæ´ø½Ã)
-			¼¼¸¶Æ÷¾î ´ë±â ¿äÃ»Àº ¸ğµç ¸Ş¸ğ¸® access¿¡ ´ëÇØ visibleÇÔÀ» º¸Àå (¾Ï¹¬Àû ¸Ş¸ğ¸® µğÆæ´ø½Ã)
+			ì„¸ë§ˆí¬ì–´ë‚˜ íœìŠ¤ëŠ” ì‹œê·¸ë„ì´ ë“¤ì–´ì˜¤ë©´ í•´ë‹¹ íê°€ ëª¨ë“  ì‘ì—…ì„ ì²˜ë¦¬í–ˆìŒì„ ë³´ì¥
+			ë˜í•œ ëª¨ë“  ë©”ëª¨ë¦¬ accessì— ëŒ€í•´ availableì„ ë³´ì¥ (ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ)
+			vkQueueSubmitëŠ” host visible ë©”ëª¨ë¦¬ì˜ ëª¨ë“  accessì— ëŒ€í•´ visibleí•¨ì„ ë³´ì¥ (ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ)
+			ì„¸ë§ˆí¬ì–´ ëŒ€ê¸° ìš”ì²­ì€ ëª¨ë“  ë©”ëª¨ë¦¬ accessì— ëŒ€í•´ visibleí•¨ì„ ë³´ì¥ (ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ)
 		*/
 		const VkMemoryBarrier2 subpassBarrier
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
 			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.srcAccessMask = 0ULL, // ¾Ï¹¬Àû ¸Ş¸ğ¸® µğÆæ´ø½Ã
+			.srcAccessMask = 0ULL, // ì•”ë¬µì  ë©”ëª¨ë¦¬ ë””íœë˜ì‹œ
 			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 			.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
 		};
@@ -596,10 +620,10 @@ namespace HyperFast
 		dependency.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2;
 		dependency.pNext = &subpassBarrier;
 
-		// srcSubpassÀÇ srcStageMask ÆÄÀÌÇÁ°¡ idleÀÌ µÇ°í, °Å±â¿¡ srcAccessMask°¡ ¸ğµÎ availableÇØÁú ¶§±îÁö ºí·Ï
+		// srcSubpassì˜ srcStageMask íŒŒì´í”„ê°€ idleì´ ë˜ê³ , ê±°ê¸°ì— srcAccessMaskê°€ ëª¨ë‘ availableí•´ì§ˆ ë•Œê¹Œì§€ ë¸”ë¡
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 
-		// dstSubpass ÁøÇà¿¡ ´ëÇØ À§ Á¶°Ç + dstAccessMask°¡ visible ÇØÁú ¶§ ±îÁö dstStageMask¸¦ ºí·Ï
+		// dstSubpass ì§„í–‰ì— ëŒ€í•´ ìœ„ ì¡°ê±´ + dstAccessMaskê°€ visible í•´ì§ˆ ë•Œ ê¹Œì§€ dstStageMaskë¥¼ ë¸”ë¡
 		dependency.dstSubpass = 0U;
 
 		dependency.dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
@@ -658,16 +682,31 @@ namespace HyperFast
 		if (__imageAcquireSemaphores[imageIdx])
 			return;
 
-		const VkSemaphoreCreateInfo createInfo
+		static constexpr VkSemaphoreCreateInfo binaryCreateInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
 		};
 
-		__imageAcquireSemaphores[imageIdx] =
-			std::make_unique<Vulkan::Semaphore>(__device, createInfo);
+		static constexpr VkSemaphoreTypeCreateInfo timelineInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+			.semaphoreType = VkSemaphoreType::VK_SEMAPHORE_TYPE_TIMELINE
+		};
 
-		__renderCompleteSemaphores[imageIdx] =
-			std::make_unique<Vulkan::Semaphore>(__device, createInfo);
+		static constexpr VkSemaphoreCreateInfo timelineCreateInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+			.pNext = &timelineInfo
+		};
+
+		__imageAcquireSemaphores[imageIdx] =
+			std::make_unique<Vulkan::Semaphore>(__device, binaryCreateInfo);
+
+		__attachmentOuputSemaphores[imageIdx] =
+			std::make_unique<Vulkan::Semaphore>(__device, binaryCreateInfo);
+
+		__renderCompletionSemaphores[imageIdx] =
+			std::make_unique<Vulkan::Semaphore>(__device, timelineCreateInfo);
 	}
 
 	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
@@ -781,9 +820,19 @@ namespace HyperFast
 		return *__renderCommandBuffers[__imageIdx];
 	}
 
-	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompleteSemaphore() noexcept
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentAttachmentOuputSemaphore() noexcept
 	{
-		return *__renderCompleteSemaphores[__imageIdx];
+		return *__attachmentOuputSemaphores[__imageIdx];
+	}
+
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionSemaphore() noexcept
+	{
+		return *__renderCompletionSemaphores[__imageIdx];
+	}
+
+	uint64_t &ScreenManager::ScreenImpl::__getCurrentRenderCompletionSemaphoreValue() noexcept
+	{
+		return __renderCompletionSemaphoreValues[__imageIdx];
 	}
 
 	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept

@@ -43,6 +43,9 @@
     <Filter Include="CommandSubmitter">
       <UniqueIdentifier>{6d40464d-8545-4298-ac20-14470728f2c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BufferCopyManager">
+      <UniqueIdentifier>{71c907be-66ee-43ed-94b5-00cbf17969d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -169,6 +172,9 @@
     </ClInclude>
     <ClInclude Include="SubmitLayerType.h">
       <Filter>CommandSubmitter</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferCopyManager.h">
+      <Filter>BufferCopyManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

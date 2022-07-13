@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="BufferCopyManager.h" />
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
     <ClInclude Include="CommandSubmitter.h" />
