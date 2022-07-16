@@ -185,7 +185,10 @@ namespace HyperFast
 		__submitCommandBufferInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
 
 		__submitSignalInfos[0].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		__submitSignalInfos[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
 		__submitSignalInfos[1].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		__submitSignalInfos[1].stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	}
 
 	constexpr void ScreenManager::ScreenImpl::__resetFrameCursor() noexcept
