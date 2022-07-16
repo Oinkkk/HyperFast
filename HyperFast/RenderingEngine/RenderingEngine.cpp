@@ -281,7 +281,7 @@ namespace HyperFast
 			if (!win32SupportResult)
 				continue;
 
-			__graphicsQueueFamilyIndex = propIter;
+			__queueFamilyIndex = propIter;
 			break;
 		}
 	}
@@ -337,7 +337,7 @@ namespace HyperFast
 		const VkDeviceQueueCreateInfo queueCreateInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = __graphicsQueueFamilyIndex,
+			.queueFamilyIndex = __queueFamilyIndex,
 			.queueCount = 1U,
 			.pQueuePriorities = &queuePriority
 		};
@@ -361,14 +361,14 @@ namespace HyperFast
 
 	void RenderingEngine::__makeQueue() noexcept
 	{
-		__pQueue = std::make_unique<Vulkan::Queue>(*__pDevice, __graphicsQueueFamilyIndex, 0U);
+		__pQueue = std::make_unique<Vulkan::Queue>(*__pDevice, __queueFamilyIndex, 0U);
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
 			*this, *__pInstance, *__pPhysicalDevice,
-			__graphicsQueueFamilyIndex, *__pDevice, *__pQueue);
+			__queueFamilyIndex, *__pDevice, *__pQueue);
 	}
 
 	void RenderingEngine::__createMemoryManager() noexcept

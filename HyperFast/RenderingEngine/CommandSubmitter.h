@@ -24,7 +24,7 @@ namespace HyperFast
 			const uint32_t signalSemaphoreInfoCount,
 			const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
 
-		void submit();
+		void submit() noexcept;
 
 	private:
 		Vulkan::Device &__device;

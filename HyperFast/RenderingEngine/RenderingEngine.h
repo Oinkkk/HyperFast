@@ -64,7 +64,7 @@ namespace HyperFast
 		VkPhysicalDeviceVulkan12Properties __physicalDevice12Prop{};
 		VkPhysicalDeviceVulkan13Properties __physicalDevice13Prop{};
 
-		uint32_t __graphicsQueueFamilyIndex{};
+		uint32_t __queueFamilyIndex{};
 		std::unique_ptr<Vulkan::Device> __pDevice;
 		std::unique_ptr<Vulkan::Queue> __pQueue;
 

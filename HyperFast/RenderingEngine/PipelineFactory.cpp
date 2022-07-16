@@ -80,9 +80,6 @@ namespace HyperFast
 
 	void PipelineFactory::PipelineResource::reset() noexcept
 	{
-		if (!__pPipeline)
-			return;
-
 		__pPipeline = nullptr;
 	}
 

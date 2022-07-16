@@ -6,18 +6,17 @@ namespace HyperFast
 	ScreenManager::ScreenImpl::ScreenImpl(
 		RenderingEngine &renderingEngine,
 		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-		const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device,
+		const uint32_t queueFamilyIndex, Vulkan::Device &device,
 		Vulkan::Queue &queue, Win::Window &window) :
 		__renderingEngine{ renderingEngine }, __instance { instance },
-		__physicalDevice{ physicalDevice },
-		__graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
-		__device{ device }, __queue{ queue },
-		__window{ window }, __pipelineFactory{ device }
+		__physicalDevice{ physicalDevice }, __queueFamilyIndex{ queueFamilyIndex },
+		__device{ device }, __queue{ queue }, __window{ window }
 	{
 		__initListeners();
+		__createResourceChain();
 		__createSurface();
 		__initSubmitInfo();
-		__updateSurfaceDependencies();
+		__initSurfaceDependencies();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
@@ -27,23 +26,25 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::setDrawcall(Drawcall *const pDrawcall) noexcept
 	{
-		if (__pDrawcall == pDrawcall)
+		Drawcall *&pCurrentDrawCall{ __resourceParam.pDrawcall };
+
+		if (pCurrentDrawCall == pDrawcall)
 			return;
 
-		if (__pDrawcall)
+		if (pCurrentDrawCall)
 		{
-			__pDrawcall->getAttributeFlagsUpdateEvent() -= __pAttribFlagsUpdateEventListener;
-			__pDrawcall->getIndirectBufferUpdateEvent() -= __pIndirectBufferUpdateListener;
-			__pDrawcall->getIndirectBufferCreateEvent() -= __pIndirectBufferCreateListener;
+			pCurrentDrawCall->getAttributeFlagsUpdateEvent() -= __pAttribFlagsUpdateEventListener;
+			pCurrentDrawCall->getIndirectBufferUpdateEvent() -= __pIndirectBufferUpdateListener;
+			pCurrentDrawCall->getIndirectBufferCreateEvent() -= __pIndirectBufferCreateListener;
 		}
 
-		__pDrawcall = pDrawcall;
+		pCurrentDrawCall = pDrawcall;
 
-		if (__pDrawcall)
+		if (pCurrentDrawCall)
 		{
-			__pDrawcall->getAttributeFlagsUpdateEvent() += __pAttribFlagsUpdateEventListener;
-			__pDrawcall->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateListener;
-			__pDrawcall->getIndirectBufferCreateEvent() += __pIndirectBufferCreateListener;
+			pCurrentDrawCall->getAttributeFlagsUpdateEvent() += __pAttribFlagsUpdateEventListener;
+			pCurrentDrawCall->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateListener;
+			pCurrentDrawCall->getIndirectBufferCreateEvent() += __pIndirectBufferCreateListener;
 		}
 
 		__needToUpdatePipelineDependencies = true;
@@ -71,28 +72,39 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__update()
 	{
+		ScreenResource &backResource{ __getBackResource() };
+		if (!(backResource.isIdle()))
+			return;
+
+		if (__needToSwapResources)
+		{
+			__swapResources();
+			__needToSwapResources = false;
+			__needToRender = true;
+		}
+
 		if (__needToUpdateSurfaceDependencies)
 		{
-			__updateSurfaceDependencies();
+			backResource.updateSwapchainDependencies();
 			__needToUpdateSurfaceDependencies = false;
 			__needToUpdatePipelineDependencies = false;
 			__needToUpdateMainCommands = false;
-			__needToRender = true;
+			__needToSwapResources = true;
 		}
 
 		if (__needToUpdatePipelineDependencies)
 		{
-			__updatePipelineDependencies();
+			backResource.updatePipelineDependencies();
 			__needToUpdatePipelineDependencies = false;
 			__needToUpdateMainCommands = false;
-			__needToRender = true;
+			__needToSwapResources = true;
 		}
 
 		if (__needToUpdateMainCommands)
 		{
-			__updateMainCommands();
+			backResource.updateMainCommands();
 			__needToUpdateMainCommands = false;
-			__needToRender = true;
+			__needToSwapResources = true;
 		}
 	}
 
@@ -175,14 +187,14 @@ namespace HyperFast
 			return;
 
 		__device.vkDeviceWaitIdle();
-		__resetPipelines();
-		__pFramebuffer = nullptr;
-		__pRenderPass = nullptr;
+
 		__renderCompletionTimelineSemaphores.clear();
 		__renderCompletionBinarySemaphores.clear();
 		__imageAcquireSemaphores.clear();
-		__swapChainImageViews.clear();
-		__renderCommandBufferManagers.clear();
+
+		__resourceChain[1] = nullptr;
+		__resourceChain[0] = nullptr;
+
 		__pSwapchain = nullptr;
 		__pSurface = nullptr;
 	
@@ -230,6 +242,15 @@ namespace HyperFast
 		__window.getDestroyEvent() += __pDestroyEventListener;
 	}
 
+	void ScreenManager::ScreenImpl::__createResourceChain() noexcept
+	{
+		__resourceChain[0] = std::make_unique<ScreenResource>(
+			__device, __resourceParam, __queueFamilyIndex);
+
+		__resourceChain[1] = std::make_unique<ScreenResource>(
+			__device, __resourceParam, __queueFamilyIndex);
+	}
+
 	void ScreenManager::ScreenImpl::__createSurface()
 	{
 		Win::WindowClass &windowClass{ __window.getClass() };
@@ -244,164 +265,47 @@ namespace HyperFast
 		__pSurface = std::make_unique<Vulkan::Surface>(__instance, createInfo);
 	}
 
-	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
-	{
-		std::unique_ptr<Vulkan::Swapchain> pOldSwapchain{ std::move(__pSwapchain) };
-
-		tf::Taskflow taskflow;
-		tf::Task t1
-		{
-			taskflow.emplace([this, &pOldSwapchain](tf::Subflow &subflow)
-			{
-				if (pOldSwapchain)
-				{
-					__device.vkDeviceWaitIdle();
-					__resetPipelines();
-					__pFramebuffer = nullptr;
-					__pRenderPass = nullptr;
-					__swapChainImageViews.clear();
-				}
-
-				__checkSurfaceSupport();
-				__querySurfaceCapabilities();
-				__querySupportedSurfaceFormats();
-				__querySupportedSurfacePresentModes();
-				__createSwapchain(pOldSwapchain.get());
-				__retrieveSwapchainImages();
-				__reserveSwapchainImageDependencyPlaceholers();
-				__resetFrameCursor();
-
-				tf::Task t1
-				{
-					subflow.emplace([this]
-					{
-						__createRenderPasses();
-					})
-				};
-
-				tf::Task t2
-				{
-					subflow.emplace([this]
-					{
-						__createFramebuffer();
-					})
-				};
-				t2.succeed(t1);
-
-				tf::Task t3
-				{
-					subflow.emplace([this](tf::Subflow &subflow)
-					{
-						__populatePipelineBuildParam();
-						__buildPipelines(subflow);
-					})
-				};
-				t3.succeed(t1);
-			})
-		};
-
-		tf::Task t2
-		{
-			taskflow.emplace([this](tf::Subflow &subflow)
-			{
-				const size_t numSwapchainImages{ __swapChainImages.size() };
-				for (
-					size_t swapchainImageIter = 0ULL;
-					swapchainImageIter < numSwapchainImages;
-					swapchainImageIter++)
-				{
-					subflow.emplace([this, imageIdx = swapchainImageIter]
-					{
-						__createRenderCommandBufferManager(imageIdx);
-						__createSwapchainImageView(imageIdx);
-						__createRenderSemaphores(imageIdx);
-						__recordRenderCommand(imageIdx);
-					});
-				}
-			})
-		};
-		t2.succeed(t1);
-
-		taskflow.emplace([this, &pOldSwapchain]()
-		{
-			pOldSwapchain = nullptr;
-		}).succeed(t1);
-
-		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		executor.run(taskflow).wait();
-	}
-
-	void ScreenManager::ScreenImpl::__updatePipelineDependencies()
+	void ScreenManager::ScreenImpl::__initSurfaceDependencies()
 	{
 		tf::Taskflow taskflow;
-		taskflow.emplace([this](tf::Subflow &subflow)
+
+		__checkSurfaceSupport();
+		__querySurfaceCapabilities();
+		__querySupportedSurfaceFormats();
+		__querySupportedSurfacePresentModes();
+		__createSwapchain();
+
+		const size_t numSwapchainImages{ __resourceParam.swapChainImages.size() };
+		__imageAcquireSemaphores.resize(numSwapchainImages);
+		__renderCompletionBinarySemaphores.resize(numSwapchainImages);
+		__renderCompletionTimelineSemaphores.resize(numSwapchainImages);
+		__renderCompletionSemaphoreValues.resize(numSwapchainImages);
+
+		taskflow.emplace([this, numSwapchainImages](tf::Subflow &subflow)
 		{
-			__device.vkDeviceWaitIdle();
-			__resetPipelines();
-			__resetFrameCursor();
-			__populatePipelineBuildParam();
-
-			tf::Task t1
+			for (
+				size_t swapchainImageIter = 0ULL;
+				swapchainImageIter < numSwapchainImages;
+				swapchainImageIter++)
 			{
-				subflow.emplace([this](tf::Subflow &subflow)
+				subflow.emplace([this, imageIdx = swapchainImageIter]
 				{
-					__buildPipelines(subflow);
-				})
-			};
-
-			subflow.emplace([this](tf::Subflow &subflow)
-			{
-				const size_t numSwapchainImages{ __swapChainImages.size() };
-				for (
-					size_t swapchainImageIter = 0ULL;
-					swapchainImageIter < numSwapchainImages;
-					swapchainImageIter++)
-				{
-					subflow.emplace([this, imageIdx = swapchainImageIter]
-					{
-						__recordRenderCommand(imageIdx);
-					});
-				}
-			}).succeed(t1);
+					__createRenderSemaphores(imageIdx);
+				});
+			}
 		});
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		executor.run(taskflow).wait();
-	}
 
-	void ScreenManager::ScreenImpl::__updateMainCommands() noexcept
-	{
-		tf::Taskflow taskflow;
-		taskflow.emplace([this](tf::Subflow &subflow)
-		{
-			__device.vkDeviceWaitIdle();
-			__resetFrameCursor();
-
-			subflow.emplace([this](tf::Subflow &subflow)
-			{
-				const size_t numSwapchainImages{ __swapChainImages.size() };
-				for (
-					size_t swapchainImageIter = 0ULL;
-					swapchainImageIter < numSwapchainImages;
-					swapchainImageIter++)
-				{
-					subflow.emplace([this, imageIdx = swapchainImageIter]
-					{
-						__recordRenderCommand(imageIdx);
-					});
-				}
-			});
-		});
-
-		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		executor.run(taskflow).wait();
+		__needToUpdateSurfaceDependencies = true;
 	}
 
 	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const
 	{
 		VkBool32 surfaceSupported{};
 		__physicalDevice.vkGetPhysicalDeviceSurfaceSupportKHR(
-			__graphicsQueueFamilyIndex, __pSurface->getHandle(), &surfaceSupported);
+			__queueFamilyIndex, __pSurface->getHandle(), &surfaceSupported);
 
 		if (!surfaceSupported)
 			throw std::exception{ "The physical device doesn't support the surface." };
@@ -435,7 +339,7 @@ namespace HyperFast
 			__pSurface->getHandle(), &numModes, __supportedSurfacePresentModes.data());
 	}
 
-	void ScreenManager::ScreenImpl::__createSwapchain(Vulkan::Swapchain *const pOldSwapchain)
+	void ScreenManager::ScreenImpl::__createSwapchain()
 	{
 		uint32_t numDesiredImages{ std::max(3U, __surfaceCapabilities.minImageCount) };
 		if (__surfaceCapabilities.maxImageCount)
@@ -506,176 +410,18 @@ namespace HyperFast
 			.compositeAlpha = compositeAlpha,
 			.presentMode = desiredPresentMode,
 			.clipped = VK_TRUE,
-			.oldSwapchain = (pOldSwapchain ? pOldSwapchain->getHandle() : VK_NULL_HANDLE)
+			.oldSwapchain = (__pSwapchain ? __pSwapchain->getHandle() : VK_NULL_HANDLE)
 		};
 
 		__pSwapchain = std::make_unique<Vulkan::Swapchain>(__device, createInfo);
-		__swapchainFormat = createInfo.imageFormat;
-		__swapchainExtent = createInfo.imageExtent;
-	}
+		__resourceParam.swapchainFormat = createInfo.imageFormat;
+		__resourceParam.swapchainExtent = createInfo.imageExtent;
 
-	void ScreenManager::ScreenImpl::__retrieveSwapchainImages() noexcept
-	{
 		uint32_t numImages{};
 		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, nullptr);
 
-		__swapChainImages.resize(numImages);
-		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, __swapChainImages.data());
-	}
-
-	void ScreenManager::ScreenImpl::__reserveSwapchainImageDependencyPlaceholers() noexcept
-	{
-		const size_t numSwapchainImages{ __swapChainImages.size() };
-
-		__renderCommandBufferManagers.resize(numSwapchainImages);
-		__renderCommandBuffers.resize(numSwapchainImages);
-		__swapChainImageViews.resize(numSwapchainImages);
-		__imageAcquireSemaphores.resize(numSwapchainImages);
-		__renderCompletionBinarySemaphores.resize(numSwapchainImages);
-		__renderCompletionTimelineSemaphores.resize(numSwapchainImages);
-		__renderCompletionSemaphoreValues.resize(numSwapchainImages);
-	}
-
-	void ScreenManager::ScreenImpl::__createRenderCommandBufferManager(const size_t imageIdx)
-	{
-		auto &pManager{ __renderCommandBufferManagers[imageIdx] };
-		if (pManager)
-			return;
-
-		pManager = std::make_unique<CommandBufferManager>(__device, __graphicsQueueFamilyIndex, 8ULL);
-	}
-
-	void ScreenManager::ScreenImpl::__createSwapchainImageView(const size_t imageIdx)
-	{
-		VkImageViewCreateInfo createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-			.image = __swapChainImages[imageIdx],
-			.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
-			.format = __swapchainFormat,
-			.components =
-			{
-				.r = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
-				.g = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
-				.b = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
-				.a = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY
-			},
-			.subresourceRange =
-			{
-				.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,
-				.baseMipLevel = 0U,
-				.levelCount = 1U,
-				.baseArrayLayer = 0U,
-				.layerCount = 1U
-			}
-		};
-
-		__swapChainImageViews[imageIdx] =
-			std::make_unique<Vulkan::ImageView>(__device, createInfo);
-	}
-
-	void ScreenManager::ScreenImpl::__createRenderPasses()
-	{
-		std::vector<VkAttachmentDescription2> attachments;
-		std::vector<VkSubpassDescription2> subpasses;
-		std::vector<VkSubpassDependency2> dependencies;
-
-		VkAttachmentDescription2 &colorAttachment{ attachments.emplace_back() };
-		colorAttachment.sType = VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2;
-		colorAttachment.format = __swapchainFormat;
-		colorAttachment.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-		colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachment.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachment.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		const VkAttachmentReference2 colorAttachmentRef
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
-			.attachment = 0U,
-			.layout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-		};
-
-		VkSubpassDescription2 &subpass{ subpasses.emplace_back() };
-		subpass.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2;
-		subpass.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1U;
-		subpass.pColorAttachments = &colorAttachmentRef;
-
-		/*
-			세마포어나 펜스는 시그널이 들어오면 해당 큐가 모든 작업을 처리했음을 보장
-			또한 모든 메모리 access에 대해 available을 보장 (암묵적 메모리 디펜던시)
-			vkQueueSubmit는 host visible 메모리의 모든 access에 대해 visible함을 보장 (암묵적 메모리 디펜던시)
-			세마포어 대기 요청은 모든 메모리 access에 대해 visible함을 보장 (암묵적 메모리 디펜던시)
-		*/
-		const VkMemoryBarrier2 subpassBarrier
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
-			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.srcAccessMask = 0ULL, // 암묵적 메모리 디펜던시
-			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
-		};
-
-		VkSubpassDependency2 &dependency{ dependencies.emplace_back() };
-		dependency.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2;
-		dependency.pNext = &subpassBarrier;
-
-		// srcSubpass의 srcStageMask 파이프가 idle이 되고, 거기에 srcAccessMask가 모두 available해질 때까지 블록
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-
-		// dstSubpass 진행에 대해 위 조건 + dstAccessMask가 visible 해질 때 까지 dstStageMask를 블록
-		dependency.dstSubpass = 0U;
-
-		dependency.dependencyFlags = VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT;
-
-		const VkRenderPassCreateInfo2 createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
-			.attachmentCount = uint32_t(attachments.size()),
-			.pAttachments = attachments.data(),
-			.subpassCount = uint32_t(subpasses.size()),
-			.pSubpasses = subpasses.data(),
-			.dependencyCount = uint32_t(dependencies.size()),
-			.pDependencies = dependencies.data()
-		};
-
-		__pRenderPass = std::make_unique<Vulkan::RenderPass>(__device, createInfo);
-	}
-
-	void ScreenManager::ScreenImpl::__createFramebuffer()
-	{
-		std::vector<VkFramebufferAttachmentImageInfo> attachmentImageInfos;
-
-		VkFramebufferAttachmentImageInfo &colorAttachmentImageInfo{ attachmentImageInfos.emplace_back() };
-		colorAttachmentImageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO;
-		colorAttachmentImageInfo.usage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		colorAttachmentImageInfo.width = __swapchainExtent.width;
-		colorAttachmentImageInfo.height = __swapchainExtent.height;
-		colorAttachmentImageInfo.layerCount = 1U;
-		colorAttachmentImageInfo.viewFormatCount = 1U;
-		colorAttachmentImageInfo.pViewFormats = &__swapchainFormat;
-
-		const VkFramebufferAttachmentsCreateInfo attachmentInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO,
-			.attachmentImageInfoCount = uint32_t(attachmentImageInfos.size()),
-			.pAttachmentImageInfos = attachmentImageInfos.data()
-		};
-
-		const VkFramebufferCreateInfo createInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			.pNext = &attachmentInfo,
-			.flags = VkFramebufferCreateFlagBits::VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT,
-			.renderPass = __pRenderPass->getHandle(),
-			.attachmentCount = 1U,
-			.width = __swapchainExtent.width,
-			.height = __swapchainExtent.height,
-			.layers = 1U
-		};
-
-		__pFramebuffer = std::make_unique<Vulkan::Framebuffer>(__device, createInfo);
+		__resourceParam.swapChainImages.resize(numImages);
+		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, __resourceParam.swapChainImages.data());
 	}
 
 	void ScreenManager::ScreenImpl::__createRenderSemaphores(const size_t imageIdx)
@@ -710,98 +456,6 @@ namespace HyperFast
 			std::make_unique<Vulkan::Semaphore>(__device, timelineCreateInfo);
 	}
 
-	void ScreenManager::ScreenImpl::__populatePipelineBuildParam() noexcept
-	{
-		__pipelineBuildParam.renderPass = __pRenderPass->getHandle();
-		__pipelineBuildParam.viewport =
-		{
-			.x = 0.0f,
-			.y = 0.0f,
-			.width = float(__swapchainExtent.width),
-			.height = float(__swapchainExtent.height),
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
-
-		__pipelineBuildParam.scissor =
-		{
-			.offset = { 0, 0 },
-			.extent = __swapchainExtent
-		};
-	}
-
-	void ScreenManager::ScreenImpl::__buildPipelines(tf::Subflow &subflow)
-	{
-		if (__pDrawcall)
-		{
-			__pipelineFactory.build(
-				__pDrawcall->getAttributeFlags(), __pipelineBuildParam, subflow);
-		}
-	}
-
-	void ScreenManager::ScreenImpl::__resetPipelines() noexcept
-	{
-		__pipelineFactory.reset();
-	}
-
-	void ScreenManager::ScreenImpl::__recordRenderCommand(const size_t imageIdx) noexcept
-	{
-		static const VkCommandBufferBeginInfo commandBufferBeginInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
-		};
-
-		const VkRenderPassAttachmentBeginInfo renderPassAttachmentInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO,
-			.attachmentCount = 1U,
-			.pAttachments = &(__swapChainImageViews[imageIdx]->getHandle())
-		};
-
-		const VkClearValue clearColor
-		{
-			.color = {.float32 = { 0.004f, 0.004f, 0.004f, 1.0f } }
-		};
-
-		const VkRenderPassBeginInfo renderPassBeginInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-			.pNext = &renderPassAttachmentInfo,
-			.renderPass = __pRenderPass->getHandle(),
-			.framebuffer = __pFramebuffer->getHandle(),
-			.renderArea =
-			{
-				.offset = { 0, 0 },
-				.extent = __swapchainExtent
-			},
-			.clearValueCount = 1U,
-			.pClearValues = &clearColor
-		};
-
-		Vulkan::CommandBuffer &commandBuffer{ __renderCommandBufferManagers[imageIdx]->getNextBuffer() };
-		__renderCommandBuffers[imageIdx] = &commandBuffer;
-
-		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
-		commandBuffer.vkCmdBeginRenderPass(
-			&renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
-
-		if (__pDrawcall)
-		{
-			for (const VertexAttributeFlag attribFlag : __pDrawcall->getAttributeFlags())
-			{
-				const VkPipeline pipeline{ __pipelineFactory.get(attribFlag) };
-
-				commandBuffer.vkCmdBindPipeline(
-					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-				__pDrawcall->render(attribFlag, commandBuffer);
-			}
-		}
-
-		commandBuffer.vkCmdEndRenderPass();
-		commandBuffer.vkEndCommandBuffer();
-	}
-
 	bool ScreenManager::ScreenImpl::__isValid() const noexcept
 	{
 		if (__destroyed)
@@ -811,6 +465,17 @@ namespace HyperFast
 		return validSize;
 	}
 
+	ScreenResource &ScreenManager::ScreenImpl::__getFrontResource() noexcept
+	{
+		return *__resourceChain[__resourceCursor];
+	}
+
+	ScreenResource &ScreenManager::ScreenImpl::__getBackResource() noexcept
+	{
+		const size_t nextCursor{ (__resourceCursor + 1ULL) % 2ULL };
+		return *__resourceChain[nextCursor];
+	}
+
 	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentImageAcquireSemaphore() noexcept
 	{
 		return *__imageAcquireSemaphores[__frameCursor];
@@ -818,7 +483,7 @@ namespace HyperFast
 
 	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__getCurrentRenderCommandBuffer() noexcept
 	{
-		return *__renderCommandBuffers[__imageIdx];
+		return __getFrontResource().getRenderCommandBuffer(__imageIdx);
 	}
 
 	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionBinarySemaphore() noexcept

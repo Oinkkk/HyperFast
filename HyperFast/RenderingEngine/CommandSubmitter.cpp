@@ -25,7 +25,7 @@ namespace HyperFast
 		infoPlaceholder.pSignalSemaphoreInfos = pSignalSemaphoreInfos;
 	}
 
-	void CommandSubmitter::submit()
+	void CommandSubmitter::submit() noexcept
 	{
 		__infoStream.clear();
 

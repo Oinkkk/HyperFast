@@ -27,6 +27,7 @@
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="ScreenManager.h" />
+    <ClInclude Include="ScreenResource.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="SizeUtil.h" />
     <ClInclude Include="Submesh.h" />
@@ -53,6 +54,7 @@
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="ScreenManager.cpp" />
     <ClCompile Include="ScreenManager_ScreenImpl.cpp" />
+    <ClCompile Include="ScreenResource.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
     <ClCompile Include="Submesh.cpp" />
   </ItemGroup>

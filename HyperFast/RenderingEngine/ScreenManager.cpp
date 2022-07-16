@@ -9,7 +9,7 @@ namespace HyperFast
 		Vulkan::Device &device, Vulkan::Queue &queue) noexcept :
 		__renderingEngine{ renderingEngine }, __instance { instance },
 		__physicalDevice{physicalDevice},
-		__graphicsQueueFamilyIndex{ graphicsQueueFamilyIndex },
+		__queueFamilyIndex{ graphicsQueueFamilyIndex },
 		__device{ device }, __queue{ queue }
 	{}
 
@@ -17,6 +17,6 @@ namespace HyperFast
 	{
 		return std::make_unique<ScreenImpl>(
 			__renderingEngine, __instance, __physicalDevice,
-			__graphicsQueueFamilyIndex, __device, __queue, window);
+			__queueFamilyIndex, __device, __queue, window);
 	}
 }
