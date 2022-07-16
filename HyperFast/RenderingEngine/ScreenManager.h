@@ -40,7 +40,7 @@ namespace HyperFast
 			const uint32_t __queueFamilyIndex;
 			Vulkan::Queue &__queue;
 
-			std::unique_ptr<ScreenResource> __resourceChain[2];
+			std::unique_ptr<ScreenResource> __resourceChain[3];
 			size_t __resourceCursor{};
 
 			Win::Window &__window;
@@ -159,7 +159,7 @@ namespace HyperFast
 
 	constexpr void ScreenManager::ScreenImpl::__swapResources() noexcept
 	{
-		__resourceCursor = ((__resourceCursor + 1ULL) % 2ULL);
+		__resourceCursor = ((__resourceCursor + 1ULL) % std::size(__resourceChain));
 	}
 
 	constexpr void ScreenManager::ScreenImpl::__initSubmitInfo() noexcept

@@ -109,7 +109,6 @@ namespace HyperFast
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__job = executor.run(std::move(taskflow));
-		__job.wait();
 	}
 
 	void ScreenResource::updatePipelineDependencies()
@@ -136,7 +135,6 @@ namespace HyperFast
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__job = executor.run(std::move(taskflow));
-		__job.wait();
 	}
 
 	void ScreenResource::updateMainCommands() noexcept
@@ -160,7 +158,6 @@ namespace HyperFast
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__job = executor.run(std::move(taskflow));
-		__job.wait();
 	}
 
 	void ScreenResource::__reserveSwapchainImageDependencyPlaceholers() noexcept

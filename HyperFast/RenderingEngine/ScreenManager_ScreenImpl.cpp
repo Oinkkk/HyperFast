@@ -247,11 +247,11 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__createResourceChain() noexcept
 	{
-		__resourceChain[0] = std::make_unique<ScreenResource>(
-			__device, __resourceParam, __queueFamilyIndex);
-
-		__resourceChain[1] = std::make_unique<ScreenResource>(
-			__device, __resourceParam, __queueFamilyIndex);
+		for (auto &pResource : __resourceChain)
+		{
+			pResource = std::make_unique<ScreenResource>(
+				__device, __resourceParam, __queueFamilyIndex);
+		}
 	}
 
 	void ScreenManager::ScreenImpl::__createSurface()
@@ -283,6 +283,7 @@ namespace HyperFast
 		__renderCompletionBinarySemaphores.resize(numSwapchainImages);
 		__renderCompletionTimelineSemaphores.resize(numSwapchainImages);
 		__renderCompletionSemaphoreValues.resize(numSwapchainImages);
+		__frameCursor = 0ULL;
 
 		taskflow.emplace([this, numSwapchainImages](tf::Subflow &subflow)
 		{
@@ -473,7 +474,7 @@ namespace HyperFast
 
 	ScreenResource &ScreenManager::ScreenImpl::__getBackResource() noexcept
 	{
-		const size_t nextCursor{ (__resourceCursor + 1ULL) % 2ULL };
+		const size_t nextCursor{ (__resourceCursor + 1ULL) % std::size(__resourceChain) };
 		return *__resourceChain[nextCursor];
 	}
 
