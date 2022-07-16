@@ -16,7 +16,6 @@ namespace HyperFast
 		__createResourceChain();
 		__createSurface();
 		__initSubmitInfo();
-		__initSurfaceDependencies();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
@@ -79,17 +78,21 @@ namespace HyperFast
 		if (__needToSwapResources)
 		{
 			__swapResources();
+			__pOldSwapchain = nullptr;
 			__needToSwapResources = false;
 			__needToRender = true;
 		}
 
 		if (__needToUpdateSurfaceDependencies)
 		{
+			__pOldSwapchain = std::move(__pSwapchain);
+			__updateSurfaceDependencies();
 			backResource.updateSwapchainDependencies();
 			__needToUpdateSurfaceDependencies = false;
 			__needToUpdatePipelineDependencies = false;
 			__needToUpdateMainCommands = false;
 			__needToSwapResources = true;
+			__needToRender = false;
 		}
 
 		if (__needToUpdatePipelineDependencies)
@@ -265,7 +268,7 @@ namespace HyperFast
 		__pSurface = std::make_unique<Vulkan::Surface>(__instance, createInfo);
 	}
 
-	void ScreenManager::ScreenImpl::__initSurfaceDependencies()
+	void ScreenManager::ScreenImpl::__updateSurfaceDependencies()
 	{
 		tf::Taskflow taskflow;
 
@@ -297,8 +300,6 @@ namespace HyperFast
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		executor.run(taskflow).wait();
-
-		__needToUpdateSurfaceDependencies = true;
 	}
 
 	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const
@@ -410,7 +411,7 @@ namespace HyperFast
 			.compositeAlpha = compositeAlpha,
 			.presentMode = desiredPresentMode,
 			.clipped = VK_TRUE,
-			.oldSwapchain = (__pSwapchain ? __pSwapchain->getHandle() : VK_NULL_HANDLE)
+			.oldSwapchain = (__pOldSwapchain ? __pOldSwapchain->getHandle() : VK_NULL_HANDLE)
 		};
 
 		__pSwapchain = std::make_unique<Vulkan::Swapchain>(__device, createInfo);

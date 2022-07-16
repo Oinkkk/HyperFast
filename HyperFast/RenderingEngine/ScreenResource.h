@@ -48,6 +48,7 @@ namespace HyperFast
 		const ExternalParam &__externalParam;
 		const uint32_t __queueFamilyIndex;
 
+		PipelineFactory::BuildParam __pipelineBuildParam;
 		PipelineFactory __pipelineFactory;
 
 		std::vector<std::unique_ptr<Vulkan::ImageView>> __swapChainImageViews;

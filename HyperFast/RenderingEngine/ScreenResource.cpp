@@ -40,7 +40,7 @@ namespace HyperFast
 		if (!(__job.valid()))
 			return;
 
-		__job.get();
+		__job.wait();
 	}
 
 	void ScreenResource::updateSwapchainDependencies()
@@ -108,7 +108,8 @@ namespace HyperFast
 		t2.succeed(t1);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__job = executor.run(taskflow);
+		__job = executor.run(std::move(taskflow));
+		__job.wait();
 	}
 
 	void ScreenResource::updatePipelineDependencies()
@@ -134,7 +135,8 @@ namespace HyperFast
 		});
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__job = executor.run(taskflow);
+		__job = executor.run(std::move(taskflow));
+		__job.wait();
 	}
 
 	void ScreenResource::updateMainCommands() noexcept
@@ -157,7 +159,8 @@ namespace HyperFast
 		});
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__job = executor.run(taskflow);
+		__job = executor.run(std::move(taskflow));
+		__job.wait();
 	}
 
 	void ScreenResource::__reserveSwapchainImageDependencyPlaceholers() noexcept
@@ -269,10 +272,8 @@ namespace HyperFast
 		if (!(__externalParam.pDrawcall))
 			return;
 
-		PipelineFactory::BuildParam buildParam;
-
-		buildParam.renderPass = __pRenderPass->getHandle();
-		buildParam.viewport =
+		__pipelineBuildParam.renderPass = __pRenderPass->getHandle();
+		__pipelineBuildParam.viewport =
 		{
 			.x = 0.0f,
 			.y = 0.0f,
@@ -282,14 +283,14 @@ namespace HyperFast
 			.maxDepth = 1.0f
 		};
 
-		buildParam.scissor =
+		__pipelineBuildParam.scissor =
 		{
 			.offset = { 0, 0 },
 			.extent = __externalParam.swapchainExtent
 		};
 
 		__pipelineFactory.build(
-			__externalParam.pDrawcall->getAttributeFlags(), buildParam, subflow);
+			__externalParam.pDrawcall->getAttributeFlags(), __pipelineBuildParam, subflow);
 	}
 
 	void ScreenResource::__createSwapchainImageView(const size_t imageIdx)

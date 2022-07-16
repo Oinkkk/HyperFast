@@ -24,8 +24,7 @@ namespace HyperFast
 			PipelineResource &pipelineResource
 			{
 				__attribFlag2ResourceMap.try_emplace(
-					attribFlag, __device,
-					__pPipelineLayout->getHandle(), attribFlag).first->second
+					attribFlag, __device, __pPipelineLayout->getHandle(), attribFlag).first->second
 			};
 
 			subflow.emplace([&pipelineResource, &buildParam]

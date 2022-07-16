@@ -58,6 +58,8 @@ namespace HyperFast
 			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
 
 			std::unique_ptr<Vulkan::Swapchain> __pSwapchain;
+			std::unique_ptr<Vulkan::Swapchain> __pOldSwapchain;
+
 			ScreenResource::ExternalParam __resourceParam;
 
 			VkSemaphoreSubmitInfo __submitWaitInfo{};
@@ -73,7 +75,7 @@ namespace HyperFast
 			bool __imageAcquired{};
 			uint32_t __imageIdx{};
 
-			bool __needToUpdateSurfaceDependencies{};
+			bool __needToUpdateSurfaceDependencies{ true };
 			bool __needToUpdatePipelineDependencies{};
 			bool __needToUpdateMainCommands{};
 			bool __needToSwapResources{};
@@ -93,8 +95,8 @@ namespace HyperFast
 			void __createResourceChain() noexcept;
 			void __createSurface();
 			constexpr void __initSubmitInfo() noexcept;
-			void __initSurfaceDependencies();
 
+			void __updateSurfaceDependencies();
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
 			void __querySupportedSurfaceFormats() noexcept;
