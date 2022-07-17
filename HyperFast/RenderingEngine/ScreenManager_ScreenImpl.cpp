@@ -56,7 +56,7 @@ namespace HyperFast
 
 		__update();
 
-		if (__needToRender)
+		if (__needToRender && !__pOldSwapchain)
 			__render();
 	}
 
@@ -177,7 +177,6 @@ namespace HyperFast
 			(presentResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
 			__needToUpdateSurfaceDependencies = true;
-			__needToRender = true;
 		}
 
 		if (presentResult == VkResult::VK_SUCCESS)
