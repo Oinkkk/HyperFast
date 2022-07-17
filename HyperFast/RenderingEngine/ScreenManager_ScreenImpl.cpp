@@ -51,7 +51,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::render()
 	{
-		if(!__isValid())
+		if(!(__isValid()))
 			return;
 
 		__update();
@@ -62,7 +62,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::present() noexcept
 	{
-		if (!__isValid())
+		if (!(__isValid()))
 			return;
 
 		if (__needToPresent)
@@ -72,6 +72,8 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__update()
 	{
 		ScreenResource &backResource{ __getBackResource() };
+
+		// 이미 resource swap 요청 됨
 		if (!(backResource.isIdle()))
 			return;
 
@@ -175,8 +177,8 @@ namespace HyperFast
 		__renderCompletionBinarySemaphores.clear();
 		__imageAcquireSemaphores.clear();
 
-		__resourceChain[1] = nullptr;
-		__resourceChain[0] = nullptr;
+		for (auto &pResource : __resourceChain)
+			pResource = nullptr;
 
 		__pSwapchain = nullptr;
 		__pSurface = nullptr;
