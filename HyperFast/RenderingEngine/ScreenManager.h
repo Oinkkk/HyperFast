@@ -97,6 +97,10 @@ namespace HyperFast
 			constexpr void __initSubmitInfo() noexcept;
 
 			void __updateSurfaceDependencies();
+			void __updatePipelineDependencies();
+			void __updateMainCommands();
+			void __swapResources() noexcept;
+
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
 			void __querySupportedSurfaceFormats() noexcept;
@@ -114,8 +118,6 @@ namespace HyperFast
 
 			[[nodiscard]]
 			ScreenResource &__getBackResource() noexcept;
-
-			constexpr void __swapResources() noexcept;
 
 			[[nodiscard]]
 			Vulkan::Semaphore &__getCurrentImageAcquireSemaphore() noexcept;
@@ -156,11 +158,6 @@ namespace HyperFast
 		const uint32_t __queueFamilyIndex;
 		Vulkan::Queue &__queue;
 	};
-
-	constexpr void ScreenManager::ScreenImpl::__swapResources() noexcept
-	{
-		__resourceCursor = ((__resourceCursor + 1ULL) % std::size(__resourceChain));
-	}
 
 	constexpr void ScreenManager::ScreenImpl::__initSubmitInfo() noexcept
 	{

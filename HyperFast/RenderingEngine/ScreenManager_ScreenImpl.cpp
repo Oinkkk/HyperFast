@@ -56,7 +56,7 @@ namespace HyperFast
 
 		__update();
 
-		if (__needToRender && !__pOldSwapchain)
+		if (__needToRender)
 			__render();
 	}
 
@@ -76,43 +76,24 @@ namespace HyperFast
 			return;
 
 		if (__needToSwapResources)
-		{
 			__swapResources();
-			__pOldSwapchain = nullptr;
-			__needToSwapResources = false;
-			__needToRender = true;
-		}
 
 		if (__needToUpdateSurfaceDependencies)
-		{
-			__pOldSwapchain = std::move(__pSwapchain);
 			__updateSurfaceDependencies();
-			backResource.updateSwapchainDependencies();
-			__needToUpdateSurfaceDependencies = false;
-			__needToUpdatePipelineDependencies = false;
-			__needToUpdateMainCommands = false;
-			__needToSwapResources = true;
-			__needToRender = false;
-		}
 
 		if (__needToUpdatePipelineDependencies)
-		{
-			backResource.updatePipelineDependencies();
-			__needToUpdatePipelineDependencies = false;
-			__needToUpdateMainCommands = false;
-			__needToSwapResources = true;
-		}
+			__updatePipelineDependencies();
 
 		if (__needToUpdateMainCommands)
-		{
-			backResource.updateMainCommands();
-			__needToUpdateMainCommands = false;
-			__needToSwapResources = true;
-		}
+			__updateMainCommands();
 	}
 
 	void ScreenManager::ScreenImpl::__render() noexcept
 	{
+		// resource swap 진행 중
+		if (__pOldSwapchain)
+			return;
+
 		Vulkan::Semaphore &imageAcquireSemaphore{ __getCurrentImageAcquireSemaphore() };
 
 		const bool validAcquire{ __acquireNextSwapchainImageIdx(imageAcquireSemaphore) };
@@ -271,11 +252,15 @@ namespace HyperFast
 	{
 		tf::Taskflow taskflow;
 
+		__pOldSwapchain = std::move(__pSwapchain);
 		__checkSurfaceSupport();
 		__querySurfaceCapabilities();
 		__querySupportedSurfaceFormats();
 		__querySupportedSurfacePresentModes();
 		__createSwapchain();
+
+		ScreenResource &backResource{ __getBackResource() };
+		backResource.updateSwapchainDependencies();
 
 		const size_t numSwapchainImages{ __resourceParam.swapChainImages.size() };
 		__imageAcquireSemaphores.resize(numSwapchainImages);
@@ -300,6 +285,40 @@ namespace HyperFast
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		executor.run(taskflow).wait();
+
+		__needToUpdateSurfaceDependencies = false;
+		__needToUpdatePipelineDependencies = false;
+		__needToUpdateMainCommands = false;
+		__needToSwapResources = true;
+		__needToRender = false;
+	}
+
+	void ScreenManager::ScreenImpl::__updatePipelineDependencies()
+	{
+		ScreenResource &backResource{ __getBackResource() };
+		backResource.updatePipelineDependencies();
+
+		__needToUpdatePipelineDependencies = false;
+		__needToUpdateMainCommands = false;
+		__needToSwapResources = true;
+	}
+
+	void ScreenManager::ScreenImpl::__updateMainCommands()
+	{
+		ScreenResource &backResource{ __getBackResource() };
+		backResource.updateMainCommands();
+
+		__needToUpdateMainCommands = false;
+		__needToSwapResources = true;
+	}
+
+	void ScreenManager::ScreenImpl::__swapResources() noexcept
+	{
+		__resourceCursor = ((__resourceCursor + 1ULL) % std::size(__resourceChain));
+
+		__pOldSwapchain = nullptr;
+		__needToSwapResources = false;
+		__needToRender = true;
 	}
 
 	void ScreenManager::ScreenImpl::__checkSurfaceSupport() const
