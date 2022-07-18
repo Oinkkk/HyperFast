@@ -58,6 +58,7 @@ namespace HyperFast
 
 	private:
 		Vulkan::Device &__device;
+		std::vector<BufferImpl *> __destroyReserved;
 	};
 
 	constexpr VkDeviceSize BufferManager::BufferImpl::getSize() const noexcept

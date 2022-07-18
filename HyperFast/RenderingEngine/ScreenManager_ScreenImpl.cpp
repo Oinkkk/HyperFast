@@ -88,6 +88,8 @@ namespace HyperFast
 
 		if (__needToUpdateMainCommands)
 			__updateMainCommands();
+
+		backResource.update();
 	}
 
 	void ScreenManager::ScreenImpl::__render() noexcept
@@ -261,9 +263,6 @@ namespace HyperFast
 		__querySupportedSurfacePresentModes();
 		__createSwapchain();
 
-		ScreenResource &backResource{ __getBackResource() };
-		backResource.updateSwapchainDependencies();
-
 		const size_t numSwapchainImages{ __resourceParam.swapChainImages.size() };
 		__imageAcquireSemaphores.resize(numSwapchainImages);
 		__renderCompletionBinarySemaphores.resize(numSwapchainImages);
@@ -288,6 +287,9 @@ namespace HyperFast
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		executor.run(taskflow).wait();
 
+		for (auto &pResource : __resourceChain)
+			pResource->needToUpdateSwapchainDependencies();
+
 		__needToUpdateSurfaceDependencies = false;
 		__needToUpdatePipelineDependencies = false;
 		__needToUpdateMainCommands = false;
@@ -297,8 +299,8 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__updatePipelineDependencies()
 	{
-		ScreenResource &backResource{ __getBackResource() };
-		backResource.updatePipelineDependencies();
+		for (auto &pResource : __resourceChain)
+			pResource->needToUpdatePipelineDependencies();
 
 		__needToUpdatePipelineDependencies = false;
 		__needToUpdateMainCommands = false;
@@ -307,8 +309,8 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__updateMainCommands()
 	{
-		ScreenResource &backResource{ __getBackResource() };
-		backResource.updateMainCommands();
+		for (auto &pResource : __resourceChain)
+			pResource->needToUpdateMainCommands();
 
 		__needToUpdateMainCommands = false;
 		__needToSwapResources = true;

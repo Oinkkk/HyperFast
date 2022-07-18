@@ -15,6 +15,7 @@ namespace HyperFast
 
 	void BufferManager::destroy(BufferImpl *const pImpl) noexcept
 	{
+		__destroyReserved.emplace_back(pImpl);
 		delete pImpl;
 	}
 }

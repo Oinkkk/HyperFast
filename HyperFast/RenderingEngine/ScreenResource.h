@@ -39,9 +39,11 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
 
-		void updateSwapchainDependencies();
-		void updatePipelineDependencies();
-		void updateMainCommands() noexcept;
+		constexpr void needToUpdateSwapchainDependencies() noexcept;
+		constexpr void needToUpdatePipelineDependencies() noexcept;
+		constexpr void needToUpdateMainCommands() noexcept;
+
+		void update();
 
 	private:
 		Vulkan::Device &__device;
@@ -58,6 +60,10 @@ namespace HyperFast
 		std::vector<std::unique_ptr<CommandBufferManager>> __renderCommandBufferManagers;
 		std::vector<Vulkan::CommandBuffer *> __renderCommandBuffers;
 
+		bool __needToUpdateSwapchainDependencies{};
+		bool __needToUpdatePipelineDependencies{};
+		bool __needToUpdateMainCommands{};
+
 		tf::Future<void> __job;
 
 		void __reserveSwapchainImageDependencyPlaceholers() noexcept;
@@ -68,10 +74,29 @@ namespace HyperFast
 		void __createSwapchainImageView(const size_t imageIdx);
 		void __createRenderCommandBufferManager(const size_t imageIdx);
 		void __recordRenderCommand(const size_t imageIdx) noexcept;
+
+		void __updateSwapchainDependencies();
+		void __updatePipelineDependencies();
+		void __updateMainCommands() noexcept;
 	};
 
 	constexpr Vulkan::CommandBuffer &ScreenResource::getRenderCommandBuffer(const size_t imageIdx) noexcept
 	{
 		return *__renderCommandBuffers[imageIdx];
+	}
+
+	constexpr void ScreenResource::needToUpdateSwapchainDependencies() noexcept
+	{
+		__needToUpdateSwapchainDependencies = true;
+	}
+
+	constexpr void ScreenResource::needToUpdatePipelineDependencies() noexcept
+	{
+		__needToUpdatePipelineDependencies = true;
+	}
+
+	constexpr void ScreenResource::needToUpdateMainCommands() noexcept
+	{
+		__needToUpdateMainCommands = true;
 	}
 }

@@ -45,7 +45,7 @@ namespace HyperFast
 			const uint32_t signalSemaphoreInfoCount,
 			const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
 
-		void submit();
+		void update();
 
 	private:
 		Infra::Logger &__logger;

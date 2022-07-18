@@ -94,7 +94,7 @@ namespace HyperFast
 			signalSemaphoreInfoCount, pSignalSemaphoreInfos);
 	}
 
-	void RenderingEngine::submit()
+	void RenderingEngine::update()
 	{
 		__pCommandSubmitter->submit();
 	}

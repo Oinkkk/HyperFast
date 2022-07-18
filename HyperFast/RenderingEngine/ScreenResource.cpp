@@ -43,121 +43,16 @@ namespace HyperFast
 		__job.wait();
 	}
 
-	void ScreenResource::updateSwapchainDependencies()
+	void ScreenResource::update()
 	{
-		tf::Taskflow taskflow;
+		if (__needToUpdateSwapchainDependencies)
+			__updateSwapchainDependencies();
 
-		__pipelineFactory.reset();
-		__pFramebuffer = nullptr;
-		__pRenderPass = nullptr;
-		__swapChainImageViews.clear();
+		if (__needToUpdatePipelineDependencies)
+			__updatePipelineDependencies();
 
-		tf::Task t1
-		{
-			taskflow.emplace([this](tf::Subflow &subflow)
-			{
-				__reserveSwapchainImageDependencyPlaceholers();
-
-				tf::Task t1
-				{
-					subflow.emplace([this]
-					{
-						__createRenderPasses();
-					})
-				};
-
-				tf::Task t2
-				{
-					subflow.emplace([this]
-					{
-						__createFramebuffer();
-					})
-				};
-				t2.succeed(t1);
-
-				tf::Task t3
-				{
-					subflow.emplace([this](tf::Subflow &subflow)
-					{
-						__buildPipelines(subflow);
-					})
-				};
-				t3.succeed(t1);
-			})
-		};
-
-		tf::Task t2
-		{
-			taskflow.emplace([this](tf::Subflow &subflow)
-			{
-				const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
-				for (
-					size_t swapchainImageIter = 0ULL;
-					swapchainImageIter < numSwapchainImages;
-					swapchainImageIter++)
-				{
-					subflow.emplace([this, imageIdx = swapchainImageIter]
-					{
-						__createRenderCommandBufferManager(imageIdx);
-						__createSwapchainImageView(imageIdx);
-						__recordRenderCommand(imageIdx);
-					});
-				}
-			})
-		};
-		t2.succeed(t1);
-
-		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__job = executor.run(std::move(taskflow));
-	}
-
-	void ScreenResource::updatePipelineDependencies()
-	{
-		tf::Taskflow taskflow;
-		
-		taskflow.emplace([this](tf::Subflow &subflow)
-		{
-			__pipelineFactory.reset();
-			__buildPipelines(subflow);
-
-			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
-			for (
-				size_t swapchainImageIter = 0ULL;
-				swapchainImageIter < numSwapchainImages;
-				swapchainImageIter++)
-			{
-				subflow.emplace([this, imageIdx = swapchainImageIter]
-				{
-					__recordRenderCommand(imageIdx);
-				});
-			}
-		});
-
-		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__job = executor.run(std::move(taskflow));
-	}
-
-	void ScreenResource::updateMainCommands() noexcept
-	{
-		tf::Taskflow taskflow;
-		
-		taskflow.emplace([this](tf::Subflow &subflow)
-		{
-			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
-			for (
-				size_t swapchainImageIter = 0ULL;
-				swapchainImageIter < numSwapchainImages;
-				swapchainImageIter++)
-			{
-				subflow.emplace([this, imageIdx = swapchainImageIter]
-				{
-					__recordRenderCommand(imageIdx);
-				});
-			}
-		});
-
-		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__job = executor.run(std::move(taskflow));
+		if (__needToUpdateMainCommands)
+			__updateMainCommands();
 	}
 
 	void ScreenResource::__reserveSwapchainImageDependencyPlaceholers() noexcept
@@ -330,7 +225,7 @@ namespace HyperFast
 
 	void ScreenResource::__recordRenderCommand(const size_t imageIdx) noexcept
 	{
-		static const VkCommandBufferBeginInfo commandBufferBeginInfo
+		static constexpr VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
 		};
@@ -342,7 +237,7 @@ namespace HyperFast
 			.pAttachments = &(__swapChainImageViews[imageIdx]->getHandle())
 		};
 
-		const VkClearValue clearColor
+		static constexpr VkClearValue clearColor
 		{
 			.color = {.float32 = { 0.004f, 0.004f, 0.004f, 1.0f } }
 		};
@@ -384,5 +279,131 @@ namespace HyperFast
 
 		commandBuffer.vkCmdEndRenderPass();
 		commandBuffer.vkEndCommandBuffer();
+	}
+
+	void ScreenResource::__updateSwapchainDependencies()
+	{
+		tf::Taskflow taskflow;
+
+		__pipelineFactory.reset();
+		__pFramebuffer = nullptr;
+		__pRenderPass = nullptr;
+		__swapChainImageViews.clear();
+
+		tf::Task t1
+		{
+			taskflow.emplace([this](tf::Subflow &subflow)
+			{
+				__reserveSwapchainImageDependencyPlaceholers();
+
+				tf::Task t1
+				{
+					subflow.emplace([this]
+					{
+						__createRenderPasses();
+					})
+				};
+
+				tf::Task t2
+				{
+					subflow.emplace([this]
+					{
+						__createFramebuffer();
+					})
+				};
+				t2.succeed(t1);
+
+				tf::Task t3
+				{
+					subflow.emplace([this](tf::Subflow &subflow)
+					{
+						__buildPipelines(subflow);
+					})
+				};
+				t3.succeed(t1);
+			})
+		};
+
+		tf::Task t2
+		{
+			taskflow.emplace([this](tf::Subflow &subflow)
+			{
+				const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+				for (
+					size_t swapchainImageIter = 0ULL;
+					swapchainImageIter < numSwapchainImages;
+					swapchainImageIter++)
+				{
+					subflow.emplace([this, imageIdx = swapchainImageIter]
+					{
+						__createRenderCommandBufferManager(imageIdx);
+						__createSwapchainImageView(imageIdx);
+						__recordRenderCommand(imageIdx);
+					});
+				}
+			})
+		};
+		t2.succeed(t1);
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		__job = executor.run(std::move(taskflow));
+
+		__needToUpdateSwapchainDependencies = false;
+		__needToUpdatePipelineDependencies = false;
+		__needToUpdateMainCommands = false;
+	}
+
+	void ScreenResource::__updatePipelineDependencies()
+	{
+		tf::Taskflow taskflow;
+		
+		taskflow.emplace([this](tf::Subflow &subflow)
+		{
+			__pipelineFactory.reset();
+			__buildPipelines(subflow);
+
+			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+			for (
+				size_t swapchainImageIter = 0ULL;
+				swapchainImageIter < numSwapchainImages;
+				swapchainImageIter++)
+			{
+				subflow.emplace([this, imageIdx = swapchainImageIter]
+				{
+					__recordRenderCommand(imageIdx);
+				});
+			}
+		});
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		__job = executor.run(std::move(taskflow));
+
+		__needToUpdatePipelineDependencies = false;
+		__needToUpdateMainCommands = false;
+	}
+
+	void ScreenResource::__updateMainCommands() noexcept
+	{
+		tf::Taskflow taskflow;
+		
+		taskflow.emplace([this](tf::Subflow &subflow)
+		{
+			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+			for (
+				size_t swapchainImageIter = 0ULL;
+				swapchainImageIter < numSwapchainImages;
+				swapchainImageIter++)
+			{
+				subflow.emplace([this, imageIdx = swapchainImageIter]
+				{
+					__recordRenderCommand(imageIdx);
+				});
+			}
+		});
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		__job = executor.run(std::move(taskflow));
+
+		__needToUpdateMainCommands = false;
 	}
 }

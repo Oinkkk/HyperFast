@@ -51,7 +51,7 @@ int main()
 			pScreen1->render();
 			pScreen2->render();
 
-			pRenderingEngine->submit();
+			pRenderingEngine->update();
 			pScreen1->present();
 			pScreen2->present();
 		})
