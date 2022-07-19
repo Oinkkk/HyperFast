@@ -40,7 +40,7 @@ namespace HyperFast
 			const uint32_t __queueFamilyIndex;
 			Vulkan::Queue &__queue;
 
-			std::unique_ptr<ScreenResource> __resourceChain[3];
+			std::unique_ptr<ScreenResource> __resourceChain[2];
 			size_t __resourceCursor{};
 			bool __resourceChainInit{};
 
@@ -79,7 +79,8 @@ namespace HyperFast
 			bool __needToUpdateSurfaceDependencies{ true };
 			bool __needToUpdatePipelineDependencies{};
 			bool __needToUpdateMainCommands{};
-			bool __needToAdvanceResources{};
+			bool __needToUpdateResource{};
+			bool __needToAdvanceResource{};
 
 			bool __needToRender{};
 			bool __needToPresent{};
@@ -100,7 +101,8 @@ namespace HyperFast
 			void __updateSurfaceDependencies();
 			void __updatePipelineDependencies();
 			void __updateMainCommands();
-			void __advanceResources() noexcept;
+			void __updateResource();
+			void __advanceResource() noexcept;
 
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;

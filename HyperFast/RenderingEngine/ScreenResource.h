@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <vector>
 #include "../Vulkan/Surface.h"
 #include "../Vulkan/Swapchain.h"
 #include "../Vulkan/ImageView.h"
@@ -11,6 +9,7 @@
 #include "CommandBufferManager.h"
 #include "Drawcall.h"
 #include "../Infrastructure/Environment.h"
+#include "TimelineSemaphore.h"
 
 namespace HyperFast
 {
@@ -34,6 +33,11 @@ namespace HyperFast
 
 		[[nodiscard]]
 		constexpr Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
+
+		void addSubmitDependency(TimelineSemaphore &semaphore) noexcept;
+
+		[[nodiscard]]
+		bool isSubmitDependent() noexcept;
 
 		[[nodiscard]]
 		bool isIdle() noexcept;
@@ -65,6 +69,8 @@ namespace HyperFast
 		bool __needToUpdateMainCommands{};
 
 		tf::Future<void> __job;
+
+		std::unordered_map<TimelineSemaphore *, uint64_t> __submitDependencies;
 
 		void __reserveSwapchainImageDependencyPlaceholers() noexcept;
 		void __createRenderPasses();

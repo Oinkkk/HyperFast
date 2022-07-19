@@ -19,6 +19,29 @@ namespace HyperFast
 		__renderCommandBufferManagers.clear();
 	}
 
+	void ScreenResource::addSubmitDependency(TimelineSemaphore &semaphore) noexcept
+	{
+		__submitDependencies[&semaphore] = semaphore.getValue();
+	}
+
+	bool ScreenResource::isSubmitDependent() noexcept
+	{
+		for (
+			auto dependencyIter = __submitDependencies.begin();
+			dependencyIter != __submitDependencies.end(); )
+		{
+			const auto &[pSemaphore, value]{ *dependencyIter };
+			const VkResult waitResult{ pSemaphore->wait(value, 0ULL) };
+
+			if (waitResult != VkResult::VK_SUCCESS)
+				return true;
+
+			dependencyIter = __submitDependencies.erase(dependencyIter);
+		}
+
+		return false;
+	}
+
 	bool ScreenResource::isIdle() noexcept
 	{
 		using namespace std;

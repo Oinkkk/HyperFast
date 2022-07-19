@@ -71,16 +71,6 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__update()
 	{
-		ScreenResource &nextResource{ __getNextResource() };
-
-		// resource advance 진행 중
-		if (!(nextResource.isIdle()))
-			return;
-
-		// 이전 사이클에서 next resource update 요청이 있었던 경우
-		if (__needToAdvanceResources)
-			__advanceResources();
-
 		if (__needToUpdateSurfaceDependencies)
 			__updateSurfaceDependencies();
 
@@ -90,9 +80,11 @@ namespace HyperFast
 		if (__needToUpdateMainCommands)
 			__updateMainCommands();
 
-		// 현재 사이클에서 resource update 요청된 경우
-		if (__needToAdvanceResources)
-			nextResource.update();
+		if (__needToUpdateResource)
+			__updateResource();
+
+		if (__needToAdvanceResource)
+			__advanceResource();
 	}
 
 	void ScreenManager::ScreenImpl::__render() noexcept
@@ -133,6 +125,8 @@ namespace HyperFast
 			SubmitLayerType::GRAPHICS,
 			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo,
 			uint32_t(std::size(__submitSignalInfos)), __submitSignalInfos);
+
+		__getCurrentResource().addSubmitDependency(renderCompletionTimelineSemaphore);
 
 		__needToRender = false;
 		__needToPresent = true;
@@ -290,7 +284,7 @@ namespace HyperFast
 		__needToUpdateSurfaceDependencies = false;
 		__needToUpdatePipelineDependencies = false;
 		__needToUpdateMainCommands = false;
-		__needToAdvanceResources = true;
+		__needToUpdateResource = true;
 		__needToRender = false;
 	}
 
@@ -301,7 +295,7 @@ namespace HyperFast
 
 		__needToUpdatePipelineDependencies = false;
 		__needToUpdateMainCommands = false;
-		__needToAdvanceResources = true;
+		__needToUpdateResource = true;
 	}
 
 	void ScreenManager::ScreenImpl::__updateMainCommands()
@@ -310,15 +304,38 @@ namespace HyperFast
 			pResource->needToUpdateMainCommands();
 
 		__needToUpdateMainCommands = false;
-		__needToAdvanceResources = true;
+		__needToUpdateResource = true;
 	}
 
-	void ScreenManager::ScreenImpl::__advanceResources() noexcept
+	void ScreenManager::ScreenImpl::__updateResource()
 	{
+		ScreenResource &nextResource{ __getNextResource() };
+
+		// 한장도 못그리고 연속해서 resource 업데이트 요청이 들어온 경우
+		if (!(nextResource.isIdle()))
+			return;
+
+		// 아직 이전 제출된 command buffer가 처리되지 않음
+		if (nextResource.isSubmitDependent())
+			return;
+
+		nextResource.update();
+		__needToUpdateResource = false;
+		__needToAdvanceResource = true;
+	}
+
+	void ScreenManager::ScreenImpl::__advanceResource() noexcept
+	{
+		ScreenResource &nextResource{ __getNextResource() };
+
+		// resource update 진행 중
+		if (!(nextResource.isIdle()))
+			return;
+
 		__resourceCursor = ((__resourceCursor + 1ULL) % std::size(__resourceChain));
 		__resourceChainInit = true;
 		__pOldSwapchain = nullptr;
-		__needToAdvanceResources = false;
+		__needToAdvanceResource = false;
 		__needToRender = true;
 	}
 
@@ -365,8 +382,6 @@ namespace HyperFast
 		uint32_t numDesiredImages{ std::max(3U, __surfaceCapabilities.minImageCount) };
 		if (__surfaceCapabilities.maxImageCount)
 			numDesiredImages = std::min(numDesiredImages, __surfaceCapabilities.maxImageCount);
-
-		numDesiredImages = __surfaceCapabilities.maxImageCount;
 
 		const VkSurfaceFormatKHR *pDesiredFormat{};
 		for (const VkSurfaceFormatKHR &surfaceFormat : __supportedSurfaceFormats)

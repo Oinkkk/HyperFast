@@ -23,6 +23,11 @@ namespace HyperFast
 		return __pSemaphore->wait(__value, timeout);
 	}
 
+	VkResult TimelineSemaphore::wait(const uint64_t value, const uint64_t timeout) noexcept
+	{
+		return __pSemaphore->wait(value, timeout);
+	}
+
 	void TimelineSemaphore::__createSemaphore()
 	{
 		const VkSemaphoreTypeCreateInfo timelineInfo

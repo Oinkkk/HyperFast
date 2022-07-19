@@ -20,6 +20,7 @@ namespace HyperFast
 
 		VkResult signal() noexcept;
 		VkResult wait(const uint64_t timeout) noexcept;
+		VkResult wait(const uint64_t value, const uint64_t timeout) noexcept;
 
 	private:
 		Vulkan::Device &__device;
