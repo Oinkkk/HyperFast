@@ -3,10 +3,10 @@
 #include "../Window/Window.h"
 #include "../Infrastructure/Logger.h"
 #include "../Vulkan/Queue.h"
-#include "../Vulkan/Semaphore.h"
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
 #include "ScreenResource.h"
+#include "TimelineSemaphore.h"
 
 namespace HyperFast
 {
@@ -42,6 +42,7 @@ namespace HyperFast
 
 			std::unique_ptr<ScreenResource> __resourceChain[3];
 			size_t __resourceCursor{};
+			bool __resourceChainInit{};
 
 			Win::Window &__window;
 			std::shared_ptr<Infra::EventListener<Win::Window &, Win::Window::ResizingType>> __pResizeEventListener;
@@ -68,7 +69,7 @@ namespace HyperFast
 
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __imageAcquireSemaphores;
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionBinarySemaphores;
-			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionTimelineSemaphores;
+			std::vector<std::unique_ptr<TimelineSemaphore>> __renderCompletionTimelineSemaphores;
 			std::vector<uint64_t> __renderCompletionSemaphoreValues;
 
 			size_t __frameCursor{};
@@ -78,7 +79,7 @@ namespace HyperFast
 			bool __needToUpdateSurfaceDependencies{ true };
 			bool __needToUpdatePipelineDependencies{};
 			bool __needToUpdateMainCommands{};
-			bool __needToSwapResources{};
+			bool __needToAdvanceResources{};
 
 			bool __needToRender{};
 			bool __needToPresent{};
@@ -99,7 +100,7 @@ namespace HyperFast
 			void __updateSurfaceDependencies();
 			void __updatePipelineDependencies();
 			void __updateMainCommands();
-			void __swapResources() noexcept;
+			void __advanceResources() noexcept;
 
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
@@ -114,10 +115,10 @@ namespace HyperFast
 			bool __isValid() const noexcept;
 
 			[[nodiscard]]
-			ScreenResource &__getFrontResource() noexcept;
+			ScreenResource &__getCurrentResource() noexcept;
 
 			[[nodiscard]]
-			ScreenResource &__getBackResource() noexcept;
+			ScreenResource &__getNextResource() noexcept;
 
 			[[nodiscard]]
 			Vulkan::Semaphore &__getCurrentImageAcquireSemaphore() noexcept;
@@ -129,10 +130,7 @@ namespace HyperFast
 			Vulkan::Semaphore &__getCurrentRenderCompletionBinarySemaphore() noexcept;
 
 			[[nodiscard]]
-			Vulkan::Semaphore &__getCurrentRenderCompletionTimelineSemaphore() noexcept;
-
-			[[nodiscard]]
-			uint64_t &__getCurrentRenderCompletionSemaphoreValue() noexcept;
+			TimelineSemaphore &__getCurrentRenderCompletionTimelineSemaphore() noexcept;
 
 			[[nodiscard]]
 			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;

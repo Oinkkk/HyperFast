@@ -33,11 +33,11 @@ namespace HyperFast
 		~ScreenResource() noexcept;
 
 		[[nodiscard]]
-		bool isIdle() noexcept;
-		void waitIdle() noexcept;
+		constexpr Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
 
 		[[nodiscard]]
-		constexpr Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
+		bool isIdle() noexcept;
+		void waitIdle() noexcept;
 
 		constexpr void needToUpdateSwapchainDependencies() noexcept;
 		constexpr void needToUpdatePipelineDependencies() noexcept;

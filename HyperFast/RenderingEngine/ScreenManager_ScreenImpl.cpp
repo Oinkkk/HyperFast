@@ -71,14 +71,15 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__update()
 	{
-		ScreenResource &backResource{ __getBackResource() };
+		ScreenResource &nextResource{ __getNextResource() };
 
-		// 이미 resource swap 요청 됨
-		if (!(backResource.isIdle()))
+		// resource advance 진행 중
+		if (!(nextResource.isIdle()))
 			return;
 
-		if (__needToSwapResources)
-			__swapResources();
+		// 이전 사이클에서 next resource update 요청이 있었던 경우
+		if (__needToAdvanceResources)
+			__advanceResources();
 
 		if (__needToUpdateSurfaceDependencies)
 			__updateSurfaceDependencies();
@@ -89,13 +90,15 @@ namespace HyperFast
 		if (__needToUpdateMainCommands)
 			__updateMainCommands();
 
-		backResource.update();
+		// 현재 사이클에서 resource update 요청된 경우
+		if (__needToAdvanceResources)
+			nextResource.update();
 	}
 
 	void ScreenManager::ScreenImpl::__render() noexcept
 	{
-		// resource swap 진행 중
-		if (__pOldSwapchain)
+		// resource advance 진행 중 or resource chain 초기화 안됨
+		if (__pOldSwapchain || (!__resourceChainInit))
 			return;
 
 		Vulkan::Semaphore &imageAcquireSemaphore{ __getCurrentImageAcquireSemaphore() };
@@ -104,19 +107,12 @@ namespace HyperFast
 		if (!validAcquire)
 			return;
 
-		Vulkan::Semaphore &renderCompletionTimelineSemaphore{ __getCurrentRenderCompletionTimelineSemaphore() };
-		uint64_t &renderCompletionSemaphoreValue{ __getCurrentRenderCompletionSemaphoreValue() };
-
-		const VkResult waitResult
-		{
-			renderCompletionTimelineSemaphore.wait(renderCompletionSemaphoreValue, 0ULL)
-		};
+		TimelineSemaphore &renderCompletionTimelineSemaphore{ __getCurrentRenderCompletionTimelineSemaphore() };
+		const VkResult waitResult{ renderCompletionTimelineSemaphore.wait(0ULL) };
 
 		// 앞전에 submit된 command buffer가 아직 처리 중
 		if (waitResult == VkResult::VK_TIMEOUT)
 			return;
-
-		renderCompletionSemaphoreValue++;
 
 		 __submitWaitInfo.semaphore = imageAcquireSemaphore.getHandle();
 
@@ -129,8 +125,9 @@ namespace HyperFast
 		Vulkan::Semaphore &renderCompletionBinarySemaphore{ __getCurrentRenderCompletionBinarySemaphore() };
 		binarySignalInfo.semaphore = renderCompletionBinarySemaphore.getHandle();
 
+		renderCompletionTimelineSemaphore.advance();
 		timelineSignalInfo.semaphore = renderCompletionTimelineSemaphore.getHandle();
-		timelineSignalInfo.value = renderCompletionSemaphoreValue;
+		timelineSignalInfo.value = renderCompletionTimelineSemaphore.getValue();
 
 		__renderingEngine.enqueueCommands(
 			SubmitLayerType::GRAPHICS,
@@ -293,7 +290,7 @@ namespace HyperFast
 		__needToUpdateSurfaceDependencies = false;
 		__needToUpdatePipelineDependencies = false;
 		__needToUpdateMainCommands = false;
-		__needToSwapResources = true;
+		__needToAdvanceResources = true;
 		__needToRender = false;
 	}
 
@@ -304,7 +301,7 @@ namespace HyperFast
 
 		__needToUpdatePipelineDependencies = false;
 		__needToUpdateMainCommands = false;
-		__needToSwapResources = true;
+		__needToAdvanceResources = true;
 	}
 
 	void ScreenManager::ScreenImpl::__updateMainCommands()
@@ -313,15 +310,15 @@ namespace HyperFast
 			pResource->needToUpdateMainCommands();
 
 		__needToUpdateMainCommands = false;
-		__needToSwapResources = true;
+		__needToAdvanceResources = true;
 	}
 
-	void ScreenManager::ScreenImpl::__swapResources() noexcept
+	void ScreenManager::ScreenImpl::__advanceResources() noexcept
 	{
 		__resourceCursor = ((__resourceCursor + 1ULL) % std::size(__resourceChain));
-
+		__resourceChainInit = true;
 		__pOldSwapchain = nullptr;
-		__needToSwapResources = false;
+		__needToAdvanceResources = false;
 		__needToRender = true;
 	}
 
@@ -368,6 +365,8 @@ namespace HyperFast
 		uint32_t numDesiredImages{ std::max(3U, __surfaceCapabilities.minImageCount) };
 		if (__surfaceCapabilities.maxImageCount)
 			numDesiredImages = std::min(numDesiredImages, __surfaceCapabilities.maxImageCount);
+
+		numDesiredImages = __surfaceCapabilities.maxImageCount;
 
 		const VkSurfaceFormatKHR *pDesiredFormat{};
 		for (const VkSurfaceFormatKHR &surfaceFormat : __supportedSurfaceFormats)
@@ -477,7 +476,7 @@ namespace HyperFast
 			std::make_unique<Vulkan::Semaphore>(__device, binaryCreateInfo);
 
 		__renderCompletionTimelineSemaphores[imageIdx] =
-			std::make_unique<Vulkan::Semaphore>(__device, timelineCreateInfo);
+			std::make_unique<TimelineSemaphore>(__device);
 	}
 
 	bool ScreenManager::ScreenImpl::__isValid() const noexcept
@@ -489,12 +488,12 @@ namespace HyperFast
 		return validSize;
 	}
 
-	ScreenResource &ScreenManager::ScreenImpl::__getFrontResource() noexcept
+	ScreenResource &ScreenManager::ScreenImpl::__getCurrentResource() noexcept
 	{
 		return *__resourceChain[__resourceCursor];
 	}
 
-	ScreenResource &ScreenManager::ScreenImpl::__getBackResource() noexcept
+	ScreenResource &ScreenManager::ScreenImpl::__getNextResource() noexcept
 	{
 		const size_t nextCursor{ (__resourceCursor + 1ULL) % std::size(__resourceChain) };
 		return *__resourceChain[nextCursor];
@@ -507,7 +506,7 @@ namespace HyperFast
 
 	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__getCurrentRenderCommandBuffer() noexcept
 	{
-		return __getFrontResource().getRenderCommandBuffer(__imageIdx);
+		return __getCurrentResource().getRenderCommandBuffer(__imageIdx);
 	}
 
 	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionBinarySemaphore() noexcept
@@ -515,14 +514,9 @@ namespace HyperFast
 		return *__renderCompletionBinarySemaphores[__imageIdx];
 	}
 
-	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionTimelineSemaphore() noexcept
+	TimelineSemaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionTimelineSemaphore() noexcept
 	{
 		return *__renderCompletionTimelineSemaphores[__imageIdx];
-	}
-
-	uint64_t &ScreenManager::ScreenImpl::__getCurrentRenderCompletionSemaphoreValue() noexcept
-	{
-		return __renderCompletionSemaphoreValues[__imageIdx];
 	}
 
 	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept

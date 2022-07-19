@@ -49,6 +49,9 @@
     <Filter Include="Screen\Resource">
       <UniqueIdentifier>{fed5750a-aace-4714-98db-6a2fa1790546}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TimelineSemaphore">
+      <UniqueIdentifier>{77b6ad1c-e713-49d5-846d-91359e54410d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -113,6 +116,9 @@
     </ClCompile>
     <ClCompile Include="ScreenResource.cpp">
       <Filter>Screen\Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="TimelineSemaphore.cpp">
+      <Filter>TimelineSemaphore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -184,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="ScreenResource.h">
       <Filter>Screen\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="TimelineSemaphore.h">
+      <Filter>TimelineSemaphore</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
