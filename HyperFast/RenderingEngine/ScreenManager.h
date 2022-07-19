@@ -40,7 +40,7 @@ namespace HyperFast
 			const uint32_t __queueFamilyIndex;
 			Vulkan::Queue &__queue;
 
-			std::unique_ptr<ScreenResource> __resourceChain[2];
+			std::unique_ptr<ScreenResource> __resourceChain[3];
 			size_t __resourceCursor{};
 			bool __resourceChainInit{};
 

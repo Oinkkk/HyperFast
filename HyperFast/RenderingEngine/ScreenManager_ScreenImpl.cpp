@@ -259,7 +259,7 @@ namespace HyperFast
 		__renderCompletionBinarySemaphores.resize(numSwapchainImages);
 		__renderCompletionTimelineSemaphores.resize(numSwapchainImages);
 		__renderCompletionSemaphoreValues.resize(numSwapchainImages);
-		__frameCursor = 0ULL;
+		__frameCursor %= numSwapchainImages;
 
 		taskflow.emplace([this, numSwapchainImages](tf::Subflow &subflow)
 		{
