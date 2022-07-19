@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../Vulkan/Surface.h"
 #include "../Vulkan/Swapchain.h"
@@ -34,6 +34,7 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
 
+		// TODO: Semaphore dependency 관리 모듈 별도로 빼기
 		void addSubmitDependency(TimelineSemaphore &semaphore) noexcept;
 
 		[[nodiscard]]

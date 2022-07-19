@@ -56,7 +56,7 @@ namespace HyperFast
 
 		__update();
 
-		if (__needToRender)
+		if (__needToRender && __isRenderable())
 			__render();
 	}
 
@@ -89,10 +89,6 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__render() noexcept
 	{
-		// resource advance 진행 중 or resource chain 초기화 안됨
-		if (__pOldSwapchain || (!__resourceChainInit))
-			return;
-
 		Vulkan::Semaphore &imageAcquireSemaphore{ __getCurrentImageAcquireSemaphore() };
 
 		const bool validAcquire{ __acquireNextSwapchainImageIdx(imageAcquireSemaphore) };
@@ -501,6 +497,19 @@ namespace HyperFast
 
 		const bool validSize{ __window.getWidth() && __window.getHeight() };
 		return validSize;
+	}
+
+	bool ScreenManager::ScreenImpl::__isRenderable() const noexcept
+	{
+		// resource advance 진행 중
+		if (__pOldSwapchain)
+			return false;
+
+		// resource chain 초기화 안됨
+		if (!__resourceChainInit)
+			return false;
+
+		return true;
 	}
 
 	ScreenResource &ScreenManager::ScreenImpl::__getCurrentResource() noexcept

@@ -117,6 +117,9 @@ namespace HyperFast
 			bool __isValid() const noexcept;
 
 			[[nodiscard]]
+			bool __isRenderable() const noexcept;
+
+			[[nodiscard]]
 			ScreenResource &__getCurrentResource() noexcept;
 
 			[[nodiscard]]

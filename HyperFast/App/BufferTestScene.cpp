@@ -27,16 +27,16 @@ void BufferTestScene::_onProcess(const float deltaTime)
 	__submeshTimer1 += deltaTime;
 	__submeshTimer2 += deltaTime;
 
-	if (__submeshTimer1 > 1000.0f)
+	if (__submeshTimer1 > 500.0f)
 	{
 		__pSubmesh1->setVisible(!__pSubmesh1->isVisible());
-		__submeshTimer1 -= 1000.0f;
+		__submeshTimer1 -= 500.0f;
 	}
 
-	if (__submeshTimer2 > 2000.0f)
+	if (__submeshTimer2 > 1000.0f)
 	{
 		__pSubmesh2->setVisible(!__pSubmesh2->isVisible());
-		__submeshTimer2 -= 2000.0f;
+		__submeshTimer2 -= 1000.0f;
 	}
 }
 
