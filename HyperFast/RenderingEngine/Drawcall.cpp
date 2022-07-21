@@ -87,10 +87,19 @@ namespace HyperFast
 	void Drawcall::render(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
-		for (const auto &[pMesh, indirectBufferBuilder] : indirectBufferBuilderMap)
+		for (const auto &[pMesh, pIndirectBufferBuilder] : indirectBufferBuilderMap)
 		{
 			pMesh->bind(commandBuffer);
-			indirectBufferBuilder->render(commandBuffer);
+			pIndirectBufferBuilder->render(commandBuffer);
+		}
+	}
+
+	void Drawcall::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
+	{
+		for (const auto &[_, indirectBufferBuilderMap] : __attribFlag2IndirectBufferMap)
+		{
+			for (const auto &[pMesh, _] : indirectBufferBuilderMap)
+				pMesh->addSemaphoreDependency(pDependency);
 		}
 	}
 

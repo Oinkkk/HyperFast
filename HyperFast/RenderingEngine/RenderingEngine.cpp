@@ -404,7 +404,8 @@ namespace HyperFast
 
 	void RenderingEngine::__createBufferManager() noexcept
 	{
-		__pBufferManager = std::make_unique<BufferManager>(*__pDevice);
+		__pBufferManager = std::make_unique<BufferManager>(
+			*__pDevice, getLifeCycleEvent(LifeCycleType::GARBAGE_COLLECT));
 	}
 
 	void RenderingEngine::__createCommandSubmitter() noexcept

@@ -19,23 +19,18 @@ namespace HyperFast
 		__renderCommandBufferManagers.clear();
 	}
 
-	void ScreenResource::setSemaphoreDependency(
+	void ScreenResource::addSemaphoreDependency(
 		const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
 	{
-		__pSemaphoreDependency = pDependency;
+		__semaphoreDependencyCluster.add(pDependency);
 	}
 
 	bool ScreenResource::isIdle() noexcept
 	{
 		using namespace std;
 
-		if (__pSemaphoreDependency)
-		{
-			if (!(__pSemaphoreDependency->isIdle()))
-				return false;
-
-			__pSemaphoreDependency = nullptr;
-		}
+		if (!(__semaphoreDependencyCluster.isIdle()))
+			return false;
 
 		if (__job.valid())
 		{

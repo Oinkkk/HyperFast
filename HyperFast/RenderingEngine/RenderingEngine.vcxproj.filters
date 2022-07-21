@@ -123,6 +123,9 @@
     <ClCompile Include="SemaphoreDependency.cpp">
       <Filter>SemaphoreDependency</Filter>
     </ClCompile>
+    <ClCompile Include="SemaphoreDependencyCluster.cpp">
+      <Filter>SemaphoreDependency</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -201,6 +204,9 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="SemaphoreDependency.h">
+      <Filter>SemaphoreDependency</Filter>
+    </ClInclude>
+    <ClInclude Include="SemaphoreDependencyCluster.h">
       <Filter>SemaphoreDependency</Filter>
     </ClInclude>
   </ItemGroup>

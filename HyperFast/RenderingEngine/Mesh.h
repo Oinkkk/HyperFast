@@ -32,6 +32,8 @@ namespace HyperFast
 		constexpr Infra::EventView<Mesh &, VertexAttributeFlag, VertexAttributeFlag> &
 			getAttributeFlagChangeEvent() noexcept;
 
+		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
+
 	private:
 		Vulkan::Device &__device;
 

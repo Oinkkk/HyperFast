@@ -26,6 +26,8 @@ namespace HyperFast
 		// TODO: secondary buffer recording¿∫ attribFlag ∫∞∑Œ
 		void render(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept;
 
+		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
+
 		[[nodiscard]]
 		constexpr Infra::EventView<Drawcall &> &getAttributeFlagsUpdateEvent() noexcept;
 

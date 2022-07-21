@@ -30,6 +30,7 @@
     <ClInclude Include="ScreenManager.h" />
     <ClInclude Include="ScreenResource.h" />
     <ClInclude Include="SemaphoreDependency.h" />
+    <ClInclude Include="SemaphoreDependencyCluster.h" />
     <ClInclude Include="SemaphoreDependencyManager.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="SizeUtil.h" />
@@ -61,6 +62,7 @@
     <ClCompile Include="SemaphoreDependency.cpp" />
     <ClCompile Include="SemaphoreDependencyManager.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
+    <ClCompile Include="SemaphoreDependencyCluster.cpp" />
     <ClCompile Include="Submesh.cpp" />
   </ItemGroup>
   <ItemGroup>
