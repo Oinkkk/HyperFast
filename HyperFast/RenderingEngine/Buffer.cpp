@@ -21,8 +21,8 @@ namespace HyperFast
 		__pImpl->bindMemory(pMemory, offset);
 	}
 
-	void Buffer::setSemaphoreDependencyCluster(SemaphoreDependencyCluster *const pCluster) noexcept
+	void Buffer::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
 	{
-		__pImpl->setSemaphoreDependencyCluster(pCluster);
+		__pImpl->addSemaphoreDependency(pDependency);
 	}
 }

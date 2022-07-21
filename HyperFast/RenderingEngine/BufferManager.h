@@ -14,7 +14,9 @@ namespace HyperFast
 		class BufferImpl final : public Infra::Unique
 		{
 		public:
-			BufferImpl(Vulkan::Device &device, const VkDeviceSize size, const VkBufferUsageFlags usage);
+			BufferImpl(
+				Vulkan::Device &device,
+				const VkDeviceSize size, const VkBufferUsageFlags usage);
 
 			[[nodiscard]]
 			constexpr VkDeviceSize getSize() const noexcept;
@@ -35,7 +37,7 @@ namespace HyperFast
 			[[nodiscard]]
 			constexpr VkDeviceAddress getMemoryOffset() const noexcept;
 
-			void setSemaphoreDependencyCluster(SemaphoreDependencyCluster *const pCluster) noexcept;
+			void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
 
 			[[nodiscard]]
 			bool isIdle() noexcept;
@@ -51,7 +53,7 @@ namespace HyperFast
 			std::shared_ptr<Memory> __pMemory;
 			VkDeviceAddress __memoryOffset{};
 
-			SemaphoreDependencyCluster *__pSemaphoreDependencyCluster{};
+			SemaphoreDependencyCluster __semaphoreDependencyCluster;
 
 			void __createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 			void __queryMemoryRequirements() noexcept;

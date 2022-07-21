@@ -52,25 +52,19 @@ namespace HyperFast
 
 	void Mesh::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
 	{
-		__semaphoreDependencyCluster.add(pDependency);
+		__pPositionBuffer->addSemaphoreDependency(pDependency);
+		__pColorBuffer->addSemaphoreDependency(pDependency);
+		__pIndexBuffer->addSemaphoreDependency(pDependency);
 	}
 
 	void Mesh::__setBuffer(
 		const VertexAttributeFlagBit attribFlagBit, const uint32_t attribLocation,
 		std::unique_ptr<Buffer> &pOldBuffer, std::unique_ptr<Buffer> &&pNewBuffer) noexcept
 	{
-		if (pOldBuffer == pNewBuffer)
-			return;
-
 		const VertexAttributeFlag prevAttribFlag{ __attribFlag };
 
-		if (pOldBuffer)
-			pOldBuffer->setSemaphoreDependencyCluster(nullptr);
-
-		pNewBuffer->setSemaphoreDependencyCluster(&__semaphoreDependencyCluster);
-
 		pOldBuffer = std::move(pNewBuffer);
-		Buffer *const pRaw{ pNewBuffer.get() };
+		Buffer *const pRaw{ pOldBuffer.get() };
 
 		__setAttribFlagBit(attribFlagBit, pRaw);
 		__setHandle(attribLocation, pRaw);

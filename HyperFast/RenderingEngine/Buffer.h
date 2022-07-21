@@ -29,7 +29,7 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr VkDeviceAddress getMemoryOffset() const noexcept;
 
-		void setSemaphoreDependencyCluster(SemaphoreDependencyCluster *const pCluster) noexcept;
+		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
 
 	private:
 		BufferManager &__manager;
