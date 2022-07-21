@@ -28,9 +28,6 @@ namespace HyperFast
 
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
-			void render();
-			void present() noexcept;
-
 		private:
 			RenderingEngine &__renderingEngine;
 			Vulkan::Instance &__instance;
@@ -52,6 +49,9 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Drawcall &>> __pAttribFlagsUpdateEventListener;
 			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferUpdateListener;
 			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferCreateListener;
+			std::shared_ptr<Infra::EventListener<>> __pScreenUpdateListener;
+			std::shared_ptr<Infra::EventListener<>> __pRenderListener;
+			std::shared_ptr<Infra::EventListener<>> __pPresentListener;
 
 			std::unique_ptr<Vulkan::Surface> __pSurface;
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
@@ -94,6 +94,7 @@ namespace HyperFast
 			void __destroy() noexcept;
 
 			void __initListeners() noexcept;
+			void __registerListeners() noexcept;
 			void __createResourceChain() noexcept;
 			void __createSurface();
 			constexpr void __initSubmitInfo() noexcept;
@@ -139,6 +140,10 @@ namespace HyperFast
 
 			[[nodiscard]]
 			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;
+
+			void __onScreenUpdate();
+			void __onRender() noexcept;
+			void __onPresent() noexcept;
 		};
 
 		ScreenManager(

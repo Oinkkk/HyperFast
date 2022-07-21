@@ -66,7 +66,7 @@ namespace HyperFast
 		__job.wait();
 	}
 
-	void ScreenResource::update()
+	void ScreenResource::commit()
 	{
 		if (__needToUpdateSwapchainDependencies)
 			__updateSwapchainDependencies();

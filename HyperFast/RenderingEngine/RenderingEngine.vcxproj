@@ -19,6 +19,7 @@
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
+    <ClInclude Include="LifeCycleType.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="Mesh.h" />
@@ -28,6 +29,7 @@
     <ClInclude Include="Screen.h" />
     <ClInclude Include="ScreenManager.h" />
     <ClInclude Include="ScreenResource.h" />
+    <ClInclude Include="SemaphoreDependency.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="SizeUtil.h" />
     <ClInclude Include="Submesh.h" />

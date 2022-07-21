@@ -48,7 +48,7 @@ namespace HyperFast
 		constexpr void needToUpdatePipelineDependencies() noexcept;
 		constexpr void needToUpdateMainCommands() noexcept;
 
-		void update();
+		void commit();
 
 	private:
 		Vulkan::Device &__device;

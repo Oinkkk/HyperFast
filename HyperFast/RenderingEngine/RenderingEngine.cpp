@@ -11,6 +11,9 @@ namespace HyperFast
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
+		__createLifeCycleEventMap();
+		__initListeners();
+		__registerListeners();
 		__getInstanceVersion();
 		__checkInstanceVersionSupport();
 
@@ -94,9 +97,34 @@ namespace HyperFast
 			signalSemaphoreInfoCount, pSignalSemaphoreInfos);
 	}
 
-	void RenderingEngine::update()
+	void RenderingEngine::tick()
 	{
-		__pCommandSubmitter->submit();
+		for (const auto &[_, pEvent] : __lifeCycleEventMap)
+			pEvent->invoke();
+	}
+
+	Infra::EventView<> &RenderingEngine::getLifeCycleEvent(const LifeCycleType lifeCycleType) noexcept
+	{
+		return *(__lifeCycleEventMap.at(lifeCycleType));
+	}
+
+	void RenderingEngine::__createLifeCycleEventMap() noexcept
+	{
+		for (int iter = (int(LifeCycleType::START) + 1); iter < int(LifeCycleType::END); iter++)
+			__lifeCycleEventMap.emplace(LifeCycleType(iter), std::make_unique<Infra::Event<>>());
+	}
+
+	void RenderingEngine::__initListeners() noexcept
+	{
+		__pSubmitEventListener = Infra::EventListener<>::make([this]
+		{
+			__pCommandSubmitter->submit();
+		});
+	}
+
+	void RenderingEngine::__registerListeners() noexcept
+	{
+		getLifeCycleEvent(LifeCycleType::SUBMIT) += __pSubmitEventListener;
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept

@@ -10,14 +10,4 @@ namespace HyperFast
 	{
 		__pImpl->setDrawcall(pDrawcall);
 	}
-
-	void Screen::render()
-	{
-		__pImpl->render();
-	}
-
-	void Screen::present() noexcept
-	{
-		__pImpl->present();
-	}
 }

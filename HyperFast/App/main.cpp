@@ -48,12 +48,7 @@ int main()
 		Infra::EventListener<float>::make([&](const float deltaTime)
 		{
 			pBufferTestScene->process(deltaTime);
-			pScreen1->render();
-			pScreen2->render();
-
-			pRenderingEngine->update();
-			pScreen1->present();
-			pScreen2->present();
+			pRenderingEngine->tick();
 		})
 	};
 

@@ -52,6 +52,9 @@
     <Filter Include="TimelineSemaphore">
       <UniqueIdentifier>{77b6ad1c-e713-49d5-846d-91359e54410d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SemaphoreDependency">
+      <UniqueIdentifier>{19a48576-5f7e-4627-aace-d86b9d1cd6c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -193,6 +196,12 @@
     </ClInclude>
     <ClInclude Include="TimelineSemaphore.h">
       <Filter>TimelineSemaphore</Filter>
+    </ClInclude>
+    <ClInclude Include="SemaphoreDependency.h">
+      <Filter>SemaphoreDependency</Filter>
+    </ClInclude>
+    <ClInclude Include="LifeCycleType.h">
+      <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

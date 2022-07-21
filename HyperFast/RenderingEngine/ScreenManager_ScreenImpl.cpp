@@ -13,6 +13,7 @@ namespace HyperFast
 		__device{ device }, __queue{ queue }, __window{ window }
 	{
 		__initListeners();
+		__registerListeners();
 		__createResourceChain();
 		__createSurface();
 		__initSubmitInfo();
@@ -47,26 +48,6 @@ namespace HyperFast
 		}
 
 		__needToUpdatePipelineDependencies = true;
-	}
-
-	void ScreenManager::ScreenImpl::render()
-	{
-		if(!(__isValid()))
-			return;
-
-		__update();
-
-		if (__needToRender && __isRenderable())
-			__render();
-	}
-
-	void ScreenManager::ScreenImpl::present() noexcept
-	{
-		if (!(__isValid()))
-			return;
-
-		if (__needToPresent)
-			__present();
 	}
 
 	void ScreenManager::ScreenImpl::__update()
@@ -211,9 +192,25 @@ namespace HyperFast
 			__needToUpdateMainCommands = true;
 		});
 
+		__pScreenUpdateListener =
+			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onScreenUpdate, this);
+
+		__pRenderListener =
+			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onRender, this);
+
+		__pPresentListener =
+			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onPresent, this);
+	}
+
+	void ScreenManager::ScreenImpl::__registerListeners() noexcept
+	{
 		__window.getResizeEvent() += __pResizeEventListener;
 		__window.getDrawEvent() += __pDrawEventListener;
 		__window.getDestroyEvent() += __pDestroyEventListener;
+
+		__renderingEngine.getLifeCycleEvent(LifeCycleType::SCREEN_UPDATE) += __pScreenUpdateListener;
+		__renderingEngine.getLifeCycleEvent(LifeCycleType::RENDER) += __pRenderListener;
+		__renderingEngine.getLifeCycleEvent(LifeCycleType::PRESENT) += __pPresentListener;
 	}
 
 	void ScreenManager::ScreenImpl::__createResourceChain() noexcept
@@ -315,7 +312,7 @@ namespace HyperFast
 		if (nextResource.isSubmitDependent())
 			return;
 
-		nextResource.update();
+		nextResource.commit();
 		__needToUpdateResource = false;
 		__needToAdvanceResource = true;
 	}
@@ -569,5 +566,38 @@ namespace HyperFast
 		}
 
 		return false;
+	}
+
+	void ScreenManager::ScreenImpl::__onScreenUpdate()
+	{
+		if (!(__isValid()))
+			return;
+
+		__update();
+	}
+
+	void ScreenManager::ScreenImpl::__onRender() noexcept
+	{
+		if (!__needToRender)
+			return;
+
+		if (!(__isValid()))
+			return;
+			
+		if (!(__isRenderable()))
+			return;
+
+		__render();
+	}
+
+	void ScreenManager::ScreenImpl::__onPresent() noexcept
+	{
+		if (!__needToPresent)
+			return;
+
+		if (!(__isValid()))
+			return;
+
+		__present();
 	}
 }
