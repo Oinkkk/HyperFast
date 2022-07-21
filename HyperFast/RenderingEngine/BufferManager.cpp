@@ -16,8 +16,7 @@ namespace HyperFast
 	}
 
 	[[nodiscard]]
-	BufferManager::BufferImpl *BufferManager::create(
-		const VkDeviceSize size, const VkBufferUsageFlags usage)
+	BufferManager::BufferImpl *BufferManager::create(const VkDeviceSize size, const VkBufferUsageFlags usage)
 	{
 		return new BufferManager::BufferImpl{ __device, size, usage };
 	}

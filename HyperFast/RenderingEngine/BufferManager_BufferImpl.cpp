@@ -29,15 +29,17 @@ namespace HyperFast
 		}
 	}
 
-	void BufferManager::BufferImpl::addSemaphoreDependency(
-		const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
+	void BufferManager::BufferImpl::setSemaphoreDependencyCluster(SemaphoreDependencyCluster *const pCluster) noexcept
 	{
-		__semaphoreDependencyCluster.add(pDependency);
+		__pSemaphoreDependencyCluster = pCluster;
 	}
 
 	bool BufferManager::BufferImpl::isIdle() noexcept
 	{
-		return __semaphoreDependencyCluster.isIdle();
+		if (!__pSemaphoreDependencyCluster)
+			return true;
+
+		return __pSemaphoreDependencyCluster->isIdle();
 	}
 
 	void BufferManager::BufferImpl::__createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage)

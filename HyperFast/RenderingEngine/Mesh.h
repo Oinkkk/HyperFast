@@ -44,6 +44,7 @@ namespace HyperFast
 		VkIndexType __indexType{};
 
 		VertexAttributeFlag __attribFlag{};
+		SemaphoreDependencyCluster __semaphoreDependencyCluster;
 
 		VkBuffer __handles[VERTEX_ATTRIB_LOCATION_MAX]{};
 		VkDeviceSize __offsets[VERTEX_ATTRIB_LOCATION_MAX]{};
