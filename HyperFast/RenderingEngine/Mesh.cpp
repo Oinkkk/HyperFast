@@ -6,23 +6,38 @@ namespace HyperFast
 		__device{ device }
 	{}
 
-	void Mesh::setPositionBuffer(const std::shared_ptr<Buffer> &pBuffer) noexcept
+	Buffer *Mesh::getPositionBuffer() const noexcept
+	{
+		return __pPositionBuffer.get();
+	}
+
+	void Mesh::setPositionBuffer(std::unique_ptr<Buffer> &&pBuffer) noexcept
 	{
 		__setBuffer(
 			VertexAttributeFlagBit::POS3, VERTEX_ATTRIB_LOCATION_POS,
-			__pPositionBuffer, pBuffer);
+			__pPositionBuffer, std::move(pBuffer));
 	}
 
-	void Mesh::setColorBuffer(const std::shared_ptr<Buffer> &pBuffer) noexcept
+	Buffer *Mesh::getColorBuffer() const noexcept
+	{
+		return __pColorBuffer.get();
+	}
+
+	void Mesh::setColorBuffer(std::unique_ptr<Buffer> &&pBuffer) noexcept
 	{
 		__setBuffer(
 			VertexAttributeFlagBit::COLOR4, VERTEX_ATTRIB_LOCATION_COLOR,
-			__pColorBuffer, pBuffer);
+			__pColorBuffer, std::move(pBuffer));
 	}
 
-	void Mesh::setIndexBuffer(const std::shared_ptr<Buffer> &pBuffer, const VkIndexType indexType) noexcept
+	Buffer *Mesh::getIndexBuffer() const noexcept
 	{
-		__pIndexBuffer = pBuffer;
+		return __pIndexBuffer.get();
+	}
+
+	void Mesh::setIndexBuffer(std::unique_ptr<Buffer> &&pBuffer, const VkIndexType indexType) noexcept
+	{
+		__pIndexBuffer = std::move(pBuffer);
 		__indexType = indexType;
 	}
 
@@ -42,7 +57,7 @@ namespace HyperFast
 
 	void Mesh::__setBuffer(
 		const VertexAttributeFlagBit attribFlagBit, const uint32_t attribLocation,
-		std::shared_ptr<Buffer> &pOldBuffer, const std::shared_ptr<Buffer> &pNewBuffer) noexcept
+		std::unique_ptr<Buffer> &pOldBuffer, std::unique_ptr<Buffer> &&pNewBuffer) noexcept
 	{
 		if (pOldBuffer == pNewBuffer)
 			return;
@@ -54,12 +69,11 @@ namespace HyperFast
 
 		pNewBuffer->setSemaphoreDependencyCluster(&__semaphoreDependencyCluster);
 
-		pOldBuffer = pNewBuffer;
+		pOldBuffer = std::move(pNewBuffer);
 		Buffer *const pRaw{ pNewBuffer.get() };
 
 		__setAttribFlagBit(attribFlagBit, pRaw);
 		__setHandle(attribLocation, pRaw);
-
 
 		if (prevAttribFlag != __attribFlag)
 			__attribFlagChangeEvent.invoke(*this, prevAttribFlag, __attribFlag);

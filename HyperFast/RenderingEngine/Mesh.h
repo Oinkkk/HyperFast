@@ -13,16 +13,16 @@ namespace HyperFast
 		Mesh(Vulkan::Device &device) noexcept;
 
 		[[nodiscard]]
-		constexpr const std::shared_ptr<Buffer> &getPositionBuffer() const noexcept;
-		void setPositionBuffer(const std::shared_ptr<Buffer> &pBuffer) noexcept;
+		Buffer *getPositionBuffer() const noexcept;
+		void setPositionBuffer(std::unique_ptr<Buffer> &&pBuffer) noexcept;
 
 		[[nodiscard]]
-		constexpr const std::shared_ptr<Buffer> &getColorBuffer() const noexcept;
-		void setColorBuffer(const std::shared_ptr<Buffer> &pBuffer) noexcept;
+		Buffer *getColorBuffer() const noexcept;
+		void setColorBuffer(std::unique_ptr<Buffer> &&pBuffer) noexcept;
 
 		[[nodiscard]]
-		constexpr const std::shared_ptr<Buffer> &getIndexBuffer() const noexcept;
-		void setIndexBuffer(const std::shared_ptr<Buffer> &pBuffer, const VkIndexType indexType) noexcept;
+		Buffer *getIndexBuffer() const noexcept;
+		void setIndexBuffer(std::unique_ptr<Buffer> &&pBuffer, const VkIndexType indexType) noexcept;
 
 		[[nodiscard]]
 		constexpr VertexAttributeFlag getVertexAttributeFlag() const noexcept;
@@ -37,10 +37,9 @@ namespace HyperFast
 	private:
 		Vulkan::Device &__device;
 
-		std::shared_ptr<Buffer> __pPositionBuffer;
-		std::shared_ptr<Buffer> __pColorBuffer;
-
-		std::shared_ptr<Buffer> __pIndexBuffer;
+		std::unique_ptr<Buffer> __pPositionBuffer;
+		std::unique_ptr<Buffer> __pColorBuffer;
+		std::unique_ptr<Buffer> __pIndexBuffer;
 		VkIndexType __indexType{};
 
 		VertexAttributeFlag __attribFlag{};
@@ -56,23 +55,8 @@ namespace HyperFast
 
 		void __setBuffer(
 			const VertexAttributeFlagBit attribFlagBit, const uint32_t attribLocation,
-			std::shared_ptr<Buffer> &pOldBuffer, const std::shared_ptr<Buffer> &pNewBuffer) noexcept;
+			std::unique_ptr<Buffer> &pOldBuffer, std::unique_ptr<Buffer> &&pNewBuffer) noexcept;
 	};
-
-	constexpr const std::shared_ptr<Buffer> &Mesh::getPositionBuffer() const noexcept
-	{
-		return __pPositionBuffer;
-	}
-
-	constexpr const std::shared_ptr<Buffer> &Mesh::getColorBuffer() const noexcept
-	{
-		return __pColorBuffer;
-	}
-
-	constexpr const std::shared_ptr<Buffer> &Mesh::getIndexBuffer() const noexcept
-	{
-		return __pIndexBuffer;
-	}
 
 	constexpr VertexAttributeFlag Mesh::getVertexAttributeFlag() const noexcept
 	{
