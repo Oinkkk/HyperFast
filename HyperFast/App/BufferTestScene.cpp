@@ -66,19 +66,25 @@ void BufferTestScene::__createMesh()
 	const size_t colorDataSize{ sizeof(glm::vec4) * colors.size() };
 	const size_t indexDataSize{ sizeof(uint16_t) * indices.size() };
 
-	std::shared_ptr<HyperFast::Buffer> pPositionBuffer
+	std::unique_ptr<HyperFast::Buffer> pPositionBuffer
 	{
-		_createBuffer(positionDataSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+		_createBuffer(
+			positionDataSize,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
 	};
 
-	std::shared_ptr<HyperFast::Buffer> pColorBuffer
+	std::unique_ptr<HyperFast::Buffer> pColorBuffer
 	{
-		_createBuffer(colorDataSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+		_createBuffer(
+			colorDataSize,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
 	};
 
-	std::shared_ptr<HyperFast::Buffer> pIndexBuffer
+	std::unique_ptr<HyperFast::Buffer> pIndexBuffer
 	{
-		_createBuffer(indexDataSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+		_createBuffer(
+			indexDataSize,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
 	};
 
 	const VkMemoryPropertyFlags memProps
@@ -100,9 +106,9 @@ void BufferTestScene::__createMesh()
 	pIndexBuffer->bindMemory(pIndexMemory, 0ULL);
 
 	__pMesh = _createMesh();
-	__pMesh->setPositionBuffer(pPositionBuffer);
-	__pMesh->setColorBuffer(pColorBuffer);
-	__pMesh->setIndexBuffer(pIndexBuffer, VkIndexType::VK_INDEX_TYPE_UINT16);
+	__pMesh->setPositionBuffer(std::move(pPositionBuffer));
+	__pMesh->setColorBuffer(std::move(pColorBuffer));
+	__pMesh->setIndexBuffer(std::move(pIndexBuffer), VkIndexType::VK_INDEX_TYPE_UINT16);
 
 	__pSubmesh1 = _createSubmesh(__pMesh);
 	__pSubmesh1->setDrawCommand(3U, 1U, 0U, 0, 0U);

@@ -23,7 +23,7 @@ namespace HyperFast
 		std::shared_ptr<Screen> createScreen(Win::Window &window);
 
 		[[nodiscard]]
-		std::shared_ptr<Buffer> createBuffer(
+		std::unique_ptr<Buffer> createBuffer(
 			const VkDeviceSize size, const VkBufferUsageFlags usage);
 
 		[[nodiscard]]

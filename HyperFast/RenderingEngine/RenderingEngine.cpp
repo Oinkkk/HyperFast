@@ -56,10 +56,10 @@ namespace HyperFast
 		return std::make_shared<HyperFast::Screen>(*__pScreenManager, window);
 	}
 
-	std::shared_ptr<Buffer> RenderingEngine::createBuffer(
+	std::unique_ptr<Buffer> RenderingEngine::createBuffer(
 		const VkDeviceSize size, const VkBufferUsageFlags usage)
 	{
-		return std::make_shared<Buffer>(*__pBufferManager, size, usage);
+		return std::make_unique<Buffer>(*__pBufferManager, size, usage);
 	}
 
 	std::shared_ptr<Memory> RenderingEngine::createMemory(

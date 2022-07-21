@@ -17,7 +17,7 @@ namespace Jin
 		__pDrawcall->validate();
 	}
 
-	std::shared_ptr<HyperFast::Buffer> Scene::_createBuffer(
+	std::unique_ptr<HyperFast::Buffer> Scene::_createBuffer(
 		const VkDeviceSize size, const VkBufferUsageFlags usage) const
 	{
 		return __renderingEngine.createBuffer(size, usage);

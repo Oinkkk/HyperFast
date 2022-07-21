@@ -16,7 +16,7 @@ namespace Jin
 
 	protected:
 		[[nodiscard]]
-		std::shared_ptr<HyperFast::Buffer> _createBuffer(
+		std::unique_ptr<HyperFast::Buffer> _createBuffer(
 			const VkDeviceSize size, const VkBufferUsageFlags usage) const;
 
 		[[nodiscard]]
