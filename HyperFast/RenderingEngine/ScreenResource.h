@@ -9,7 +9,7 @@
 #include "CommandBufferManager.h"
 #include "Drawcall.h"
 #include "../Infrastructure/Environment.h"
-#include "TimelineSemaphore.h"
+#include "../Vulkan/Semaphore.h"
 
 namespace HyperFast
 {
@@ -35,7 +35,7 @@ namespace HyperFast
 		constexpr Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
 
 		// TODO: Semaphore dependency 관리 모듈 별도로 빼기
-		void addSubmitDependency(TimelineSemaphore &semaphore) noexcept;
+		void addSubmitDependency(Vulkan::Semaphore &semaphore, const uint64_t value) noexcept;
 
 		[[nodiscard]]
 		bool isSubmitDependent() noexcept;
@@ -71,7 +71,7 @@ namespace HyperFast
 
 		tf::Future<void> __job;
 
-		std::unordered_map<TimelineSemaphore *, uint64_t> __submitDependencies;
+		std::unordered_map<Vulkan::Semaphore *, uint64_t> __submitDependencies;
 
 		void __reserveSwapchainImageDependencyPlaceholers() noexcept;
 		void __createRenderPasses();

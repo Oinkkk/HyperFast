@@ -6,7 +6,7 @@
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
 #include "ScreenResource.h"
-#include "TimelineSemaphore.h"
+#include "../Vulkan/Semaphore.h"
 
 namespace HyperFast
 {
@@ -69,7 +69,7 @@ namespace HyperFast
 
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __imageAcquireSemaphores;
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionBinarySemaphores;
-			std::vector<std::unique_ptr<TimelineSemaphore>> __renderCompletionTimelineSemaphores;
+			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionTimelineSemaphores;
 			std::vector<uint64_t> __renderCompletionSemaphoreValues;
 
 			size_t __frameCursor{};
@@ -136,7 +136,10 @@ namespace HyperFast
 			Vulkan::Semaphore &__getCurrentRenderCompletionBinarySemaphore() noexcept;
 
 			[[nodiscard]]
-			TimelineSemaphore &__getCurrentRenderCompletionTimelineSemaphore() noexcept;
+			Vulkan::Semaphore &__getCurrentRenderCompletionTimelineSemaphore() noexcept;
+
+			[[nodiscard]]
+			uint64_t &__getCurrentRenderCompletionSemaphoreValue() noexcept;
 
 			[[nodiscard]]
 			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;

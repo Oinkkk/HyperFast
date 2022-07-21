@@ -19,9 +19,9 @@ namespace HyperFast
 		__renderCommandBufferManagers.clear();
 	}
 
-	void ScreenResource::addSubmitDependency(TimelineSemaphore &semaphore) noexcept
+	void ScreenResource::addSubmitDependency(Vulkan::Semaphore &semaphore, const uint64_t value) noexcept
 	{
-		__submitDependencies[&semaphore] = semaphore.getValue();
+		__submitDependencies[&semaphore] = value;
 	}
 
 	bool ScreenResource::isSubmitDependent() noexcept

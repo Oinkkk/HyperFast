@@ -76,8 +76,14 @@ namespace HyperFast
 		if (!validAcquire)
 			return;
 
-		TimelineSemaphore &renderCompletionTimelineSemaphore{ __getCurrentRenderCompletionTimelineSemaphore() };
-		const VkResult waitResult{ renderCompletionTimelineSemaphore.wait(0ULL) };
+		Vulkan::Semaphore &renderCompletionTimelineSemaphore{ __getCurrentRenderCompletionTimelineSemaphore() };
+		uint64_t &renderCompletionSemaphoreValue{ __getCurrentRenderCompletionSemaphoreValue() };
+
+		const VkResult waitResult
+		{
+			renderCompletionTimelineSemaphore.wait(
+				renderCompletionSemaphoreValue, 0ULL)
+		};
 
 		// 앞전에 submit된 command buffer가 아직 처리 중
 		if (waitResult == VkResult::VK_TIMEOUT)
@@ -94,16 +100,17 @@ namespace HyperFast
 		Vulkan::Semaphore &renderCompletionBinarySemaphore{ __getCurrentRenderCompletionBinarySemaphore() };
 		binarySignalInfo.semaphore = renderCompletionBinarySemaphore.getHandle();
 
-		renderCompletionTimelineSemaphore.advance();
+		renderCompletionSemaphoreValue++;
 		timelineSignalInfo.semaphore = renderCompletionTimelineSemaphore.getHandle();
-		timelineSignalInfo.value = renderCompletionTimelineSemaphore.getValue();
+		timelineSignalInfo.value = renderCompletionSemaphoreValue;
 
 		__renderingEngine.enqueueCommands(
 			SubmitLayerType::GRAPHICS,
 			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo,
 			uint32_t(std::size(__submitSignalInfos)), __submitSignalInfos);
 
-		__getCurrentResource().addSubmitDependency(renderCompletionTimelineSemaphore);
+		__getCurrentResource().addSubmitDependency(
+			renderCompletionTimelineSemaphore, renderCompletionSemaphoreValue);
 
 		__needToRender = false;
 		__needToPresent = true;
@@ -484,7 +491,7 @@ namespace HyperFast
 			std::make_unique<Vulkan::Semaphore>(__device, binaryCreateInfo);
 
 		__renderCompletionTimelineSemaphores[imageIdx] =
-			std::make_unique<TimelineSemaphore>(__device);
+			std::make_unique<Vulkan::Semaphore>(__device, timelineCreateInfo);
 	}
 
 	bool ScreenManager::ScreenImpl::__isValid() const noexcept
@@ -535,10 +542,16 @@ namespace HyperFast
 		return *__renderCompletionBinarySemaphores[__imageIdx];
 	}
 
-	TimelineSemaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionTimelineSemaphore() noexcept
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionTimelineSemaphore() noexcept
 	{
 		return *__renderCompletionTimelineSemaphores[__imageIdx];
 	}
+
+	uint64_t &ScreenManager::ScreenImpl::__getCurrentRenderCompletionSemaphoreValue() noexcept
+	{
+		return __renderCompletionSemaphoreValues[__imageIdx];
+	}
+
 
 	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept
 	{

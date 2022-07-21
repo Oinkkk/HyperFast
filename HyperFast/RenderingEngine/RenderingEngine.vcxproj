@@ -34,7 +34,6 @@
     <ClInclude Include="SizeUtil.h" />
     <ClInclude Include="Submesh.h" />
     <ClInclude Include="SubmitLayerType.h" />
-    <ClInclude Include="TimelineSemaphore.h" />
     <ClInclude Include="VertexAttribute.h" />
     <ClInclude Include="VertexAttributeUtil.h" />
   </ItemGroup>
@@ -60,7 +59,6 @@
     <ClCompile Include="ScreenResource.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
     <ClCompile Include="Submesh.cpp" />
-    <ClCompile Include="TimelineSemaphore.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\glslc\glslc.vcxproj">

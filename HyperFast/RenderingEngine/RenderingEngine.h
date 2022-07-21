@@ -39,12 +39,9 @@ namespace HyperFast
 
 		void enqueueCommands(
 			const SubmitLayerType layerType,
-			const uint32_t waitSemaphoreInfoCount,
-			const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
-			const uint32_t commandBufferInfoCount,
-			const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
-			const uint32_t signalSemaphoreInfoCount,
-			const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
+			const uint32_t waitSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
+			const uint32_t commandBufferInfoCount, const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
+			const uint32_t signalSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
 
 		void tick();
 

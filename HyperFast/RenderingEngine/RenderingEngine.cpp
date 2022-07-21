@@ -83,12 +83,9 @@ namespace HyperFast
 
 	void RenderingEngine::enqueueCommands(
 		const SubmitLayerType layerType,
-		const uint32_t waitSemaphoreInfoCount,
-		const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
-		const uint32_t commandBufferInfoCount,
-		const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
-		const uint32_t signalSemaphoreInfoCount,
-		const VkSemaphoreSubmitInfo *pSignalSemaphoreInfos) noexcept
+		const uint32_t waitSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
+		const uint32_t commandBufferInfoCount, const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
+		const uint32_t signalSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept
 	{
 		__pCommandSubmitter->enqueue(
 			layerType,
