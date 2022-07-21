@@ -6,7 +6,6 @@
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
 #include "ScreenResource.h"
-#include "../Vulkan/Semaphore.h"
 
 namespace HyperFast
 {
@@ -66,6 +65,9 @@ namespace HyperFast
 			VkSemaphoreSubmitInfo __submitWaitInfo{};
 			VkCommandBufferSubmitInfo __submitCommandBufferInfo{};
 			VkSemaphoreSubmitInfo __submitSignalInfos[2]{};
+
+			SemaphoreDependencyManager __submitDependencyManager;
+			std::shared_ptr<SemaphoreDependency> __pCurrentSubmitDependency;
 
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __imageAcquireSemaphores;
 			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionBinarySemaphores;

@@ -117,6 +117,12 @@
     <ClCompile Include="ScreenResource.cpp">
       <Filter>Screen\Resource</Filter>
     </ClCompile>
+    <ClCompile Include="SemaphoreDependencyManager.cpp">
+      <Filter>SemaphoreDependency</Filter>
+    </ClCompile>
+    <ClCompile Include="SemaphoreDependency.cpp">
+      <Filter>SemaphoreDependency</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -188,11 +194,14 @@
     <ClInclude Include="ScreenResource.h">
       <Filter>Screen\Resource</Filter>
     </ClInclude>
-    <ClInclude Include="SemaphoreDependency.h">
+    <ClInclude Include="SemaphoreDependencyManager.h">
       <Filter>SemaphoreDependency</Filter>
     </ClInclude>
     <ClInclude Include="LifeCycleType.h">
       <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="SemaphoreDependency.h">
+      <Filter>SemaphoreDependency</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

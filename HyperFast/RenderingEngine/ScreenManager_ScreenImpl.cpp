@@ -109,7 +109,7 @@ namespace HyperFast
 			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo,
 			uint32_t(std::size(__submitSignalInfos)), __submitSignalInfos);
 
-		__getCurrentResource().addSubmitDependency(
+		__submitDependencyManager.setDependency(
 			renderCompletionTimelineSemaphore, renderCompletionSemaphoreValue);
 
 		__needToRender = false;
@@ -310,13 +310,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__updateResource()
 	{
 		ScreenResource &nextResource{ __getNextResource() };
-
-		// 한장도 못그리고 연속해서 resource 업데이트 요청이 들어온 경우
 		if (!(nextResource.isIdle()))
-			return;
-
-		// 아직 이전 제출된 command buffer가 처리되지 않음
-		if (nextResource.isSubmitDependent())
 			return;
 
 		nextResource.commit();
@@ -327,12 +321,15 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__advanceResource() noexcept
 	{
 		ScreenResource &nextResource{ __getNextResource() };
-
-		// resource update 진행 중
 		if (!(nextResource.isIdle()))
 			return;
 
 		__resourceCursor = ((__resourceCursor + 1ULL) % std::size(__resourceChain));
+
+		__submitDependencyManager.nextGroup();
+		__pCurrentSubmitDependency = std::make_shared<SemaphoreDependency>(__submitDependencyManager);
+		nextResource.setSemaphoreDependency(__pCurrentSubmitDependency);
+
 		__resourceChainInit = true;
 		__pOldSwapchain = nullptr;
 		__needToAdvanceResource = false;

@@ -19,43 +19,36 @@ namespace HyperFast
 		__renderCommandBufferManagers.clear();
 	}
 
-	void ScreenResource::addSubmitDependency(Vulkan::Semaphore &semaphore, const uint64_t value) noexcept
+	void ScreenResource::setSemaphoreDependency(
+		const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
 	{
-		__submitDependencies[&semaphore] = value;
-	}
-
-	bool ScreenResource::isSubmitDependent() noexcept
-	{
-		for (
-			auto dependencyIter = __submitDependencies.begin();
-			dependencyIter != __submitDependencies.end(); )
-		{
-			const auto &[pSemaphore, value]{ *dependencyIter };
-			const VkResult waitResult{ pSemaphore->wait(value, 0ULL) };
-
-			if (waitResult != VkResult::VK_SUCCESS)
-				return true;
-
-			dependencyIter = __submitDependencies.erase(dependencyIter);
-		}
-
-		return false;
+		__pSemaphoreDependency = pDependency;
 	}
 
 	bool ScreenResource::isIdle() noexcept
 	{
 		using namespace std;
 
-		if (!(__job.valid()))
-			return true;
-
-		if (__job.wait_for(0s) == std::future_status::ready)
+		if (__pSemaphoreDependency)
 		{
-			__job.get();
-			return true;
+			if (!(__pSemaphoreDependency->isIdle()))
+				return false;
+
+			__pSemaphoreDependency = nullptr;
 		}
 
-		return false;
+		if (__job.valid())
+		{
+			if (__job.wait_for(0s) != std::future_status::ready)
+				return false;
+			else
+			{
+				__job.get();
+				return true;
+			}
+		}
+
+		return true;
 	}
 
 	void ScreenResource::waitIdle() noexcept
