@@ -9,7 +9,7 @@
 #include "Drawcall.h"
 #include "../Vulkan/DebugUtilsMessenger.h"
 #include "CommandSubmitter.h"
-#include "LifeCycleType.h"
+#include "LifeCycleSignalType.h"
 
 namespace HyperFast
 {
@@ -46,7 +46,7 @@ namespace HyperFast
 		void tick();
 
 		[[nodiscard]]
-		Infra::EventView<> &getLifeCycleEvent(const LifeCycleType lifeCycleType) noexcept;
+		Infra::EventView<> &getLifeCycleSignalEvent(const LifeCycleSignalType signalType) noexcept;
 
 	private:
 		Infra::Logger &__logger;
@@ -74,12 +74,12 @@ namespace HyperFast
 		std::unique_ptr<BufferManager> __pBufferManager;
 		std::unique_ptr<CommandSubmitter> __pCommandSubmitter;
 
-		std::map<LifeCycleType, std::unique_ptr<Infra::Event<>>> __lifeCycleEventMap;
+		std::map<LifeCycleSignalType, std::unique_ptr<Infra::Event<>>> __lifeCycleSignalEventMap;
 		std::shared_ptr<Infra::EventListener<>> __pSubmitEventListener;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
-		void __createLifeCycleEventMap() noexcept;
+		void __createLifeCycleSignalEventMap() noexcept;
 		void __initListeners() noexcept;
 		void __registerListeners() noexcept;
 		void __getInstanceVersion() noexcept;

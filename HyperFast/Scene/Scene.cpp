@@ -14,7 +14,7 @@ namespace Jin
 	void Scene::process(const float deltaTime)
 	{
 		_onProcess(deltaTime);
-		__pDrawcall->validate();
+		__pDrawcall->update();
 	}
 
 	std::unique_ptr<HyperFast::Buffer> Scene::_createBuffer(

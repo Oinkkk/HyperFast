@@ -33,20 +33,28 @@ namespace HyperFast
 
 		if (pCurrentDrawCall)
 		{
-			pCurrentDrawCall->getAttributeFlagsUpdateEvent() -= __pAttribFlagsUpdateEventListener;
-			pCurrentDrawCall->getMeshBufferChangeEvent() -= __pMeshBufferChangeEventListener;
-			pCurrentDrawCall->getIndirectBufferUpdateEvent() -= __pIndirectBufferUpdateListener;
-			pCurrentDrawCall->getIndirectBufferCreateEvent() -= __pIndirectBufferCreateListener;
+			pCurrentDrawCall->getNeedToUpdatePipelineDependenciesEvent()
+				-= __pDrawcallNeedToUpdatePipelineDependenciesListener;
+			
+			pCurrentDrawCall->getNeedToUpdateMainCommandsEvent()
+				-= __pDrawcallNeedToUpdateMainCommandsListener;
+			
+			pCurrentDrawCall->getNeedToRenderEvent()
+				-= __pDrawcallNeedToRenderListener;
 		}
 
 		pCurrentDrawCall = pDrawcall;
 
 		if (pCurrentDrawCall)
 		{
-			pCurrentDrawCall->getAttributeFlagsUpdateEvent() += __pAttribFlagsUpdateEventListener;
-			pCurrentDrawCall->getMeshBufferChangeEvent() += __pMeshBufferChangeEventListener;
-			pCurrentDrawCall->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateListener;
-			pCurrentDrawCall->getIndirectBufferCreateEvent() += __pIndirectBufferCreateListener;
+			pCurrentDrawCall->getNeedToUpdatePipelineDependenciesEvent()
+				+= __pDrawcallNeedToUpdatePipelineDependenciesListener;
+
+			pCurrentDrawCall->getNeedToUpdateMainCommandsEvent()
+				+= __pDrawcallNeedToUpdateMainCommandsListener;
+
+			pCurrentDrawCall->getNeedToRenderEvent()
+				+= __pDrawcallNeedToRenderListener;
 		}
 
 		__needToUpdatePipelineDependencies = true;
@@ -186,24 +194,19 @@ namespace HyperFast
 			__destroy();
 		});
 
-		__pAttribFlagsUpdateEventListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
+		__pDrawcallNeedToUpdatePipelineDependenciesListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
 		{
 			__needToUpdatePipelineDependencies = true;
 		});
 
-		__pMeshBufferChangeEventListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
+		__pDrawcallNeedToUpdateMainCommandsListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
 		{
 			__needToUpdateMainCommands = true;
 		});
 
-		__pIndirectBufferUpdateListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
+		__pDrawcallNeedToRenderListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
 		{
 			__needToRender = true;
-		});
-
-		__pIndirectBufferCreateListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
-		{
-			__needToUpdateMainCommands = true;
 		});
 
 		__pScreenUpdateListener =
@@ -222,9 +225,9 @@ namespace HyperFast
 		__window.getDrawEvent() += __pDrawEventListener;
 		__window.getDestroyEvent() += __pDestroyEventListener;
 
-		__renderingEngine.getLifeCycleEvent(LifeCycleType::SCREEN_UPDATE) += __pScreenUpdateListener;
-		__renderingEngine.getLifeCycleEvent(LifeCycleType::RENDER) += __pRenderListener;
-		__renderingEngine.getLifeCycleEvent(LifeCycleType::PRESENT) += __pPresentListener;
+		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::SCREEN_UPDATE) += __pScreenUpdateListener;
+		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::RENDER) += __pRenderListener;
+		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::PRESENT) += __pPresentListener;
 	}
 
 	void ScreenManager::ScreenImpl::__createResourceChain() noexcept

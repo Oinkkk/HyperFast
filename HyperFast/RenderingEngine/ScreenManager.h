@@ -45,13 +45,12 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDrawEventListener;
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDestroyEventListener;
 
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pAttribFlagsUpdateEventListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pMeshBufferChangeEventListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferUpdateListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferCreateListener;
 			std::shared_ptr<Infra::EventListener<>> __pScreenUpdateListener;
 			std::shared_ptr<Infra::EventListener<>> __pRenderListener;
 			std::shared_ptr<Infra::EventListener<>> __pPresentListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallNeedToUpdatePipelineDependenciesListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallNeedToUpdateMainCommandsListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallNeedToRenderListener;
 
 			std::unique_ptr<Vulkan::Surface> __pSurface;
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};

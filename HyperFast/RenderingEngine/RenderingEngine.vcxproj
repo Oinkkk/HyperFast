@@ -19,7 +19,7 @@
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
-    <ClInclude Include="LifeCycleType.h" />
+    <ClInclude Include="LifeCycleSignalType.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="Mesh.h" />

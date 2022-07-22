@@ -11,6 +11,7 @@ namespace HyperFast
 	{
 	public:
 		Mesh(Vulkan::Device &device) noexcept;
+		~Mesh() noexcept;
 
 		[[nodiscard]]
 		Buffer *getPositionBuffer() const noexcept;
@@ -37,6 +38,9 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr Infra::EventView<Mesh &> &getBufferChangeEvent() noexcept;
 
+		[[nodiscard]]
+		constexpr Infra::EventView<Mesh &> &getDestroyEvent() noexcept;
+
 	private:
 		Vulkan::Device &__device;
 
@@ -52,6 +56,7 @@ namespace HyperFast
 
 		Infra::Event<Mesh &, VertexAttributeFlag, VertexAttributeFlag> __attribFlagChangeEvent;
 		Infra::Event<Mesh &> __bufferChangeEvent;
+		Infra::Event<Mesh &> __destroyEvent;
 
 		constexpr void __setAttribFlagBit(const VertexAttributeFlagBit flagBit, const bool set) noexcept;
 		constexpr void __setHandle(const uint32_t attribLocation, Buffer *const pBuffer) noexcept;
@@ -75,6 +80,11 @@ namespace HyperFast
 	constexpr Infra::EventView<Mesh &> &Mesh::getBufferChangeEvent() noexcept
 	{
 		return __bufferChangeEvent;
+	}
+
+	constexpr Infra::EventView<Mesh &> &Mesh::getDestroyEvent() noexcept
+	{
+		return __destroyEvent;
 	}
 
 	constexpr void Mesh::__setAttribFlagBit(const VertexAttributeFlagBit flagBit, const bool set) noexcept

@@ -11,7 +11,7 @@ namespace HyperFast
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
-		__createLifeCycleEventMap();
+		__createLifeCycleSignalEventMap();
 		__initListeners();
 		__registerListeners();
 		__getInstanceVersion();
@@ -96,19 +96,19 @@ namespace HyperFast
 
 	void RenderingEngine::tick()
 	{
-		for (const auto &[_, pEvent] : __lifeCycleEventMap)
+		for (const auto &[_, pEvent] : __lifeCycleSignalEventMap)
 			pEvent->invoke();
 	}
 
-	Infra::EventView<> &RenderingEngine::getLifeCycleEvent(const LifeCycleType lifeCycleType) noexcept
+	Infra::EventView<> &RenderingEngine::getLifeCycleSignalEvent(const LifeCycleSignalType signalType) noexcept
 	{
-		return *(__lifeCycleEventMap.at(lifeCycleType));
+		return *(__lifeCycleSignalEventMap.at(signalType));
 	}
 
-	void RenderingEngine::__createLifeCycleEventMap() noexcept
+	void RenderingEngine::__createLifeCycleSignalEventMap() noexcept
 	{
-		for (int iter = (int(LifeCycleType::START) + 1); iter < int(LifeCycleType::END); iter++)
-			__lifeCycleEventMap.emplace(LifeCycleType(iter), std::make_unique<Infra::Event<>>());
+		for (int iter = (int(LifeCycleSignalType::START) + 1); iter < int(LifeCycleSignalType::END); iter++)
+			__lifeCycleSignalEventMap.emplace(LifeCycleSignalType(iter), std::make_unique<Infra::Event<>>());
 	}
 
 	void RenderingEngine::__initListeners() noexcept
@@ -121,7 +121,7 @@ namespace HyperFast
 
 	void RenderingEngine::__registerListeners() noexcept
 	{
-		getLifeCycleEvent(LifeCycleType::SUBMIT) += __pSubmitEventListener;
+		getLifeCycleSignalEvent(LifeCycleSignalType::SUBMIT) += __pSubmitEventListener;
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -405,7 +405,7 @@ namespace HyperFast
 	void RenderingEngine::__createBufferManager() noexcept
 	{
 		__pBufferManager = std::make_unique<BufferManager>(
-			*__pDevice, getLifeCycleEvent(LifeCycleType::GARBAGE_COLLECT));
+			*__pDevice, getLifeCycleSignalEvent(LifeCycleSignalType::GARBAGE_COLLECT));
 	}
 
 	void RenderingEngine::__createCommandSubmitter() noexcept

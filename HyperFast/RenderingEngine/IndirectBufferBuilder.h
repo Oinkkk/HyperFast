@@ -18,8 +18,8 @@ namespace HyperFast
 		[[nodiscard]]
 		constexpr bool isEmpty() const noexcept;
 
-		void validate();
-		void render(Vulkan::CommandBuffer &commandBuffer) noexcept;
+		void update();
+		void draw(Vulkan::CommandBuffer &commandBuffer) noexcept;
 
 		[[nodiscard]]
 		constexpr Infra::EventView<IndirectBufferBuilder &> &getIndirectBufferUpdateEvent() noexcept;
@@ -47,7 +47,6 @@ namespace HyperFast
 
 		std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDrawCommandChangeEventListener;
 		std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshVisibleChangeEventListener;
-		std::shared_ptr<Infra::EventListener<Submesh &>> __pSubmeshDestroyEventListener;
 
 		Infra::Event<IndirectBufferBuilder &> __indirectBufferUpdateEvent;
 		Infra::Event<IndirectBufferBuilder &> __indirectBufferCreateEvent;
@@ -62,7 +61,6 @@ namespace HyperFast
 
 		void __onSubmeshDrawCommandChange(Submesh &submesh) noexcept;
 		void __onSubmeshVisibleChange(Submesh &submesh) noexcept;
-		void __onSubmeshDestroy(Submesh &submesh) noexcept;
 	};
 
 	constexpr bool IndirectBufferBuilder::isEmpty() const noexcept

@@ -6,6 +6,11 @@ namespace HyperFast
 		__device{ device }
 	{}
 
+	Mesh::~Mesh() noexcept
+	{
+		__destroyEvent.invoke(*this);
+	}
+
 	Buffer *Mesh::getPositionBuffer() const noexcept
 	{
 		return __pPositionBuffer.get();

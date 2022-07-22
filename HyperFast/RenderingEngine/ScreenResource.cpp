@@ -284,7 +284,7 @@ namespace HyperFast
 				commandBuffer.vkCmdBindPipeline(
 					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-				__externalParam.pDrawcall->render(attribFlag, commandBuffer);
+				__externalParam.pDrawcall->draw(attribFlag, commandBuffer);
 			}
 		}
 

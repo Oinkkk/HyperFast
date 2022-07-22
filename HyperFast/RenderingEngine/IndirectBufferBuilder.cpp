@@ -17,7 +17,6 @@ namespace HyperFast
 	{
 		submesh.getDrawCommandChangeEvent() += __pSubmeshDrawCommandChangeEventListener;
 		submesh.getVisibleChangeEvent() += __pSubmeshVisibleChangeEventListener;
-		submesh.getDestroyEvent() += __pSubmeshDestroyEventListener;
 
 		__submeshes.emplace(&submesh);
 
@@ -29,7 +28,6 @@ namespace HyperFast
 	{
 		submesh.getDrawCommandChangeEvent() -= __pSubmeshDrawCommandChangeEventListener;
 		submesh.getVisibleChangeEvent() -= __pSubmeshVisibleChangeEventListener;
-		submesh.getDestroyEvent() -= __pSubmeshDestroyEventListener;
 
 		__submeshes.erase(&submesh);
 
@@ -37,16 +35,16 @@ namespace HyperFast
 			__needToUpdate = true;
 	}
 
-	void IndirectBufferBuilder::validate()
+	void IndirectBufferBuilder::update()
 	{
-		if (!__needToUpdate)
-			return;
-
-		__update();
-		__needToUpdate = false;
+		if (__needToUpdate)
+		{
+			__update();
+			__needToUpdate = false;
+		}
 	}
 
-	void IndirectBufferBuilder::render(Vulkan::CommandBuffer &commandBuffer) noexcept
+	void IndirectBufferBuilder::draw(Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
 		if (!__pIndirectBuffer)
 			return;
@@ -66,10 +64,6 @@ namespace HyperFast
 		__pSubmeshVisibleChangeEventListener =
 			Infra::EventListener<Submesh &>::bind(
 				&IndirectBufferBuilder::__onSubmeshVisibleChange, this, std::placeholders::_1);
-
-		__pSubmeshDestroyEventListener =
-			Infra::EventListener<Submesh &>::bind(
-				&IndirectBufferBuilder::__onSubmeshDestroy, this, std::placeholders::_1);
 	}
 
 	void IndirectBufferBuilder::__update()
@@ -159,13 +153,5 @@ namespace HyperFast
 	void IndirectBufferBuilder::__onSubmeshVisibleChange(Submesh &submesh) noexcept
 	{
 		__needToUpdate = true;
-	}
-
-	void IndirectBufferBuilder::__onSubmeshDestroy(Submesh &submesh) noexcept
-	{
-		__submeshes.erase(&submesh);
-
-		if (submesh.isVisible())
-			__needToUpdate = true;
 	}
 }

@@ -22,6 +22,8 @@ namespace HyperFast
 			__attribFlagsUpdated = true;
 
 		auto &pIndirectBufferBuilder{ indirectBufferBuilderMap[&mesh] };
+
+		// 처음 본 메시
 		if (!pIndirectBufferBuilder)
 		{
 			pIndirectBufferBuilder =
@@ -29,16 +31,16 @@ namespace HyperFast
 
 			pIndirectBufferBuilder->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateEventListener;
 			pIndirectBufferBuilder->getIndirectBufferCreateEvent() += __pIndirectBufferCreateEventListener;
-		}
 
-		if (pIndirectBufferBuilder->isEmpty())
-		{
 			mesh.getAttributeFlagChangeEvent() += __pMeshAttributeFlagChangeEventListener;
 			mesh.getBufferChangeEvent() += __pMeshBufferChangeEventListener;
-			__meshBufferChanged = true;
+			mesh.getDestroyEvent() += __pMeshDestroyEventListener;
+
+			__needToUpdateMainCommands = true;
 		}
 
 		pIndirectBufferBuilder->addSubmesh(submesh);
+		submesh.getDestroyEvent() += __pSubmeshDestroyEventListener;
 	}
 
 	void Drawcall::removeSubmesh(Submesh &submesh) noexcept
@@ -49,17 +51,11 @@ namespace HyperFast
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
 		auto &pIndirectBufferBuilder{ indirectBufferBuilderMap[&mesh] };
 
+		submesh.getDestroyEvent() -= __pSubmeshDestroyEventListener;
 		pIndirectBufferBuilder->removeSubmesh(submesh);
-
-		if (pIndirectBufferBuilder->isEmpty())
-		{
-			mesh.getAttributeFlagChangeEvent() -= __pMeshAttributeFlagChangeEventListener;
-			mesh.getBufferChangeEvent() -= __pMeshBufferChangeEventListener;
-			__meshBufferChanged = true;
-		}
 	}
 
-	void Drawcall::validate()
+	void Drawcall::update()
 	{
 		if (__attribFlagsUpdated)
 		{
@@ -72,42 +68,42 @@ namespace HyperFast
 				cursor++;
 			}
 
-			__attributeFlagsUpdateEvent.invoke(*this);
+			__needToUpdatePipelineDependencies = true;
 			__attribFlagsUpdated = false;
-		}
-
-		if (__meshBufferChanged)
-		{
-			__meshBufferChangeEvent.invoke(*this);
-			__meshBufferChanged = false;
 		}
 
 		for (const auto &[_, indirectBufferBuilderMap] : __attribFlag2IndirectBufferMap)
 		{
 			for (const auto &[_, indirectBufferBuilder] : indirectBufferBuilderMap)
-				indirectBufferBuilder->validate();
+				indirectBufferBuilder->update();
 		}
 
-		if (__indirectBufferUpdated)
+		if (__needToUpdatePipelineDependencies)
 		{
-			__indirectBufferUpdateEvent.invoke(*this);
-			__indirectBufferUpdated = false;
+			__needToUpdatePipelineDependenciesEvent.invoke(*this);
+			__needToUpdatePipelineDependencies = false;
 		}
 
-		if (__indirectBufferCreated)
+		if (__needToUpdateMainCommands)
 		{
-			__indirectBufferCreateEvent.invoke(*this);
-			__indirectBufferCreated = false;
+			__needToUpdateMainCommandsEvent.invoke(*this);
+			__needToUpdateMainCommands = false;
+		}
+
+		if (__needToRender)
+		{
+			__needToRenderEvent.invoke(*this);
+			__needToRender = false;
 		}
 	}
 
-	void Drawcall::render(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept
+	void Drawcall::draw(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
 		for (const auto &[pMesh, pIndirectBufferBuilder] : indirectBufferBuilderMap)
 		{
 			pMesh->bind(commandBuffer);
-			pIndirectBufferBuilder->render(commandBuffer);
+			pIndirectBufferBuilder->draw(commandBuffer);
 		}
 	}
 
@@ -131,6 +127,14 @@ namespace HyperFast
 			Infra::EventListener<Mesh &>::bind(
 				&Drawcall::__onMeshBufferChange, this, std::placeholders::_1);
 
+		__pMeshDestroyEventListener =
+			Infra::EventListener<Mesh &>::bind(
+				&Drawcall::__onMeshDestroy, this, std::placeholders::_1);
+
+		__pSubmeshDestroyEventListener =
+			Infra::EventListener<Submesh &>::bind(
+				&Drawcall::__onSubmeshDestroy, this, std::placeholders::_1);
+
 		__pIndirectBufferUpdateEventListener =
 			Infra::EventListener<IndirectBufferBuilder &>::bind(
 				&Drawcall::__onIndirectBufferUpdate, this, std::placeholders::_1);
@@ -151,16 +155,35 @@ namespace HyperFast
 
 	void Drawcall::__onMeshBufferChange(Mesh &mesh) noexcept
 	{
-		__meshBufferChanged = true;
+		__needToUpdateMainCommands = true;
+	}
+
+	void Drawcall::__onMeshDestroy(Mesh &mesh) noexcept
+	{
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
+		indirectBufferBuilderMap.erase(&mesh);
+	}
+
+	void Drawcall::__onSubmeshDestroy(Submesh &submesh) noexcept
+	{
+		Mesh &mesh{ submesh.getMesh() };
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
+		auto &pIndirectBufferBuilder{ indirectBufferBuilderMap[&mesh] };
+
+		pIndirectBufferBuilder->removeSubmesh(submesh);
 	}
 
 	void Drawcall::__onIndirectBufferUpdate(IndirectBufferBuilder &builder) noexcept
 	{
-		__indirectBufferUpdated = true;
+		__needToRender = true;
 	}
 
 	void Drawcall::__onIndirectBufferCreate(IndirectBufferBuilder &builder) noexcept
 	{
-		__indirectBufferCreated = true;
+		__needToUpdateMainCommands = true;
 	}
 }

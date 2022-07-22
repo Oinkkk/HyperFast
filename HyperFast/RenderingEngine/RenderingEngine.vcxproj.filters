@@ -200,7 +200,7 @@
     <ClInclude Include="SemaphoreDependencyManager.h">
       <Filter>SemaphoreDependency</Filter>
     </ClInclude>
-    <ClInclude Include="LifeCycleType.h">
+    <ClInclude Include="LifeCycleSignalType.h">
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="SemaphoreDependency.h">
