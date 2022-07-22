@@ -32,7 +32,7 @@ namespace HyperFast
 		~ScreenResource() noexcept;
 
 		[[nodiscard]]
-		constexpr Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
+		Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
 
 		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
 
@@ -59,7 +59,6 @@ namespace HyperFast
 		std::unique_ptr<Vulkan::Framebuffer> __pFramebuffer;
 
 		std::vector<std::unique_ptr<CommandBufferManager>> __renderCommandBufferManagers;
-		std::vector<Vulkan::CommandBuffer *> __renderCommandBuffers;
 
 		bool __needToUpdateSwapchainDependencies{};
 		bool __needToUpdatePipelineDependencies{};
@@ -81,11 +80,6 @@ namespace HyperFast
 		void __updatePipelineDependencies();
 		void __updateMainCommands() noexcept;
 	};
-
-	constexpr Vulkan::CommandBuffer &ScreenResource::getRenderCommandBuffer(const size_t imageIdx) noexcept
-	{
-		return *__renderCommandBuffers[imageIdx];
-	}
 
 	constexpr void ScreenResource::needToUpdateSwapchainDependencies() noexcept
 	{

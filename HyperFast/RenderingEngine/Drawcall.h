@@ -1,9 +1,9 @@
 ﻿#pragma once
 
+#include "CommandBufferManager.h"
 #include "IndirectBufferBuilder.h"
 #include <unordered_map>
 #include <unordered_set>
-#include "../Vulkan/CommandBuffer.h"
 
 namespace HyperFast
 {
@@ -12,8 +12,8 @@ namespace HyperFast
 	{
 	public:
 		Drawcall(
-			Vulkan::Device &device, BufferManager &bufferManager,
-			MemoryManager &memoryManager) noexcept;
+			Vulkan::Device &device, const uint32_t queueFamilyIndex,
+			BufferManager &bufferManager, MemoryManager &memoryManager) noexcept;
 
 		void addSubmesh(Submesh &submesh) noexcept;
 		void removeSubmesh(Submesh &submesh) noexcept;
@@ -39,10 +39,18 @@ namespace HyperFast
 		constexpr Infra::EventView<Drawcall &> &getNeedToRenderEvent() noexcept;
 
 	private:
-		using IndirectBufferBuilderMap = std::unordered_map<Mesh *, std::unique_ptr<IndirectBufferBuilder>>;
+		class PerMeshResource
+		{
+		public:
+			std::unique_ptr<CommandBufferManager> pCommandBufferManager;
+			std::unique_ptr<IndirectBufferBuilder> pIndirectBufferBuilder;
+		};
+
+		using Mesh2ResourceMap = std::unordered_map<Mesh *, PerMeshResource>;
 		using MeshAttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
 
 		Vulkan::Device &__device;
+		const uint32_t __queueFamilyIndex;
 		BufferManager &__bufferManager;
 		MemoryManager &__memoryManager;
 
@@ -51,7 +59,7 @@ namespace HyperFast
 		bool __needToUpdateMainCommands{};
 		bool __needToRender{};
 
-		std::unordered_map<VertexAttributeFlag, IndirectBufferBuilderMap> __attribFlag2IndirectBufferMap;
+		std::unordered_map<VertexAttributeFlag, Mesh2ResourceMap> __attribFlag2MeshResourceMap;
 		std::vector<VertexAttributeFlag> __attribFlags;
 
 		std::shared_ptr<MeshAttributeFlagChangeEventListener> __pMeshAttributeFlagChangeEventListener;

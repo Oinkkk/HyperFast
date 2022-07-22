@@ -19,6 +19,11 @@ namespace HyperFast
 		__renderCommandBufferManagers.clear();
 	}
 
+	Vulkan::CommandBuffer &ScreenResource::getRenderCommandBuffer(const size_t imageIdx) noexcept
+	{
+		return __renderCommandBufferManagers[imageIdx]->get();
+	}
+
 	void ScreenResource::addSemaphoreDependency(
 		const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
 	{
@@ -71,7 +76,6 @@ namespace HyperFast
 		const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
 
 		__renderCommandBufferManagers.resize(numSwapchainImages);
-		__renderCommandBuffers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
 	}
 
@@ -231,7 +235,7 @@ namespace HyperFast
 		if (pManager)
 			return;
 
-		pManager = std::make_unique<CommandBufferManager>(__device, __queueFamilyIndex, 8ULL);
+		pManager = std::make_unique<CommandBufferManager>(__device, __queueFamilyIndex);
 	}
 
 	void ScreenResource::__recordRenderCommand(const size_t imageIdx) noexcept
@@ -268,8 +272,10 @@ namespace HyperFast
 			.pClearValues = &clearColor
 		};
 
-		Vulkan::CommandBuffer &commandBuffer{ __renderCommandBufferManagers[imageIdx]->getNextBuffer() };
-		__renderCommandBuffers[imageIdx] = &commandBuffer;
+		CommandBufferManager &commandBufferManager{ *(__renderCommandBufferManagers[imageIdx]) };
+		commandBufferManager.advance();
+
+		Vulkan::CommandBuffer &commandBuffer{ commandBufferManager.get() };
 
 		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
 		commandBuffer.vkCmdBeginRenderPass(

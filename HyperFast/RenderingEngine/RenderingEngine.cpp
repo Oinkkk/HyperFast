@@ -73,7 +73,7 @@ namespace HyperFast
 	std::unique_ptr<Drawcall> RenderingEngine::createDrawcall() noexcept
 	{
 		return std::make_unique<Drawcall>(
-			*__pDevice, *__pBufferManager, *__pMemoryManager);
+			*__pDevice, __queueFamilyIndex, *__pBufferManager, *__pMemoryManager);
 	}
 
 	std::shared_ptr<Mesh> RenderingEngine::createMesh() noexcept

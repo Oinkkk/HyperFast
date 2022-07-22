@@ -12,11 +12,13 @@ namespace HyperFast
 	{
 	public:
 		CommandBufferManager(
-			Vulkan::Device &device, const uint32_t queueFamilyIndex,
-			const size_t numMaxBuffers) noexcept;
+			Vulkan::Device &device,
+			const uint32_t queueFamilyIndex, const size_t numMaxBuffers = 8ULL) noexcept;
 		
+		void advance() noexcept;
+
 		[[nodiscard]]
-		Vulkan::CommandBuffer &getNextBuffer() noexcept;
+		Vulkan::CommandBuffer &get() noexcept;
 
 	private:
 		Vulkan::Device &__device;
