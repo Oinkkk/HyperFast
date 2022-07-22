@@ -32,6 +32,9 @@ namespace HyperFast
 		constexpr Infra::EventView<Drawcall &> &getAttributeFlagsUpdateEvent() noexcept;
 
 		[[nodiscard]]
+		constexpr Infra::EventView<Drawcall &> &getMeshBufferChangeEvent() noexcept;
+
+		[[nodiscard]]
 		constexpr Infra::EventView<Drawcall &> &getIndirectBufferUpdateEvent() noexcept;
 
 		[[nodiscard]]
@@ -39,31 +42,37 @@ namespace HyperFast
 
 	private:
 		using IndirectBufferBuilderMap = std::unordered_map<Mesh *, std::unique_ptr<IndirectBufferBuilder>>;
-		using AttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
+		using MeshAttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
 
 		Vulkan::Device &__device;
 		BufferManager &__bufferManager;
 		MemoryManager &__memoryManager;
 
 		bool __attribFlagsUpdated{};
+		bool __meshBufferChanged{};
 		bool __indirectBufferUpdated{};
 		bool __indirectBufferCreated{};
 
 		std::unordered_map<VertexAttributeFlag, IndirectBufferBuilderMap> __attribFlag2IndirectBufferMap;
 		std::vector<VertexAttributeFlag> __attribFlags;
 
-		std::shared_ptr<AttributeFlagChangeEventListener> __pAttributeFlagChangeEventListener;
+		std::shared_ptr<MeshAttributeFlagChangeEventListener> __pMeshAttributeFlagChangeEventListener;
+		std::shared_ptr<Infra::EventListener<Mesh &>> __pMeshBufferChangeEventListener;
+
 		std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferUpdateEventListener;
 		std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferCreateEventListener;
 
 		Infra::Event<Drawcall &> __attributeFlagsUpdateEvent;
+		Infra::Event<Drawcall &> __meshBufferChangeEvent;
 		Infra::Event<Drawcall &> __indirectBufferUpdateEvent;
 		Infra::Event<Drawcall &> __indirectBufferCreateEvent;
 
 		void __initEventListeners() noexcept;
 		
-		void __onAttributeFlagChange(
+		void __onMeshAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;
+
+		void __onMeshBufferChange(Mesh &mesh) noexcept;
 
 		void __onIndirectBufferUpdate(IndirectBufferBuilder &builder) noexcept;
 		void __onIndirectBufferCreate(IndirectBufferBuilder &builder) noexcept;
@@ -77,6 +86,11 @@ namespace HyperFast
 	constexpr Infra::EventView<Drawcall &> &Drawcall::getAttributeFlagsUpdateEvent() noexcept
 	{
 		return __attributeFlagsUpdateEvent;
+	}
+
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getMeshBufferChangeEvent() noexcept
+	{
+		return __meshBufferChangeEvent;
 	}
 
 	constexpr Infra::EventView<Drawcall &> &Drawcall::getIndirectBufferUpdateEvent() noexcept

@@ -46,6 +46,7 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDestroyEventListener;
 
 			std::shared_ptr<Infra::EventListener<Drawcall &>> __pAttribFlagsUpdateEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pMeshBufferChangeEventListener;
 			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferUpdateListener;
 			std::shared_ptr<Infra::EventListener<Drawcall &>> __pIndirectBufferCreateListener;
 			std::shared_ptr<Infra::EventListener<>> __pScreenUpdateListener;

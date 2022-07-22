@@ -18,23 +18,25 @@ namespace HyperFast
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
-		IndirectBufferBuilder *pIndirectBufferBuilder{};
-
 		if (indirectBufferBuilderMap.empty())
-		{
-			mesh.getAttributeFlagChangeEvent() += __pAttributeFlagChangeEventListener;
 			__attribFlagsUpdated = true;
 
+		auto &pIndirectBufferBuilder{ indirectBufferBuilderMap[&mesh] };
+		if (!pIndirectBufferBuilder)
+		{
 			pIndirectBufferBuilder =
-				indirectBufferBuilderMap.emplace(
-					&mesh, std::make_unique<IndirectBufferBuilder>(
-						__device, __bufferManager, __memoryManager)).first->second.get();
+				std::make_unique<IndirectBufferBuilder>(__device, __bufferManager, __memoryManager);
 
 			pIndirectBufferBuilder->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateEventListener;
 			pIndirectBufferBuilder->getIndirectBufferCreateEvent() += __pIndirectBufferCreateEventListener;
 		}
-		else
-			pIndirectBufferBuilder = indirectBufferBuilderMap.at(&mesh).get();
+
+		if (pIndirectBufferBuilder->isEmpty())
+		{
+			mesh.getAttributeFlagChangeEvent() += __pMeshAttributeFlagChangeEventListener;
+			mesh.getBufferChangeEvent() += __pMeshBufferChangeEventListener;
+			__meshBufferChanged = true;
+		}
 
 		pIndirectBufferBuilder->addSubmesh(submesh);
 	}
@@ -45,7 +47,16 @@ namespace HyperFast
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
 		IndirectBufferBuilderMap &indirectBufferBuilderMap{ __attribFlag2IndirectBufferMap[attribFlag] };
-		indirectBufferBuilderMap.at(&mesh)->removeSubmesh(submesh);
+		auto &pIndirectBufferBuilder{ indirectBufferBuilderMap[&mesh] };
+
+		pIndirectBufferBuilder->removeSubmesh(submesh);
+
+		if (pIndirectBufferBuilder->isEmpty())
+		{
+			mesh.getAttributeFlagChangeEvent() -= __pMeshAttributeFlagChangeEventListener;
+			mesh.getBufferChangeEvent() -= __pMeshBufferChangeEventListener;
+			__meshBufferChanged = true;
+		}
 	}
 
 	void Drawcall::validate()
@@ -63,6 +74,12 @@ namespace HyperFast
 
 			__attributeFlagsUpdateEvent.invoke(*this);
 			__attribFlagsUpdated = false;
+		}
+
+		if (__meshBufferChanged)
+		{
+			__meshBufferChangeEvent.invoke(*this);
+			__meshBufferChanged = false;
 		}
 
 		for (const auto &[_, indirectBufferBuilderMap] : __attribFlag2IndirectBufferMap)
@@ -105,10 +122,14 @@ namespace HyperFast
 
 	void Drawcall::__initEventListeners() noexcept
 	{
-		__pAttributeFlagChangeEventListener =
-			AttributeFlagChangeEventListener::bind(
-				&Drawcall::__onAttributeFlagChange, this,
+		__pMeshAttributeFlagChangeEventListener =
+			MeshAttributeFlagChangeEventListener::bind(
+				&Drawcall::__onMeshAttributeFlagChange, this,
 				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+
+		__pMeshBufferChangeEventListener =
+			Infra::EventListener<Mesh &>::bind(
+				&Drawcall::__onMeshBufferChange, this, std::placeholders::_1);
 
 		__pIndirectBufferUpdateEventListener =
 			Infra::EventListener<IndirectBufferBuilder &>::bind(
@@ -119,13 +140,18 @@ namespace HyperFast
 				&Drawcall::__onIndirectBufferCreate, this, std::placeholders::_1);
 	}
 
-	void Drawcall::__onAttributeFlagChange(
+	void Drawcall::__onMeshAttributeFlagChange(
 		Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept
 	{
 		IndirectBufferBuilderMap &oldMap{ __attribFlag2IndirectBufferMap[oldFlag] };
 		IndirectBufferBuilderMap &newMap{ __attribFlag2IndirectBufferMap[newFlag] };
 
 		newMap.insert(oldMap.extract(&mesh));
+	}
+
+	void Drawcall::__onMeshBufferChange(Mesh &mesh) noexcept
+	{
+		__meshBufferChanged = true;
 	}
 
 	void Drawcall::__onIndirectBufferUpdate(IndirectBufferBuilder &builder) noexcept

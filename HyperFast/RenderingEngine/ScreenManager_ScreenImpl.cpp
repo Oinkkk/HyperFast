@@ -34,6 +34,7 @@ namespace HyperFast
 		if (pCurrentDrawCall)
 		{
 			pCurrentDrawCall->getAttributeFlagsUpdateEvent() -= __pAttribFlagsUpdateEventListener;
+			pCurrentDrawCall->getMeshBufferChangeEvent() -= __pMeshBufferChangeEventListener;
 			pCurrentDrawCall->getIndirectBufferUpdateEvent() -= __pIndirectBufferUpdateListener;
 			pCurrentDrawCall->getIndirectBufferCreateEvent() -= __pIndirectBufferCreateListener;
 		}
@@ -43,6 +44,7 @@ namespace HyperFast
 		if (pCurrentDrawCall)
 		{
 			pCurrentDrawCall->getAttributeFlagsUpdateEvent() += __pAttribFlagsUpdateEventListener;
+			pCurrentDrawCall->getMeshBufferChangeEvent() += __pMeshBufferChangeEventListener;
 			pCurrentDrawCall->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateListener;
 			pCurrentDrawCall->getIndirectBufferCreateEvent() += __pIndirectBufferCreateListener;
 		}
@@ -187,6 +189,11 @@ namespace HyperFast
 		__pAttribFlagsUpdateEventListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
 		{
 			__needToUpdatePipelineDependencies = true;
+		});
+
+		__pMeshBufferChangeEventListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
+		{
+			__needToUpdateMainCommands = true;
 		});
 
 		__pIndirectBufferUpdateListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)

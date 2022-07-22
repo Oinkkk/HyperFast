@@ -28,11 +28,14 @@ namespace HyperFast
 		constexpr VertexAttributeFlag getVertexAttributeFlag() const noexcept;
 		void bind(Vulkan::CommandBuffer &commandBuffer) const noexcept;
 
+		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
+
 		[[nodiscard]]
 		constexpr Infra::EventView<Mesh &, VertexAttributeFlag, VertexAttributeFlag> &
 			getAttributeFlagChangeEvent() noexcept;
 
-		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
+		[[nodiscard]]
+		constexpr Infra::EventView<Mesh &> &getBufferChangeEvent() noexcept;
 
 	private:
 		Vulkan::Device &__device;
@@ -48,6 +51,7 @@ namespace HyperFast
 		VkDeviceSize __offsets[VERTEX_ATTRIB_LOCATION_MAX]{};
 
 		Infra::Event<Mesh &, VertexAttributeFlag, VertexAttributeFlag> __attribFlagChangeEvent;
+		Infra::Event<Mesh &> __bufferChangeEvent;
 
 		constexpr void __setAttribFlagBit(const VertexAttributeFlagBit flagBit, const bool set) noexcept;
 		constexpr void __setHandle(const uint32_t attribLocation, Buffer *const pBuffer) noexcept;
@@ -66,6 +70,11 @@ namespace HyperFast
 		Mesh::getAttributeFlagChangeEvent() noexcept
 	{
 		return __attribFlagChangeEvent;
+	}
+
+	constexpr Infra::EventView<Mesh &> &Mesh::getBufferChangeEvent() noexcept
+	{
+		return __bufferChangeEvent;
 	}
 
 	constexpr void Mesh::__setAttribFlagBit(const VertexAttributeFlagBit flagBit, const bool set) noexcept

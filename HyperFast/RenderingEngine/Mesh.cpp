@@ -71,5 +71,7 @@ namespace HyperFast
 
 		if (prevAttribFlag != __attribFlag)
 			__attribFlagChangeEvent.invoke(*this, prevAttribFlag, __attribFlag);
+
+		__bufferChangeEvent.invoke(*this);
 	}
 }
