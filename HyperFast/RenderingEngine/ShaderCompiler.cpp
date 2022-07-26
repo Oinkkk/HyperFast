@@ -15,15 +15,6 @@ namespace HyperFast
 		__options.SetOptimizationLevel(level);
 	}
 
-	void ShaderCompiler::setVertexAttributeFlag(const VertexAttributeFlag flag) noexcept
-	{
-		if (flag & VertexAttributeFlagBit::POS3)
-			__options.AddMacroDefinition("VERTEX_ATTRIB_POS");
-
-		if (flag & VertexAttributeFlagBit::COLOR4)
-			__options.AddMacroDefinition("VERTEX_ATTRIB_COLOR");
-	}
-
 	std::vector<uint32_t> ShaderCompiler::compile(const std::string_view &shaderPath, const shaderc_shader_kind shaderKind)
 	{
 		std::ifstream fin{ shaderPath.data() };

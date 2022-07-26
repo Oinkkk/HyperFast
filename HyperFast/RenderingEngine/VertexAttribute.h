@@ -8,16 +8,24 @@ namespace HyperFast
 	{
 		NONE		= 0U,
 		POS3		= (1U << VERTEX_ATTRIB_LOCATION_POS),
-		COLOR4		= (1U << VERTEX_ATTRIB_LOCATION_COLOR)
+		COLOR4		= (1U << VERTEX_ATTRIB_LOCATION_COLOR),
+		NORMAL3		= (1U << VERTEX_ATTRIB_LOCATION_NORMAL),
 	};
 
 	enum class VertexAttributeFlag : uint32_t
 	{
 		POS3 = uint32_t(VertexAttributeFlagBit::POS3),
+		
 		POS3_COLOR4 =
 		(
 			uint32_t(VertexAttributeFlagBit::POS3) |
 			uint32_t(VertexAttributeFlagBit::COLOR4)
+		),
+
+		POS3_NORMAL3 =
+		(
+			uint32_t(VertexAttributeFlagBit::POS3) |
+			uint32_t(VertexAttributeFlagBit::NORMAL3)
 		)
 	};
 

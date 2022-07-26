@@ -210,8 +210,7 @@ namespace HyperFast
 			.extent = __externalParam.swapchainExtent
 		};
 
-		__pipelineFactory.build(
-			__externalParam.pDrawcall->getAttributeFlags(), __pipelineBuildParam, subflow);
+		__pipelineFactory.build(__pipelineBuildParam, subflow);
 	}
 
 	void ScreenResource::__createSwapchainImageView(const size_t imageIdx)
@@ -313,15 +312,10 @@ namespace HyperFast
 
 		if (__externalParam.pDrawcall)
 		{
-			for (const VertexAttributeFlag attribFlag : __externalParam.pDrawcall->getAttributeFlags())
-			{
-				const VkPipeline pipeline{ __pipelineFactory.get(attribFlag) };
+			commandBuffer.vkCmdBindPipeline(
+				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
 
-				commandBuffer.vkCmdBindPipeline(
-					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-				__externalParam.pDrawcall->draw(attribFlag, commandBuffer);
-			}
+			__externalParam.pDrawcall->draw(commandBuffer);
 		}
 
 		commandBuffer.vkCmdEndRenderPass();

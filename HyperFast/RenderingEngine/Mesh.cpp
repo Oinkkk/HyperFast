@@ -66,17 +66,10 @@ namespace HyperFast
 		const VertexAttributeFlagBit attribFlagBit, const uint32_t attribLocation,
 		std::unique_ptr<Buffer> &pOldBuffer, std::unique_ptr<Buffer> &&pNewBuffer) noexcept
 	{
-		const VertexAttributeFlag prevAttribFlag{ __attribFlag };
-
 		pOldBuffer = std::move(pNewBuffer);
 		Buffer *const pRaw{ pOldBuffer.get() };
 
-		__setAttribFlagBit(attribFlagBit, pRaw);
 		__setHandle(attribLocation, pRaw);
-
-		if (prevAttribFlag != __attribFlag)
-			__attribFlagChangeEvent.invoke(*this, prevAttribFlag, __attribFlag);
-
 		__bufferChangeEvent.invoke(*this);
 	}
 }

@@ -33,8 +33,8 @@ namespace HyperFast
 
 		if (pCurrentDrawCall)
 		{
-			pCurrentDrawCall->getAttributeFlagListChangeEvent()
-				-= __pDrawcallAttributeFlagListChangeEventListener;
+			pCurrentDrawCall->getMeshBufferChangeEvent()
+				-= __pDrawcallMeshBufferChangeEventListener;
 			
 			pCurrentDrawCall->getIndirectBufferUpdateEvent()
 				-= __pDrawcallIndirectBufferUpdateEventListener;
@@ -47,8 +47,8 @@ namespace HyperFast
 
 		if (pCurrentDrawCall)
 		{
-			pCurrentDrawCall->getAttributeFlagListChangeEvent()
-				+= __pDrawcallAttributeFlagListChangeEventListener;
+			pCurrentDrawCall->getMeshBufferChangeEvent()
+				+= __pDrawcallMeshBufferChangeEventListener;
 
 			pCurrentDrawCall->getIndirectBufferUpdateEvent()
 				+= __pDrawcallIndirectBufferUpdateEventListener;
@@ -188,9 +188,9 @@ namespace HyperFast
 			Infra::EventListener<Win::Window &>::bind(
 				&ScreenManager::ScreenImpl::__onWindowDestroy, this, std::placeholders::_1);
 
-		__pDrawcallAttributeFlagListChangeEventListener =
+		__pDrawcallMeshBufferChangeEventListener =
 			Infra::EventListener<Drawcall &>::bind(
-				&ScreenManager::ScreenImpl::__onDrawcallAttributeFlagListChange, this, std::placeholders::_1);
+				&ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange, this, std::placeholders::_1);
 
 		__pDrawcallIndirectBufferUpdateEventListener =
 			Infra::EventListener<Drawcall &>::bind(
@@ -591,19 +591,9 @@ namespace HyperFast
 		__needToUpdateSurfaceDependencies = true;
 	}
 
-	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept
+	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(Drawcall &drawcall) noexcept
 	{
-		__needToRender = true;
-	}
-
-	void ScreenManager::ScreenImpl::__onWindowDestroy(Win::Window &window) noexcept
-	{
-		__destroy();
-	}
-
-	void ScreenManager::ScreenImpl::__onDrawcallAttributeFlagListChange(Drawcall &drawcall) noexcept
-	{
-		__needToUpdatePipelineDependencies = true;
+		__needToUpdateMainCommands = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(Drawcall &drawcall) noexcept
@@ -614,6 +604,16 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(Drawcall &drawcall) noexcept
 	{
 		__needToUpdateMainCommands = true;
+	}
+
+	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept
+	{
+		__needToRender = true;
+	}
+
+	void ScreenManager::ScreenImpl::__onWindowDestroy(Win::Window &window) noexcept
+	{
+		__destroy();
 	}
 
 	void ScreenManager::ScreenImpl::__onScreenUpdate()
