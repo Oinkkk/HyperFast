@@ -87,6 +87,8 @@ namespace HyperFast
 
 	void PipelineFactory::PipelineResource::__populatePipelineCreateInfos() noexcept
 	{
+		// shader
+
 		VkPipelineShaderStageCreateInfo &vsStageInfo{ __shaderStageInfos.emplace_back() };
 		vsStageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
@@ -98,56 +100,59 @@ namespace HyperFast
 		fsStageInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
 		fsStageInfo.module = __pFragShader->getHandle();
 		fsStageInfo.pName = "main";
-	}
 
-	void PipelineFactory::PipelineResource::__buildPipeline(const BuildParam &buildParam)
-	{
-		std::vector<VkVertexInputBindingDescription> vertexBindingDescs;
-		std::vector<VkVertexInputAttributeDescription> vertexAttribDescs;
 
-		VkVertexInputBindingDescription &posBindingDesc{ vertexBindingDescs.emplace_back() };
+		// vertex binding description
+
+		VkVertexInputBindingDescription &posBindingDesc{ __vertexBindingDescs.emplace_back() };
 		posBindingDesc.binding = VERTEX_ATTRIB_LOCATION_POS;
 		posBindingDesc.stride = sizeof(glm::vec3);
 		posBindingDesc.inputRate = VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
 
-		VkVertexInputBindingDescription &colorBindingDesc{ vertexBindingDescs.emplace_back() };
+		VkVertexInputBindingDescription &colorBindingDesc{ __vertexBindingDescs.emplace_back() };
 		colorBindingDesc.binding = VERTEX_ATTRIB_LOCATION_COLOR;
 		colorBindingDesc.stride = sizeof(glm::vec4);
 		colorBindingDesc.inputRate = VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
 
-		VkVertexInputBindingDescription &normalBindingDesc{ vertexBindingDescs.emplace_back() };
+		VkVertexInputBindingDescription &normalBindingDesc{ __vertexBindingDescs.emplace_back() };
 		normalBindingDesc.binding = VERTEX_ATTRIB_LOCATION_NORMAL;
 		normalBindingDesc.stride = sizeof(glm::vec3);
 		normalBindingDesc.inputRate = VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
 
-		VkVertexInputAttributeDescription &posAttribDesc{ vertexAttribDescs.emplace_back() };
+
+		// vertex attribute description
+
+		VkVertexInputAttributeDescription &posAttribDesc{ __vertexAttribDescs.emplace_back() };
 		posAttribDesc.location = VERTEX_ATTRIB_LOCATION_POS;
 		posAttribDesc.binding = VERTEX_ATTRIB_LOCATION_POS;
 		posAttribDesc.format = VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
 		posAttribDesc.offset = 0U;
 
-		VkVertexInputAttributeDescription &colorAttribDesc{ vertexAttribDescs.emplace_back() };
+		VkVertexInputAttributeDescription &colorAttribDesc{ __vertexAttribDescs.emplace_back() };
 		colorAttribDesc.location = VERTEX_ATTRIB_LOCATION_COLOR;
 		colorAttribDesc.binding = VERTEX_ATTRIB_LOCATION_COLOR;
 		colorAttribDesc.format = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 		colorAttribDesc.offset = 0U;
 
-		VkVertexInputAttributeDescription &normalAttribDesc{ vertexAttribDescs.emplace_back() };
+		VkVertexInputAttributeDescription &normalAttribDesc{ __vertexAttribDescs.emplace_back() };
 		normalAttribDesc.location = VERTEX_ATTRIB_LOCATION_NORMAL;
 		normalAttribDesc.binding = VERTEX_ATTRIB_LOCATION_NORMAL;
 		normalAttribDesc.format = VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
 		normalAttribDesc.offset = 0U;
 
-		const VkPipelineVertexInputStateCreateInfo vertexInputInfo
-		{
-			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-			.vertexBindingDescriptionCount = uint32_t(vertexBindingDescs.size()),
-			.pVertexBindingDescriptions = vertexBindingDescs.data(),
-			.vertexAttributeDescriptionCount = uint32_t(vertexAttribDescs.size()),
-			.pVertexAttributeDescriptions = vertexAttribDescs.data()
-		};
 
-		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
+		// vertex input info
+
+		__vertexInputInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		__vertexInputInfo.vertexBindingDescriptionCount = uint32_t(__vertexBindingDescs.size());
+		__vertexInputInfo.pVertexBindingDescriptions = __vertexBindingDescs.data();
+		__vertexInputInfo.vertexAttributeDescriptionCount = uint32_t(__vertexAttribDescs.size());
+		__vertexInputInfo.pVertexAttributeDescriptions = __vertexAttribDescs.data();
+	}
+
+	void PipelineFactory::PipelineResource::__buildPipeline(const BuildParam &buildParam)
+	{
+		static constexpr VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 			.topology = VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -163,7 +168,7 @@ namespace HyperFast
 			.pScissors = &(buildParam.scissor)
 		};
 
-		const VkPipelineRasterizationStateCreateInfo rasterizationInfo
+		static constexpr VkPipelineRasterizationStateCreateInfo rasterizationInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 			.depthClampEnable = VK_FALSE,
@@ -175,14 +180,14 @@ namespace HyperFast
 			.lineWidth = 1.0f
 		};
 
-		const VkPipelineMultisampleStateCreateInfo multisampleInfo
+		static constexpr VkPipelineMultisampleStateCreateInfo multisampleInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
 			.rasterizationSamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
 			.sampleShadingEnable = VK_FALSE
 		};
 
-		const VkPipelineDepthStencilStateCreateInfo depthStencilInfo
+		static constexpr VkPipelineDepthStencilStateCreateInfo depthStencilInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 			.depthTestEnable = VK_FALSE,
@@ -191,7 +196,7 @@ namespace HyperFast
 			.stencilTestEnable = VK_FALSE
 		};
 
-		const VkPipelineColorBlendAttachmentState colorBlendAttachmentInfo
+		static constexpr VkPipelineColorBlendAttachmentState colorBlendAttachmentInfo
 		{
 			.blendEnable = VK_FALSE,
 			.colorWriteMask =
@@ -203,7 +208,7 @@ namespace HyperFast
 			)
 		};
 
-		const VkPipelineColorBlendStateCreateInfo colorBlendInfo
+		static constexpr VkPipelineColorBlendStateCreateInfo colorBlendInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
 			.logicOpEnable = VK_FALSE,
@@ -211,7 +216,7 @@ namespace HyperFast
 			.pAttachments = &colorBlendAttachmentInfo,
 		};
 
-		const VkPipelineDynamicStateCreateInfo dynamicState
+		static constexpr VkPipelineDynamicStateCreateInfo dynamicState
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO
 		};
@@ -221,7 +226,7 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 			.stageCount = uint32_t(__shaderStageInfos.size()),
 			.pStages = __shaderStageInfos.data(),
-			.pVertexInputState = &vertexInputInfo,
+			.pVertexInputState = &__vertexInputInfo,
 			.pInputAssemblyState = &inputAssemblyInfo,
 			.pTessellationState = nullptr,
 			.pViewportState = &viewportInfo,

@@ -2,7 +2,6 @@
 
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
-#include "VertexAttribute.h"
 #include "../Vulkan/ShaderModule.h"
 #include "../Vulkan/PipelineLayout.h"
 #include "../Vulkan/PipelineCache.h"
@@ -24,22 +23,18 @@ namespace HyperFast
 		PipelineFactory(Vulkan::Device &device) noexcept;
 		~PipelineFactory() noexcept;
 
-		void build(
-			const std::vector<VertexAttributeFlag> &usedAttribFlags,
-			const BuildParam &buildParam, tf::Subflow &subflow);
-		
+		void build(const BuildParam &buildParam, tf::Subflow &subflow);
 		void reset() noexcept;
 
 		[[nodiscard]]
-		VkPipeline get(const VertexAttributeFlag attribFlag) noexcept;
+		VkPipeline get() noexcept;
 
 	private:
 		class PipelineResource final
 		{
 		public:
 			PipelineResource(
-				Vulkan::Device &device, const VkPipelineLayout pipelineLayout,
-				const VertexAttributeFlag attribFlag) noexcept;
+				Vulkan::Device &device, const VkPipelineLayout pipelineLayout) noexcept;
 			
 			~PipelineResource() noexcept;
 
@@ -52,23 +47,31 @@ namespace HyperFast
 		private:
 			Vulkan::Device &__device;
 			const VkPipelineLayout __pipelineLayout;
-			const VertexAttributeFlag __attribFlag;
 
 			std::unique_ptr<Vulkan::ShaderModule> __pVertexShader;
 			std::unique_ptr<Vulkan::ShaderModule> __pFragShader;
 			std::unique_ptr<Vulkan::PipelineCache> __pPipelineCache;
+
+			std::vector<VkPipelineShaderStageCreateInfo> __shaderStageInfos;
+			std::vector<VkVertexInputBindingDescription> __vertexBindingDescs;
+			std::vector<VkVertexInputAttributeDescription> __vertexAttribDescs;
+			VkPipelineVertexInputStateCreateInfo __vertexInputInfo;
+
 			std::unique_ptr<Vulkan::Pipeline> __pPipeline;
 
 			void __createShaderModules();
 			void __createPipelineCache();
-			void __createPipeline(const BuildParam &buildParam);
+			void __populatePipelineCreateInfos() noexcept;
+
+			void __buildPipeline(const BuildParam &buildParam);
 		};
 
 		Vulkan::Device &__device;
 
 		std::unique_ptr<Vulkan::PipelineLayout> __pPipelineLayout;
-		std::unordered_map<VertexAttributeFlag, PipelineResource> __attribFlag2ResourceMap;
+		std::unique_ptr<PipelineResource> __pResource;
 
 		void __createPipelineLayouts();
+		void __createResource() noexcept;
 	};
 }

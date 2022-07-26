@@ -18,6 +18,7 @@
     <ClInclude Include="CommandSubmitter.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
+    <ClInclude Include="DrawcallSegment.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
     <ClInclude Include="LifeCycleSignalType.h" />
     <ClInclude Include="Memory.h" />
@@ -54,6 +55,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PhysicalDevicePicker.cpp" />
     <ClCompile Include="PipelineFactory.cpp" />
+    <ClCompile Include="PipelineFactory_Resource.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="ScreenManager.cpp" />
