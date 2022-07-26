@@ -41,16 +41,16 @@ namespace HyperFast
 			bool __resourceChainInit{};
 
 			Win::Window &__window;
-			std::shared_ptr<Infra::EventListener<Win::Window &, Win::Window::ResizingType>> __pResizeEventListener;
-			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDrawEventListener;
-			std::shared_ptr<Infra::EventListener<Win::Window &>> __pDestroyEventListener;
+			std::shared_ptr<Infra::EventListener<Win::Window &, Win::Window::ResizingType>> __pWindowResizeEventListener;
+			std::shared_ptr<Infra::EventListener<Win::Window &>> __pWindowDrawEventListener;
+			std::shared_ptr<Infra::EventListener<Win::Window &>> __pWindowDestroyEventListener;
 
 			std::shared_ptr<Infra::EventListener<>> __pScreenUpdateListener;
 			std::shared_ptr<Infra::EventListener<>> __pRenderListener;
 			std::shared_ptr<Infra::EventListener<>> __pPresentListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallNeedToUpdatePipelineDependenciesListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallNeedToUpdateMainCommandsListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallNeedToRenderListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallAttributeFlagListChangeEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallIndirectBufferUpdateEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallIndirectBufferCreateEventListener;
 
 			std::unique_ptr<Vulkan::Surface> __pSurface;
 			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
@@ -145,6 +145,15 @@ namespace HyperFast
 
 			[[nodiscard]]
 			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;
+
+			void __onWindowResize(
+				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
+
+			void __onWindowDraw(Win::Window &window) noexcept;
+			void __onWindowDestroy(Win::Window &window) noexcept;
+			void __onDrawcallAttributeFlagListChange(Drawcall &drawcall) noexcept;
+			void __onDrawcallIndirectBufferUpdate(Drawcall &drawcall) noexcept;
+			void __onDrawcallIndirectBufferCreate(Drawcall &drawcall) noexcept;
 
 			void __onScreenUpdate();
 			void __onRender() noexcept;

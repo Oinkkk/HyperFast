@@ -58,7 +58,8 @@ namespace HyperFast
 		std::unique_ptr<Vulkan::RenderPass> __pRenderPass;
 		std::unique_ptr<Vulkan::Framebuffer> __pFramebuffer;
 
-		std::vector<std::unique_ptr<CommandBufferManager>> __renderCommandBufferManagers;
+		std::vector<std::unique_ptr<CommandBufferManager>> __primaryCommandBufferManagers;
+		std::vector<std::unique_ptr<CommandBufferManager>> __secondaryCommandBufferManagers;
 
 		bool __needToUpdateSwapchainDependencies{};
 		bool __needToUpdatePipelineDependencies{};
@@ -67,18 +68,21 @@ namespace HyperFast
 		tf::Future<void> __job;
 		SemaphoreDependencyCluster __semaphoreDependencyCluster;
 
+		void __createSecondaryCommandBuffers() noexcept;
+
 		void __reserveSwapchainImageDependencyPlaceholers() noexcept;
 		void __createRenderPasses();
 		void __createFramebuffer();
 
 		void __buildPipelines(tf::Subflow &subflow);
 		void __createSwapchainImageView(const size_t imageIdx);
-		void __createRenderCommandBufferManager(const size_t imageIdx);
-		void __recordRenderCommand(const size_t imageIdx) noexcept;
+		void __createPrimaryCommandBufferManager(const size_t imageIdx);
+		void __updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept;
+		void __recordPrimaryCommand(const size_t imageIdx) noexcept;
 
 		void __updateSwapchainDependencies();
 		void __updatePipelineDependencies();
-		void __updateMainCommands() noexcept;
+		void __updateCommandBuffers() noexcept;
 	};
 
 	constexpr void ScreenResource::needToUpdateSwapchainDependencies() noexcept

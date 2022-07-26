@@ -35,8 +35,6 @@ namespace HyperFast
 			mesh.getAttributeFlagChangeEvent() += __pMeshAttributeFlagChangeEventListener;
 			mesh.getBufferChangeEvent() += __pMeshBufferChangeEventListener;
 			mesh.getDestroyEvent() += __pMeshDestroyEventListener;
-
-			__needToUpdateMainCommands = true;
 		}
 
 		pIndirectBufferBuilder->addSubmesh(submesh);
@@ -57,31 +55,25 @@ namespace HyperFast
 
 	void Drawcall::update()
 	{
+		__updateIndirectBufferBuilders();
+
 		if (__attribFlagsUpdated)
 		{
 			__updateAttributeFlagVector();
-			__needToUpdatePipelineDependencies = true;
+			__attributeFlagListChangeEvent.invoke(*this);
 			__attribFlagsUpdated = false;
 		}
 
-		__updateIndirectBufferBuilders();
-
-		if (__needToUpdatePipelineDependencies)
+		if (__indirectBufferUpdated)
 		{
-			__needToUpdatePipelineDependenciesEvent.invoke(*this);
-			__needToUpdatePipelineDependencies = false;
+			__indirectBufferUpdateEvent.invoke(*this);
+			__indirectBufferUpdated = false;
 		}
 
-		if (__needToUpdateMainCommands)
+		if (__indirectBufferCreated)
 		{
-			__needToUpdateMainCommandsEvent.invoke(*this);
-			__needToUpdateMainCommands = false;
-		}
-
-		if (__needToRender)
-		{
-			__needToRenderEvent.invoke(*this);
-			__needToRender = false;
+			__indirectBufferCreateEvent.invoke(*this);
+			__indirectBufferCreated = false;
 		}
 	}
 
@@ -189,11 +181,11 @@ namespace HyperFast
 
 	void Drawcall::__onIndirectBufferUpdate(IndirectBufferBuilder &builder) noexcept
 	{
-		__needToRender = true;
+		__indirectBufferUpdated = true;
 	}
 
 	void Drawcall::__onIndirectBufferCreate(IndirectBufferBuilder &builder) noexcept
 	{
-		__dirtyBuilders.emplace(&builder);
+		__indirectBufferCreated = true;
 	}
 }

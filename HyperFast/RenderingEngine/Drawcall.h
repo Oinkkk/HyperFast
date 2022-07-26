@@ -7,7 +7,6 @@
 
 namespace HyperFast
 {
-	// Per shading type
 	class Drawcall : public Infra::Unique
 	{
 	public:
@@ -27,13 +26,13 @@ namespace HyperFast
 		constexpr const std::vector<VertexAttributeFlag> &getAttributeFlags() const noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Drawcall &> &getNeedToUpdatePipelineDependenciesEvent() noexcept;
+		constexpr Infra::EventView<Drawcall &> &getAttributeFlagListChangeEvent() noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Drawcall &> &getNeedToUpdateMainCommandsEvent() noexcept;
+		constexpr Infra::EventView<Drawcall &> &getIndirectBufferUpdateEvent() noexcept;
 
 		[[nodiscard]]
-		constexpr Infra::EventView<Drawcall &> &getNeedToRenderEvent() noexcept;
+		constexpr Infra::EventView<Drawcall &> &getIndirectBufferCreateEvent() noexcept;
 
 	private:
 		using Mesh2BuilderMap = std::unordered_map<Mesh *, std::unique_ptr<IndirectBufferBuilder>>;
@@ -45,9 +44,8 @@ namespace HyperFast
 		MemoryManager &__memoryManager;
 
 		bool __attribFlagsUpdated{};
-		bool __needToUpdatePipelineDependencies{};
-		bool __needToUpdateMainCommands{};
-		bool __needToRender{};
+		bool __indirectBufferCreated{};
+		bool __indirectBufferUpdated{};
 
 		std::unordered_map<VertexAttributeFlag, Mesh2BuilderMap> __attribFlag2MeshBuilderMap;
 		std::vector<VertexAttributeFlag> __attribFlags;
@@ -61,9 +59,9 @@ namespace HyperFast
 		std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferUpdateEventListener;
 		std::shared_ptr<Infra::EventListener<IndirectBufferBuilder &>> __pIndirectBufferCreateEventListener;
 
-		Infra::Event<Drawcall &> __needToUpdatePipelineDependenciesEvent;
-		Infra::Event<Drawcall &> __needToUpdateMainCommandsEvent;
-		Infra::Event<Drawcall &> __needToRenderEvent;
+		Infra::Event<Drawcall &> __attributeFlagListChangeEvent;
+		Infra::Event<Drawcall &> __indirectBufferCreateEvent;
+		Infra::Event<Drawcall &> __indirectBufferUpdateEvent;
 
 		void __initEventListeners() noexcept;
 		void __updateAttributeFlagVector() noexcept;
@@ -85,18 +83,18 @@ namespace HyperFast
 		return __attribFlags;
 	}
 
-	constexpr Infra::EventView<Drawcall &> &Drawcall::getNeedToUpdatePipelineDependenciesEvent() noexcept
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getAttributeFlagListChangeEvent() noexcept
 	{
-		return __needToUpdatePipelineDependenciesEvent;
+		return __attributeFlagListChangeEvent;
 	}
 
-	constexpr Infra::EventView<Drawcall &> &Drawcall::getNeedToUpdateMainCommandsEvent() noexcept
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getIndirectBufferUpdateEvent() noexcept
 	{
-		return __needToUpdateMainCommandsEvent;
+		return __indirectBufferUpdateEvent;
 	}
 
-	constexpr Infra::EventView<Drawcall &> &Drawcall::getNeedToRenderEvent() noexcept
+	constexpr Infra::EventView<Drawcall &> &Drawcall::getIndirectBufferCreateEvent() noexcept
 	{
-		return __needToRenderEvent;
+		return __indirectBufferCreateEvent;
 	}
 }

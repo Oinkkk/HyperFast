@@ -33,28 +33,28 @@ namespace HyperFast
 
 		if (pCurrentDrawCall)
 		{
-			pCurrentDrawCall->getNeedToUpdatePipelineDependenciesEvent()
-				-= __pDrawcallNeedToUpdatePipelineDependenciesListener;
+			pCurrentDrawCall->getAttributeFlagListChangeEvent()
+				-= __pDrawcallAttributeFlagListChangeEventListener;
 			
-			pCurrentDrawCall->getNeedToUpdateMainCommandsEvent()
-				-= __pDrawcallNeedToUpdateMainCommandsListener;
+			pCurrentDrawCall->getIndirectBufferUpdateEvent()
+				-= __pDrawcallIndirectBufferUpdateEventListener;
 			
-			pCurrentDrawCall->getNeedToRenderEvent()
-				-= __pDrawcallNeedToRenderListener;
+			pCurrentDrawCall->getIndirectBufferCreateEvent()
+				-= __pDrawcallIndirectBufferCreateEventListener;
 		}
 
 		pCurrentDrawCall = pDrawcall;
 
 		if (pCurrentDrawCall)
 		{
-			pCurrentDrawCall->getNeedToUpdatePipelineDependenciesEvent()
-				+= __pDrawcallNeedToUpdatePipelineDependenciesListener;
+			pCurrentDrawCall->getAttributeFlagListChangeEvent()
+				+= __pDrawcallAttributeFlagListChangeEventListener;
 
-			pCurrentDrawCall->getNeedToUpdateMainCommandsEvent()
-				+= __pDrawcallNeedToUpdateMainCommandsListener;
+			pCurrentDrawCall->getIndirectBufferUpdateEvent()
+				+= __pDrawcallIndirectBufferUpdateEventListener;
 
-			pCurrentDrawCall->getNeedToRenderEvent()
-				+= __pDrawcallNeedToRenderListener;
+			pCurrentDrawCall->getIndirectBufferCreateEvent()
+				+= __pDrawcallIndirectBufferCreateEventListener;
 		}
 
 		__needToUpdatePipelineDependencies = true;
@@ -175,39 +175,30 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__initListeners() noexcept
 	{
-		__pResizeEventListener = Infra::EventListener<Win::Window &, Win::Window::ResizingType>::
-			make([this](Win::Window &window, const Win::Window::ResizingType resizingType)
-		{
-			if (resizingType == Win::Window::ResizingType::MINIMIZED)
-				return;
+		__pWindowResizeEventListener =
+			Infra::EventListener<Win::Window &, Win::Window::ResizingType>::bind(
+				&ScreenManager::ScreenImpl::__onWindowResize, this,
+				std::placeholders::_1, std::placeholders::_2);
 
-			__needToUpdateSurfaceDependencies = true;
-		});
+		__pWindowDrawEventListener =
+			Infra::EventListener<Win::Window &>::bind(
+				&ScreenManager::ScreenImpl::__onWindowDraw, this, std::placeholders::_1);
 
-		__pDrawEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &window)
-		{
-			__needToRender = true;
-		});
+		__pWindowDestroyEventListener =
+			Infra::EventListener<Win::Window &>::bind(
+				&ScreenManager::ScreenImpl::__onWindowDestroy, this, std::placeholders::_1);
 
-		__pDestroyEventListener = Infra::EventListener<Win::Window &>::make([this] (Win::Window &)
-		{
-			__destroy();
-		});
+		__pDrawcallAttributeFlagListChangeEventListener =
+			Infra::EventListener<Drawcall &>::bind(
+				&ScreenManager::ScreenImpl::__onDrawcallAttributeFlagListChange, this, std::placeholders::_1);
 
-		__pDrawcallNeedToUpdatePipelineDependenciesListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
-		{
-			__needToUpdatePipelineDependencies = true;
-		});
+		__pDrawcallIndirectBufferUpdateEventListener =
+			Infra::EventListener<Drawcall &>::bind(
+				&ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate, this, std::placeholders::_1);
 
-		__pDrawcallNeedToUpdateMainCommandsListener = Infra::EventListener<Drawcall &>::make([this] (Drawcall &)
-		{
-			__needToUpdateMainCommands = true;
-		});
-
-		__pDrawcallNeedToRenderListener = Infra::EventListener<Drawcall &>::make([this](Drawcall &)
-		{
-			__needToRender = true;
-		});
+		__pDrawcallIndirectBufferCreateEventListener =
+			Infra::EventListener<Drawcall &>::bind(
+				&ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate, this, std::placeholders::_1);
 
 		__pScreenUpdateListener =
 			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onScreenUpdate, this);
@@ -221,9 +212,9 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__registerListeners() noexcept
 	{
-		__window.getResizeEvent() += __pResizeEventListener;
-		__window.getDrawEvent() += __pDrawEventListener;
-		__window.getDestroyEvent() += __pDestroyEventListener;
+		__window.getResizeEvent() += __pWindowResizeEventListener;
+		__window.getDrawEvent() += __pWindowDrawEventListener;
+		__window.getDestroyEvent() += __pWindowDestroyEventListener;
 
 		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::SCREEN_UPDATE) += __pScreenUpdateListener;
 		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::RENDER) += __pRenderListener;
@@ -589,6 +580,40 @@ namespace HyperFast
 		}
 
 		return false;
+	}
+
+	void ScreenManager::ScreenImpl::__onWindowResize(
+		Win::Window &window, const Win::Window::ResizingType resizingType) noexcept
+	{
+		if (resizingType == Win::Window::ResizingType::MINIMIZED)
+			return;
+
+		__needToUpdateSurfaceDependencies = true;
+	}
+
+	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept
+	{
+		__needToRender = true;
+	}
+
+	void ScreenManager::ScreenImpl::__onWindowDestroy(Win::Window &window) noexcept
+	{
+		__destroy();
+	}
+
+	void ScreenManager::ScreenImpl::__onDrawcallAttributeFlagListChange(Drawcall &drawcall) noexcept
+	{
+		__needToUpdatePipelineDependencies = true;
+	}
+
+	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(Drawcall &drawcall) noexcept
+	{
+		__needToRender = true;
+	}
+
+	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(Drawcall &drawcall) noexcept
+	{
+		__needToUpdateMainCommands = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onScreenUpdate()

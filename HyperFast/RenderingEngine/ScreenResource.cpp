@@ -1,4 +1,4 @@
-#include "ScreenResource.h"
+﻿#include "ScreenResource.h"
 
 namespace HyperFast
 {
@@ -7,7 +7,9 @@ namespace HyperFast
 		const uint32_t queueFamilyIndex) noexcept :
 		__device{ device }, __externalParam{ externalParam },
 		__queueFamilyIndex{ queueFamilyIndex }, __pipelineFactory{ device }
-	{}
+	{
+		__createSecondaryCommandBuffers();
+	}
 
 	ScreenResource::~ScreenResource() noexcept
 	{
@@ -16,12 +18,12 @@ namespace HyperFast
 		__pFramebuffer = nullptr;
 		__pRenderPass = nullptr;
 		__swapChainImageViews.clear();
-		__renderCommandBufferManagers.clear();
+		__primaryCommandBufferManagers.clear();
 	}
 
 	Vulkan::CommandBuffer &ScreenResource::getRenderCommandBuffer(const size_t imageIdx) noexcept
 	{
-		return __renderCommandBufferManagers[imageIdx]->get();
+		return __primaryCommandBufferManagers[imageIdx]->get();
 	}
 
 	void ScreenResource::addSemaphoreDependency(
@@ -68,14 +70,26 @@ namespace HyperFast
 			__updatePipelineDependencies();
 
 		if (__needToUpdateMainCommands)
-			__updateMainCommands();
+			__updateCommandBuffers();
+	}
+
+	void ScreenResource::__createSecondaryCommandBuffers() noexcept
+	{
+		const uint32_t numCores{ std::thread::hardware_concurrency() };
+		for (uint32_t iter = 0U; iter < numCores; iter++)
+		{
+			__secondaryCommandBufferManagers.emplace_back(
+				std::make_unique<CommandBufferManager>(
+					__device, __queueFamilyIndex,
+					VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY));
+		}
 	}
 
 	void ScreenResource::__reserveSwapchainImageDependencyPlaceholers() noexcept
 	{
 		const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
 
-		__renderCommandBufferManagers.resize(numSwapchainImages);
+		__primaryCommandBufferManagers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
 	}
 
@@ -112,7 +126,7 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
 			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 
-			// �Ϲ��� �޸� �������
+			// 암묵적 메모리 디펜던시
 			.srcAccessMask = 0ULL, 
 			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 			.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
@@ -229,9 +243,9 @@ namespace HyperFast
 			std::make_unique<Vulkan::ImageView>(__device, createInfo);
 	}
 
-	void ScreenResource::__createRenderCommandBufferManager(const size_t imageIdx)
+	void ScreenResource::__createPrimaryCommandBufferManager(const size_t imageIdx)
 	{
-		auto &pManager{ __renderCommandBufferManagers[imageIdx] };
+		auto &pManager{ __primaryCommandBufferManagers[imageIdx] };
 		if (pManager)
 			return;
 
@@ -239,7 +253,22 @@ namespace HyperFast
 			__device, __queueFamilyIndex, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	}
 
-	void ScreenResource::__recordRenderCommand(const size_t imageIdx) noexcept
+	void ScreenResource::__updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept
+	{
+		/*
+			- Secondary command buffer manager 별도 관리
+			- secondary command buffer 단위는 크게 잡아야 primary command buffer recoding overhead가 적음
+			- DrawcallGroup 만들기 (mesh 단위로 그룹에 편재되도록, 그룹 크기는 hardware_concurrency 크기와 동일)
+			- group resource update event 제공
+			- renderpass, framebuffer, pipeline 등 업데이트 시 secondary command buffer 갱신
+			- external param들은 명시적으로 setter 제공 (업데이트 타이밍 알아야됨)
+		*/
+
+		// 1. Secondary command buffer recoding
+		// 2. Primary command buffer에서 사용
+	}
+
+	void ScreenResource::__recordPrimaryCommand(const size_t imageIdx) noexcept
 	{
 		static constexpr VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
@@ -273,7 +302,7 @@ namespace HyperFast
 			.pClearValues = &clearColor
 		};
 
-		CommandBufferManager &commandBufferManager{ *(__renderCommandBufferManagers[imageIdx]) };
+		CommandBufferManager &commandBufferManager{ *(__primaryCommandBufferManagers[imageIdx]) };
 		commandBufferManager.advance();
 
 		Vulkan::CommandBuffer &commandBuffer{ commandBufferManager.get() };
@@ -347,16 +376,13 @@ namespace HyperFast
 			taskflow.emplace([this](tf::Subflow &subflow)
 			{
 				const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
-				for (
-					size_t swapchainImageIter = 0ULL;
-					swapchainImageIter < numSwapchainImages;
-					swapchainImageIter++)
+				for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 				{
-					subflow.emplace([this, imageIdx = swapchainImageIter]
+					subflow.emplace([this, imageIter]
 					{
-						__createRenderCommandBufferManager(imageIdx);
-						__createSwapchainImageView(imageIdx);
-						__recordRenderCommand(imageIdx);
+						__createPrimaryCommandBufferManager(imageIter);
+						__createSwapchainImageView(imageIter);
+						__recordPrimaryCommand(imageIter);
 					});
 				}
 			})
@@ -381,14 +407,11 @@ namespace HyperFast
 			__buildPipelines(subflow);
 
 			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
-			for (
-				size_t swapchainImageIter = 0ULL;
-				swapchainImageIter < numSwapchainImages;
-				swapchainImageIter++)
+			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
-				subflow.emplace([this, imageIdx = swapchainImageIter]
+				subflow.emplace([this, imageIter]
 				{
-					__recordRenderCommand(imageIdx);
+					__recordPrimaryCommand(imageIter);
 				});
 			}
 		});
@@ -400,22 +423,27 @@ namespace HyperFast
 		__needToUpdateMainCommands = false;
 	}
 
-	void ScreenResource::__updateMainCommands() noexcept
+	void ScreenResource::__updateCommandBuffers() noexcept
 	{
 		tf::Taskflow taskflow;
 		
 		taskflow.emplace([this](tf::Subflow &subflow)
 		{
-			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
-			for (
-				size_t swapchainImageIter = 0ULL;
-				swapchainImageIter < numSwapchainImages;
-				swapchainImageIter++)
+			tf::Task t1
 			{
-				subflow.emplace([this, imageIdx = swapchainImageIter]
+				subflow.emplace([this](tf::Subflow &subflow)
 				{
-					__recordRenderCommand(imageIdx);
-				});
+					__updateSecondaryCommandBuffers(subflow);
+				})
+			};
+
+			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
+			{
+				subflow.emplace([this, imageIter]
+				{
+					__recordPrimaryCommand(imageIter);
+				}).succeed(t1);
 			}
 		});
 
