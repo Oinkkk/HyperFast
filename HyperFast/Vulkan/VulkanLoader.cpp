@@ -387,6 +387,10 @@ namespace Vulkan
 			reinterpret_cast<PFN_vkCmdPipelineBarrier2>(
 				vkGetDeviceProcAddr(device, "vkCmdPipelineBarrier2"));
 
+		retVal.vkCmdExecuteCommands =
+			reinterpret_cast<PFN_vkCmdExecuteCommands>(
+				vkGetDeviceProcAddr(device, "vkCmdExecuteCommands"));
+
 		return retVal;
 	}
 

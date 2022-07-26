@@ -17,16 +17,15 @@ namespace HyperFast
 		Mesh &mesh{ submesh.getMesh() };
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
-		Mesh2ResourceMap &mesh2ResourceMap{ __attribFlag2MeshResourceMap[attribFlag] };
-		if (mesh2ResourceMap.empty())
+		Mesh2BuilderMap &mesh2BuilderMap{ __attribFlag2MeshBuilderMap[attribFlag] };
+		if (mesh2BuilderMap.empty())
 			__attribFlagsUpdated = true;
 
-		auto &[pCommandBufferManager, pIndirectBufferBuilder]{ mesh2ResourceMap[&mesh] };
+		auto &pIndirectBufferBuilder{ mesh2BuilderMap[&mesh] };
 
 		// 처음 본 메시
 		if (!pIndirectBufferBuilder)
 		{
-			pCommandBufferManager = std::make_unique<CommandBufferManager>(__device, __queueFamilyIndex);
 			pIndirectBufferBuilder =
 				std::make_unique<IndirectBufferBuilder>(__device, __bufferManager, __memoryManager);
 
@@ -49,8 +48,8 @@ namespace HyperFast
 		Mesh &mesh{ submesh.getMesh() };
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
-		Mesh2ResourceMap &mesh2ResourceMap{ __attribFlag2MeshResourceMap[attribFlag] };
-		auto &[pCommandBufferManager, pIndirectBufferBuilder] { mesh2ResourceMap[&mesh] };
+		Mesh2BuilderMap &mesh2BuilderMap{ __attribFlag2MeshBuilderMap[attribFlag] };
+		auto &pIndirectBufferBuilder{ mesh2BuilderMap[&mesh] };
 
 		submesh.getDestroyEvent() -= __pSubmeshDestroyEventListener;
 		pIndirectBufferBuilder->removeSubmesh(submesh);
@@ -60,27 +59,12 @@ namespace HyperFast
 	{
 		if (__attribFlagsUpdated)
 		{
-			__attribFlags.resize(__attribFlag2MeshResourceMap.size());
-
-			size_t cursor{};
-			for (const auto &[attribFlag, _] : __attribFlag2MeshResourceMap)
-			{
-				__attribFlags[cursor] = attribFlag;
-				cursor++;
-			}
-
+			__updateAttributeFlagVector();
 			__needToUpdatePipelineDependencies = true;
 			__attribFlagsUpdated = false;
 		}
 
-		for (const auto &[_, mesh2ResourceMap] : __attribFlag2MeshResourceMap)
-		{
-			for (const auto &[_, perMeshResource] : mesh2ResourceMap)
-			{
-				auto &[_, pIndirectBufferBuilder] { perMeshResource };
-				pIndirectBufferBuilder->update();
-			}
-		}
+		__updateIndirectBufferBuilders();
 
 		if (__needToUpdatePipelineDependencies)
 		{
@@ -103,11 +87,9 @@ namespace HyperFast
 
 	void Drawcall::draw(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
-		Mesh2ResourceMap &mesh2ResourceMap{ __attribFlag2MeshResourceMap[attribFlag] };
-		for (const auto &[pMesh, perMeshResource] : mesh2ResourceMap)
+		Mesh2BuilderMap &mesh2BuilderMap{ __attribFlag2MeshBuilderMap[attribFlag] };
+		for (const auto &[pMesh, pIndirectBufferBuilder] : mesh2BuilderMap)
 		{
-			auto &[_, pIndirectBufferBuilder] { perMeshResource };
-
 			pMesh->bind(commandBuffer);
 			pIndirectBufferBuilder->draw(commandBuffer);
 		}
@@ -115,7 +97,7 @@ namespace HyperFast
 
 	void Drawcall::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
 	{
-		for (const auto &[_, mesh2ResourceMap] : __attribFlag2MeshResourceMap)
+		for (const auto &[_, mesh2ResourceMap] : __attribFlag2MeshBuilderMap)
 		{
 			for (const auto &[pMesh, _] : mesh2ResourceMap)
 				pMesh->addSemaphoreDependency(pDependency);
@@ -150,25 +132,47 @@ namespace HyperFast
 				&Drawcall::__onIndirectBufferCreate, this, std::placeholders::_1);
 	}
 
+	void Drawcall::__updateAttributeFlagVector() noexcept
+	{
+		__attribFlags.clear();
+
+		for (const auto &[attribFlag, _] : __attribFlag2MeshBuilderMap)
+			__attribFlags.emplace_back(attribFlag);
+	}
+
+	void Drawcall::__updateIndirectBufferBuilders() noexcept
+	{
+		for (const auto &[_, mesh2BuilderMap] : __attribFlag2MeshBuilderMap)
+		{
+			for (const auto &[_, pIndirectBufferBuilder] : mesh2BuilderMap)
+				pIndirectBufferBuilder->update();
+		}
+	}
+
 	void Drawcall::__onMeshAttributeFlagChange(
 		Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept
 	{
-		Mesh2ResourceMap &oldMap{ __attribFlag2MeshResourceMap[oldFlag] };
-		Mesh2ResourceMap &newMap{ __attribFlag2MeshResourceMap[newFlag] };
+		Mesh2BuilderMap &oldMap{ __attribFlag2MeshBuilderMap[oldFlag] };
+		Mesh2BuilderMap &newMap{ __attribFlag2MeshBuilderMap[newFlag] };
 
 		newMap.insert(oldMap.extract(&mesh));
 	}
 
 	void Drawcall::__onMeshBufferChange(Mesh &mesh) noexcept
 	{
-		__needToUpdateMainCommands = true;
+		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
+
+		Mesh2BuilderMap &mesh2BuilderMap{ __attribFlag2MeshBuilderMap[attribFlag] };
+		auto &pIndirectBufferBuilder{ mesh2BuilderMap[&mesh] };
+
+		__dirtyBuilders.emplace(pIndirectBufferBuilder.get());
 	}
 
 	void Drawcall::__onMeshDestroy(Mesh &mesh) noexcept
 	{
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
-		Mesh2ResourceMap &mesh2ResourceMap{ __attribFlag2MeshResourceMap[attribFlag] };
+		Mesh2BuilderMap &mesh2ResourceMap{ __attribFlag2MeshBuilderMap[attribFlag] };
 		mesh2ResourceMap.erase(&mesh);
 	}
 
@@ -177,8 +181,8 @@ namespace HyperFast
 		Mesh &mesh{ submesh.getMesh() };
 		const VertexAttributeFlag attribFlag{ mesh.getVertexAttributeFlag() };
 
-		Mesh2ResourceMap &mesh2ResourceMap{ __attribFlag2MeshResourceMap[attribFlag] };
-		auto &[_, pIndirectBufferBuilder]{ mesh2ResourceMap[&mesh] };
+		Mesh2BuilderMap &mesh2BuilderMap{ __attribFlag2MeshBuilderMap[attribFlag] };
+		auto &pIndirectBufferBuilder{ mesh2BuilderMap[&mesh] };
 
 		pIndirectBufferBuilder->removeSubmesh(submesh);
 	}
@@ -190,6 +194,6 @@ namespace HyperFast
 
 	void Drawcall::__onIndirectBufferCreate(IndirectBufferBuilder &builder) noexcept
 	{
-		__needToUpdateMainCommands = true;
+		__dirtyBuilders.emplace(&builder);
 	}
 }

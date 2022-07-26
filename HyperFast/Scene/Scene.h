@@ -10,7 +10,7 @@ namespace Jin
 	{
 	public:
 		Scene(HyperFast::RenderingEngine &renderingEngine) noexcept;
-		virtual ~Scene() noexcept;
+		virtual ~Scene() noexcept = default;
 
 		void process(const float deltaTime);
 

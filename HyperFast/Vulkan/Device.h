@@ -227,6 +227,10 @@ namespace Vulkan
 			const VkCommandBuffer commandBuffer, const VkBuffer srcBuffer,
 			const VkBuffer dstBuffer, const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept;
 
+		void vkCmdExecuteCommands(
+			const VkCommandBuffer commandBuffer,
+			const uint32_t commandBufferCount, const VkCommandBuffer *const pCommandBuffers) noexcept;
+
 	private:
 		Instance &__instance;
 		PhysicalDevice &__physicalDevice;

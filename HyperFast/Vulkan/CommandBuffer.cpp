@@ -76,4 +76,10 @@ namespace Vulkan
 		__device.vkCmdCopyBuffer(
 			getHandle(), srcBuffer, dstBuffer, regionCount, pRegions);
 	}
+
+	void CommandBuffer::vkCmdExecuteCommands(
+		const uint32_t commandBufferCount, const VkCommandBuffer *const pCommandBuffers) noexcept
+	{
+		__device.vkCmdExecuteCommands(getHandle(), commandBufferCount, pCommandBuffers);
+	}
 }

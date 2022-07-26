@@ -12,8 +12,8 @@ namespace HyperFast
 	{
 	public:
 		CommandBufferManager(
-			Vulkan::Device &device,
-			const uint32_t queueFamilyIndex, const size_t numMaxBuffers = 8ULL) noexcept;
+			Vulkan::Device &device, const uint32_t queueFamilyIndex,
+			const VkCommandBufferLevel level, const size_t numMaxBuffers = 8ULL) noexcept;
 		
 		void advance() noexcept;
 
@@ -23,6 +23,7 @@ namespace HyperFast
 	private:
 		Vulkan::Device &__device;
 		const uint32_t __queueFamilyIndex;
+		const VkCommandBufferLevel __level;
 		const size_t __numMaxBuffers;
 
 		std::unique_ptr<Vulkan::CommandPool> __pCommandPool;

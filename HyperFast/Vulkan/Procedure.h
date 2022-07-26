@@ -104,5 +104,6 @@ namespace Vulkan
 		PFN_vkCmdDrawIndexedIndirectCount vkCmdDrawIndexedIndirectCount{};
 		PFN_vkCmdPipelineBarrier2 vkCmdPipelineBarrier2{};
 		PFN_vkCmdCopyBuffer vkCmdCopyBuffer{};
+		PFN_vkCmdExecuteCommands vkCmdExecuteCommands{};
 	};
 }

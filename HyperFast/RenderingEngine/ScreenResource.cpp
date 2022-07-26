@@ -235,7 +235,8 @@ namespace HyperFast
 		if (pManager)
 			return;
 
-		pManager = std::make_unique<CommandBufferManager>(__device, __queueFamilyIndex);
+		pManager = std::make_unique<CommandBufferManager>(
+			__device, __queueFamilyIndex, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	}
 
 	void ScreenResource::__recordRenderCommand(const size_t imageIdx) noexcept

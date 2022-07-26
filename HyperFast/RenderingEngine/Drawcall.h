@@ -19,15 +19,12 @@ namespace HyperFast
 		void removeSubmesh(Submesh &submesh) noexcept;
 
 		void update();
-
-		[[nodiscard]]
-		constexpr const std::vector<VertexAttributeFlag> &getAttributeFlags() const noexcept;
-
-		// TODO: secondary buffer recording은 attribFlag 별로
-		void build() noexcept;
 		void draw(const VertexAttributeFlag attribFlag, Vulkan::CommandBuffer &commandBuffer) noexcept;
 
 		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
+
+		[[nodiscard]]
+		constexpr const std::vector<VertexAttributeFlag> &getAttributeFlags() const noexcept;
 
 		[[nodiscard]]
 		constexpr Infra::EventView<Drawcall &> &getNeedToUpdatePipelineDependenciesEvent() noexcept;
@@ -39,14 +36,7 @@ namespace HyperFast
 		constexpr Infra::EventView<Drawcall &> &getNeedToRenderEvent() noexcept;
 
 	private:
-		class PerMeshResource
-		{
-		public:
-			std::unique_ptr<CommandBufferManager> pCommandBufferManager;
-			std::unique_ptr<IndirectBufferBuilder> pIndirectBufferBuilder;
-		};
-
-		using Mesh2ResourceMap = std::unordered_map<Mesh *, PerMeshResource>;
+		using Mesh2BuilderMap = std::unordered_map<Mesh *, std::unique_ptr<IndirectBufferBuilder>>;
 		using MeshAttributeFlagChangeEventListener = Infra::EventListener<Mesh &, VertexAttributeFlag, VertexAttributeFlag>;
 
 		Vulkan::Device &__device;
@@ -59,8 +49,10 @@ namespace HyperFast
 		bool __needToUpdateMainCommands{};
 		bool __needToRender{};
 
-		std::unordered_map<VertexAttributeFlag, Mesh2ResourceMap> __attribFlag2MeshResourceMap;
+		std::unordered_map<VertexAttributeFlag, Mesh2BuilderMap> __attribFlag2MeshBuilderMap;
 		std::vector<VertexAttributeFlag> __attribFlags;
+
+		std::unordered_set<IndirectBufferBuilder *> __dirtyBuilders;
 
 		std::shared_ptr<MeshAttributeFlagChangeEventListener> __pMeshAttributeFlagChangeEventListener;
 		std::shared_ptr<Infra::EventListener<Mesh &>> __pMeshBufferChangeEventListener;
@@ -74,7 +66,9 @@ namespace HyperFast
 		Infra::Event<Drawcall &> __needToRenderEvent;
 
 		void __initEventListeners() noexcept;
-		
+		void __updateAttributeFlagVector() noexcept;
+		void __updateIndirectBufferBuilders() noexcept;
+
 		void __onMeshAttributeFlagChange(
 			Mesh &mesh, const VertexAttributeFlag oldFlag, VertexAttributeFlag newFlag) noexcept;
 

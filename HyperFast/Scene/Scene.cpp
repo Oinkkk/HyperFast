@@ -6,11 +6,6 @@ namespace Jin
 		__renderingEngine{ renderingEngine }, __pDrawcall{ renderingEngine.createDrawcall() }
 	{}
 
-	Scene::~Scene() noexcept
-	{
-
-	}
-
 	void Scene::process(const float deltaTime)
 	{
 		_onProcess(deltaTime);

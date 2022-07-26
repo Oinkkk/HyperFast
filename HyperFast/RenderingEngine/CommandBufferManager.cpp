@@ -3,8 +3,10 @@
 namespace HyperFast
 {
 	CommandBufferManager::CommandBufferManager(
-		Vulkan::Device &device, const uint32_t queueFamilyIndex, const size_t numMaxBuffers) noexcept :
-		__device{ device }, __queueFamilyIndex { queueFamilyIndex }, __numMaxBuffers{numMaxBuffers}
+		Vulkan::Device &device, const uint32_t queueFamilyIndex,
+		const VkCommandBufferLevel level, const size_t numMaxBuffers) noexcept :
+		__device{ device }, __queueFamilyIndex { queueFamilyIndex },
+		__level{ level }, __numMaxBuffers{ numMaxBuffers }
 	{
 		__createCommandPool();
 		__allocateCommandBuffers();
@@ -45,8 +47,7 @@ namespace HyperFast
 		const VkResult result
 		{
 			__pCommandPool->vkAllocateCommandBuffers(
-				nullptr, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-				uint32_t(__numMaxBuffers), handles.data())
+				nullptr, __level, uint32_t(__numMaxBuffers), handles.data())
 		};
 
 		if (result != VK_SUCCESS)

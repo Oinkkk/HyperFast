@@ -390,6 +390,13 @@ namespace Vulkan
 		__proc.vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, regionCount, pRegions);
 	}
 
+	void Device::vkCmdExecuteCommands(
+		const VkCommandBuffer commandBuffer,
+		const uint32_t commandBufferCount, const VkCommandBuffer *const pCommandBuffers) noexcept
+	{
+		__proc.vkCmdExecuteCommands(commandBuffer, commandBufferCount, pCommandBuffers);
+	}
+
 	void Device::__queryProc() noexcept
 	{
 		__proc = __instance.queryDeviceProcedure(getHandle());
