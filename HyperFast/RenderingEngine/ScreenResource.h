@@ -106,7 +106,7 @@ namespace HyperFast
 		void __updateSecondaryCommandBufferHandles(const size_t imageIdx) noexcept;
 
 		[[nodiscard]]
-		std::vector<VkCommandBuffer> &__getSecondaryCommandBufferHandles(const size_t imageIdx) noexcept;
+		const std::vector<VkCommandBuffer> &__getSecondaryCommandBufferHandles(const size_t imageIdx) noexcept;
 	};
 
 	constexpr void ScreenResource::needToUpdateSwapchainDependencies() noexcept

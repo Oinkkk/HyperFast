@@ -218,14 +218,6 @@ namespace HyperFast
 		__secondaryCommandBufferInheritanceInfo.renderPass = __pRenderPass->getHandle();
 		__secondaryCommandBufferInheritanceInfo.framebuffer = __pFramebuffer->getHandle();
 
-		tf::Task t1
-		{
-			subflow.emplace([this, imageIdx]
-			{
-				__updateSecondaryCommandBufferHandles(imageIdx);
-			})
-		};
-
 		for (const size_t drawcallSegmentIdx : __updateNeededDrawcallSegmentIndices)
 		{
 			subflow.emplace([this, pDrawcall, imageIdx, drawcallSegmentIdx](tf::Subflow &subflow)
@@ -242,7 +234,7 @@ namespace HyperFast
 				}
 
 				commandBuffer.vkEndCommandBuffer();
-			}).precede(t1);
+			});
 		}
 	}
 
@@ -284,20 +276,16 @@ namespace HyperFast
 
 		Vulkan::CommandBuffer &commandBuffer{ __nextPrimaryCommandBuffer(imageIdx) };
 
+		__updateSecondaryCommandBufferHandles(imageIdx);
+		const std::vector<VkCommandBuffer> &secondaryCommandBufferHandles{ __getSecondaryCommandBufferHandles(imageIdx) };
+
 		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
 		commandBuffer.vkCmdBeginRenderPass(
-			&renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+			&renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		if (pDrawcall)
-		{
-			commandBuffer.vkCmdBindPipeline(
-				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
-
-			const size_t numSegments{ pDrawcall->getNumSegments() };
-
-			for (size_t segmentIter = 0ULL; segmentIter < numSegments; segmentIter++)
-				pDrawcall->draw(segmentIter, commandBuffer);
-		}
+		commandBuffer.vkCmdExecuteCommands(
+			uint32_t(secondaryCommandBufferHandles.size()),
+			secondaryCommandBufferHandles.data());
 
 		commandBuffer.vkCmdEndRenderPass();
 		commandBuffer.vkEndCommandBuffer();
@@ -352,12 +340,19 @@ namespace HyperFast
 			{
 				for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 				{
-					subflow.emplace([this, imageIter, &swapchainParam, pDrawcall](tf::Subflow &subflow)
+					tf::Task t1
+					{
+						subflow.emplace([this, pDrawcall, imageIter](tf::Subflow &subflow)
+						{
+							__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
+						})
+					};
+
+					subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
 					{
 						__createSwapchainImageView(swapchainParam, imageIter);
-						__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
 						__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
-					});
+					}).succeed(t1);
 				}
 			})
 		};
@@ -382,11 +377,18 @@ namespace HyperFast
 
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
-				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall](tf::Subflow &subflow)
+				tf::Task t1
 				{
-					__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
+					subflow.emplace([this, pDrawcall, imageIter](tf::Subflow &subflow)
+					{
+						__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
+					})
+				};
+
+				subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
+				{
 					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
-				});
+				}).succeed(t1);
 			}
 		});
 
@@ -407,11 +409,18 @@ namespace HyperFast
 		{
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
-				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall](tf::Subflow &subflow)
+				tf::Task t1
 				{
-					__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
+					subflow.emplace([this, pDrawcall, imageIter](tf::Subflow &subflow)
+					{
+						__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
+					})
+				};
+
+				subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
+				{
 					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
-				});
+				}).succeed(t1);
 			}
 		});
 
@@ -477,7 +486,7 @@ namespace HyperFast
 		}
 	}
 
-	std::vector<VkCommandBuffer> &
+	const std::vector<VkCommandBuffer> &
 		ScreenResource::__getSecondaryCommandBufferHandles(const size_t imageIdx) noexcept
 	{
 		SecondaryCommandBufferResource &resource{ __getSecondaryCommandBufferResource(imageIdx) };
