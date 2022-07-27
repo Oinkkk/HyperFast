@@ -26,34 +26,32 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::setDrawcall(Drawcall *const pDrawcall) noexcept
 	{
-		Drawcall *&pCurrentDrawCall{ __resourceParam.pDrawcall };
-
-		if (pCurrentDrawCall == pDrawcall)
+		if (__pDrawcall == pDrawcall)
 			return;
 
-		if (pCurrentDrawCall)
+		if (__pDrawcall)
 		{
-			pCurrentDrawCall->getMeshBufferChangeEvent()
+			__pDrawcall->getMeshBufferChangeEvent()
 				-= __pDrawcallMeshBufferChangeEventListener;
 			
-			pCurrentDrawCall->getIndirectBufferUpdateEvent()
+			__pDrawcall->getIndirectBufferUpdateEvent()
 				-= __pDrawcallIndirectBufferUpdateEventListener;
 			
-			pCurrentDrawCall->getIndirectBufferCreateEvent()
+			__pDrawcall->getIndirectBufferCreateEvent()
 				-= __pDrawcallIndirectBufferCreateEventListener;
 		}
 
-		pCurrentDrawCall = pDrawcall;
+		__pDrawcall = pDrawcall;
 
-		if (pCurrentDrawCall)
+		if (__pDrawcall)
 		{
-			pCurrentDrawCall->getMeshBufferChangeEvent()
+			__pDrawcall->getMeshBufferChangeEvent()
 				+= __pDrawcallMeshBufferChangeEventListener;
 
-			pCurrentDrawCall->getIndirectBufferUpdateEvent()
+			__pDrawcall->getIndirectBufferUpdateEvent()
 				+= __pDrawcallIndirectBufferUpdateEventListener;
 
-			pCurrentDrawCall->getIndirectBufferCreateEvent()
+			__pDrawcall->getIndirectBufferCreateEvent()
 				+= __pDrawcallIndirectBufferCreateEventListener;
 		}
 
@@ -68,7 +66,7 @@ namespace HyperFast
 		if (__needToUpdatePipelineDependencies)
 			__updatePipelineDependencies();
 
-		if (__needToUpdateMainCommands)
+		if (__needToUpdatePrimaryCommandBuffer)
 			__updatePrimaryCommandBuffer();
 
 		if (__needToUpdateResource)
@@ -227,10 +225,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__createResourceChain() noexcept
 	{
 		for (auto &pResource : __resourceChain)
-		{
-			pResource = std::make_unique<ScreenResource>(
-				__device, __resourceParam, __queueFamilyIndex);
-		}
+			pResource = std::make_unique<ScreenResource>(__device, __queueFamilyIndex);
 	}
 
 	void ScreenManager::ScreenImpl::__createSurface()
@@ -258,7 +253,7 @@ namespace HyperFast
 		__querySupportedSurfacePresentModes();
 		__createSwapchain();
 
-		const size_t numSwapchainImages{ __resourceParam.swapChainImages.size() };
+		const size_t numSwapchainImages{ __swapchainParam.swapChainImages.size() };
 		__imageAcquireSemaphores.resize(numSwapchainImages);
 		__renderCompletionBinarySemaphores.resize(numSwapchainImages);
 		__renderCompletionTimelineSemaphores.resize(numSwapchainImages);
@@ -287,7 +282,7 @@ namespace HyperFast
 
 		__needToUpdateSurfaceDependencies = false;
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdateMainCommands = false;
+		__needToUpdatePrimaryCommandBuffer = false;
 		__needToUpdateResource = true;
 		__needToRender = false;
 	}
@@ -298,7 +293,7 @@ namespace HyperFast
 			pResource->needToUpdatePipelineDependencies();
 
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdateMainCommands = false;
+		__needToUpdatePrimaryCommandBuffer = false;
 		__needToUpdateResource = true;
 	}
 
@@ -307,7 +302,7 @@ namespace HyperFast
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdatePrimaryCommandBuffer();
 
-		__needToUpdateMainCommands = false;
+		__needToUpdatePrimaryCommandBuffer = false;
 		__needToUpdateResource = true;
 	}
 
@@ -317,7 +312,7 @@ namespace HyperFast
 		if (!(nextResource.isIdle()))
 			return;
 
-		nextResource.commit();
+		nextResource.update(__swapchainParam, __pDrawcall);
 		__needToUpdateResource = false;
 		__needToAdvanceResource = true;
 	}
@@ -334,8 +329,8 @@ namespace HyperFast
 		__pCurrentSubmitDependency = std::make_shared<SemaphoreDependency>(__submitDependencyManager);
 
 		nextResource.addSemaphoreDependency(__pCurrentSubmitDependency);
-		if (__resourceParam.pDrawcall)
-			__resourceParam.pDrawcall->addSemaphoreDependency(__pCurrentSubmitDependency);
+		if (__pDrawcall)
+			__pDrawcall->addSemaphoreDependency(__pCurrentSubmitDependency);
 
 		__resourceChainInit = true;
 		__pOldSwapchain = nullptr;
@@ -456,14 +451,14 @@ namespace HyperFast
 		};
 
 		__pSwapchain = std::make_unique<Vulkan::Swapchain>(__device, createInfo);
-		__resourceParam.swapchainFormat = createInfo.imageFormat;
-		__resourceParam.swapchainExtent = createInfo.imageExtent;
+		__swapchainParam.swapchainFormat = createInfo.imageFormat;
+		__swapchainParam.swapchainExtent = createInfo.imageExtent;
 
 		uint32_t numImages{};
 		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, nullptr);
 
-		__resourceParam.swapChainImages.resize(numImages);
-		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, __resourceParam.swapChainImages.data());
+		__swapchainParam.swapChainImages.resize(numImages);
+		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, __swapchainParam.swapChainImages.data());
 	}
 
 	void ScreenManager::ScreenImpl::__createRenderSemaphores(const size_t imageIdx)
@@ -597,7 +592,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateMainCommands = true;
+		__needToUpdatePrimaryCommandBuffer = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(
@@ -609,7 +604,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateMainCommands = true;
+		__needToUpdatePrimaryCommandBuffer = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept

@@ -16,19 +16,15 @@ namespace HyperFast
 	class ScreenResource final : public Infra::Unique
 	{
 	public:
-		class ExternalParam
+		class SwapchainParam
 		{
 		public:
 			VkFormat swapchainFormat{};
 			VkExtent2D swapchainExtent{};
 			std::vector<VkImage> swapChainImages;
-			Drawcall *pDrawcall{};
 		};
 
-		ScreenResource(
-			Vulkan::Device &device, const ExternalParam &externalParam,
-			const uint32_t queueFamilyIndex) noexcept;
-		
+		ScreenResource(Vulkan::Device &device, const uint32_t queueFamilyIndex) noexcept;
 		~ScreenResource() noexcept;
 
 		[[nodiscard]]
@@ -44,11 +40,10 @@ namespace HyperFast
 		constexpr void needToUpdatePipelineDependencies() noexcept;
 		constexpr void needToUpdatePrimaryCommandBuffer() noexcept;
 
-		void commit();
+		void update(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
 
 	private:
 		Vulkan::Device &__device;
-		const ExternalParam &__externalParam;
 		const uint32_t __queueFamilyIndex;
 
 		PipelineFactory::BuildParam __pipelineBuildParam;
@@ -70,19 +65,21 @@ namespace HyperFast
 
 		void __createSecondaryCommandBuffers() noexcept;
 
-		void __reserveSwapchainImageDependencyPlaceholers() noexcept;
-		void __createRenderPasses();
-		void __createFramebuffer();
+		void __reserveSwapchainImageDependencyPlaceholders(const SwapchainParam &swapchainParam) noexcept;
+		void __createRenderPasses(const SwapchainParam &swapchainParam);
+		void __createFramebuffer(const SwapchainParam &swapchainParam);
 
-		void __buildPipelines(tf::Subflow &subflow);
-		void __createSwapchainImageView(const size_t imageIdx);
+		void __buildPipelines(const SwapchainParam &swapchainParam, tf::Subflow &subflow);
+		void __createSwapchainImageView(const SwapchainParam &swapchainParam, const size_t imageIdx);
 		void __createPrimaryCommandBufferManager(const size_t imageIdx);
 		void __updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept;
-		void __updatePrimaryCommandBuffer(const size_t imageIdx) noexcept;
+		void __updatePrimaryCommandBuffer(
+			const SwapchainParam &swapchainParam,
+			Drawcall *const pDrawcall, const size_t imageIdx) noexcept;
 
-		void __updateSwapchainDependencies();
-		void __updatePipelineDependencies();
-		void __updateCommandBuffers() noexcept;
+		void __updateSwapchainDependencies(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
+		void __updatePipelineDependencies(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
+		void __updateCommandBuffers(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall) noexcept;
 	};
 
 	constexpr void ScreenResource::needToUpdateSwapchainDependencies() noexcept

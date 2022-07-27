@@ -2,11 +2,8 @@
 
 namespace HyperFast
 {
-	ScreenResource::ScreenResource(
-		Vulkan::Device &device, const ExternalParam &externalParam,
-		const uint32_t queueFamilyIndex) noexcept :
-		__device{ device }, __externalParam{ externalParam },
-		__queueFamilyIndex{ queueFamilyIndex }, __pipelineFactory{ device }
+	ScreenResource::ScreenResource(Vulkan::Device &device, const uint32_t queueFamilyIndex) noexcept :
+		__device{ device }, __queueFamilyIndex{ queueFamilyIndex }, __pipelineFactory{ device }
 	{
 		__createSecondaryCommandBuffers();
 	}
@@ -61,16 +58,16 @@ namespace HyperFast
 		__job.wait();
 	}
 
-	void ScreenResource::commit()
+	void ScreenResource::update(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall)
 	{
 		if (__needToUpdateSwapchainDependencies)
-			__updateSwapchainDependencies();
+			__updateSwapchainDependencies(swapchainParam, pDrawcall);
 
 		if (__needToUpdatePipelineDependencies)
-			__updatePipelineDependencies();
+			__updatePipelineDependencies(swapchainParam, pDrawcall);
 
 		if (__needToPrimaryCommandBuffer)
-			__updateCommandBuffers();
+			__updateCommandBuffers(swapchainParam, pDrawcall);
 	}
 
 	void ScreenResource::__createSecondaryCommandBuffers() noexcept
@@ -85,15 +82,16 @@ namespace HyperFast
 		}
 	}
 
-	void ScreenResource::__reserveSwapchainImageDependencyPlaceholers() noexcept
+	void ScreenResource::__reserveSwapchainImageDependencyPlaceholders(
+		const SwapchainParam &swapchainParam) noexcept
 	{
-		const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+		const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 
 		__primaryCommandBufferManagers.resize(numSwapchainImages);
 		__swapChainImageViews.resize(numSwapchainImages);
 	}
 
-	void ScreenResource::__createRenderPasses()
+	void ScreenResource::__createRenderPasses(const SwapchainParam &swapchainParam)
 	{
 		std::vector<VkAttachmentDescription2> attachments;
 		std::vector<VkSubpassDescription2> subpasses;
@@ -101,7 +99,7 @@ namespace HyperFast
 
 		VkAttachmentDescription2 &colorAttachment{ attachments.emplace_back() };
 		colorAttachment.sType = VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2;
-		colorAttachment.format = __externalParam.swapchainFormat;
+		colorAttachment.format = swapchainParam.swapchainFormat;
 		colorAttachment.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
@@ -153,18 +151,18 @@ namespace HyperFast
 		__pRenderPass = std::make_unique<Vulkan::RenderPass>(__device, createInfo);
 	}
 
-	void ScreenResource::__createFramebuffer()
+	void ScreenResource::__createFramebuffer(const SwapchainParam &swapchainParam)
 	{
 		std::vector<VkFramebufferAttachmentImageInfo> attachmentImageInfos;
 
 		VkFramebufferAttachmentImageInfo &colorAttachmentImageInfo{ attachmentImageInfos.emplace_back() };
 		colorAttachmentImageInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO;
 		colorAttachmentImageInfo.usage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		colorAttachmentImageInfo.width = __externalParam.swapchainExtent.width;
-		colorAttachmentImageInfo.height = __externalParam.swapchainExtent.height;
+		colorAttachmentImageInfo.width = swapchainParam.swapchainExtent.width;
+		colorAttachmentImageInfo.height = swapchainParam.swapchainExtent.height;
 		colorAttachmentImageInfo.layerCount = 1U;
 		colorAttachmentImageInfo.viewFormatCount = 1U;
-		colorAttachmentImageInfo.pViewFormats = &(__externalParam.swapchainFormat);
+		colorAttachmentImageInfo.pViewFormats = &(swapchainParam.swapchainFormat);
 
 		const VkFramebufferAttachmentsCreateInfo attachmentInfo
 		{
@@ -180,26 +178,23 @@ namespace HyperFast
 			.flags = VkFramebufferCreateFlagBits::VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT,
 			.renderPass = __pRenderPass->getHandle(),
 			.attachmentCount = 1U,
-			.width = __externalParam.swapchainExtent.width,
-			.height = __externalParam.swapchainExtent.height,
+			.width = swapchainParam.swapchainExtent.width,
+			.height = swapchainParam.swapchainExtent.height,
 			.layers = 1U
 		};
 
 		__pFramebuffer = std::make_unique<Vulkan::Framebuffer>(__device, createInfo);
 	}
 
-	void ScreenResource::__buildPipelines(tf::Subflow &subflow)
+	void ScreenResource::__buildPipelines(const SwapchainParam &swapchainParam, tf::Subflow &subflow)
 	{
-		if (!(__externalParam.pDrawcall))
-			return;
-
 		__pipelineBuildParam.renderPass = __pRenderPass->getHandle();
 		__pipelineBuildParam.viewport =
 		{
 			.x = 0.0f,
 			.y = 0.0f,
-			.width = float(__externalParam.swapchainExtent.width),
-			.height = float(__externalParam.swapchainExtent.height),
+			.width = float(swapchainParam.swapchainExtent.width),
+			.height = float(swapchainParam.swapchainExtent.height),
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
@@ -207,20 +202,21 @@ namespace HyperFast
 		__pipelineBuildParam.scissor =
 		{
 			.offset = { 0, 0 },
-			.extent = __externalParam.swapchainExtent
+			.extent = swapchainParam.swapchainExtent
 		};
 
 		__pipelineFactory.build(__pipelineBuildParam, subflow);
 	}
 
-	void ScreenResource::__createSwapchainImageView(const size_t imageIdx)
+	void ScreenResource::__createSwapchainImageView(
+		const SwapchainParam &swapchainParam, const size_t imageIdx)
 	{
 		VkImageViewCreateInfo createInfo
 		{
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-			.image = __externalParam.swapChainImages[imageIdx],
+			.image = swapchainParam.swapChainImages[imageIdx],
 			.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
-			.format = __externalParam.swapchainFormat,
+			.format = swapchainParam.swapchainFormat,
 			.components =
 			{
 				.r = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -267,7 +263,9 @@ namespace HyperFast
 		// 2. Primary command buffer에서 사용
 	}
 
-	void ScreenResource::__updatePrimaryCommandBuffer(const size_t imageIdx) noexcept
+	void ScreenResource::__updatePrimaryCommandBuffer(
+		const SwapchainParam &swapchainParam,
+		Drawcall *const pDrawcall, const size_t imageIdx) noexcept
 	{
 		static constexpr VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
@@ -295,7 +293,7 @@ namespace HyperFast
 			.renderArea =
 			{
 				.offset = { 0, 0 },
-				.extent = __externalParam.swapchainExtent
+				.extent = swapchainParam.swapchainExtent
 			},
 			.clearValueCount = 1U,
 			.pClearValues = &clearColor
@@ -310,22 +308,23 @@ namespace HyperFast
 		commandBuffer.vkCmdBeginRenderPass(
 			&renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-		if (__externalParam.pDrawcall)
+		if (pDrawcall)
 		{
 			commandBuffer.vkCmdBindPipeline(
 				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
 
-			const size_t numSegments{ __externalParam.pDrawcall->getNumSegments() };
+			const size_t numSegments{ pDrawcall->getNumSegments() };
 
 			for (size_t segmentIter = 0ULL; segmentIter < numSegments; segmentIter++)
-				__externalParam.pDrawcall->draw(segmentIter, commandBuffer);
+				pDrawcall->draw(segmentIter, commandBuffer);
 		}
 
 		commandBuffer.vkCmdEndRenderPass();
 		commandBuffer.vkEndCommandBuffer();
 	}
 
-	void ScreenResource::__updateSwapchainDependencies()
+	void ScreenResource::__updateSwapchainDependencies(
+		const SwapchainParam &swapchainParam, Drawcall *const pDrawcall)
 	{
 		tf::Taskflow taskflow;
 
@@ -336,32 +335,32 @@ namespace HyperFast
 
 		tf::Task t1
 		{
-			taskflow.emplace([this](tf::Subflow &subflow)
+			taskflow.emplace([this, &swapchainParam](tf::Subflow &subflow)
 			{
-				__reserveSwapchainImageDependencyPlaceholers();
+				__reserveSwapchainImageDependencyPlaceholders(swapchainParam);
 
 				tf::Task t1
 				{
-					subflow.emplace([this]
+					subflow.emplace([this, &swapchainParam]
 					{
-						__createRenderPasses();
+						__createRenderPasses(swapchainParam);
 					})
 				};
 
 				tf::Task t2
 				{
-					subflow.emplace([this]
+					subflow.emplace([this, &swapchainParam]
 					{
-						__createFramebuffer();
+						__createFramebuffer(swapchainParam);
 					})
 				};
 				t2.succeed(t1);
 
 				tf::Task t3
 				{
-					subflow.emplace([this](tf::Subflow &subflow)
+					subflow.emplace([this, &swapchainParam](tf::Subflow &subflow)
 					{
-						__buildPipelines(subflow);
+						__buildPipelines(swapchainParam, subflow);
 					})
 				};
 				t3.succeed(t1);
@@ -370,16 +369,16 @@ namespace HyperFast
 
 		tf::Task t2
 		{
-			taskflow.emplace([this](tf::Subflow &subflow)
+			taskflow.emplace([this, &swapchainParam, pDrawcall](tf::Subflow &subflow)
 			{
-				const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+				const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 				for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 				{
-					subflow.emplace([this, imageIter]
+					subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
 					{
 						__createPrimaryCommandBufferManager(imageIter);
-						__createSwapchainImageView(imageIter);
-						__updatePrimaryCommandBuffer(imageIter);
+						__createSwapchainImageView(swapchainParam, imageIter);
+						__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
 					});
 				}
 			})
@@ -394,21 +393,21 @@ namespace HyperFast
 		__needToPrimaryCommandBuffer = false;
 	}
 
-	void ScreenResource::__updatePipelineDependencies()
+	void ScreenResource::__updatePipelineDependencies(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall)
 	{
 		tf::Taskflow taskflow;
 		
-		taskflow.emplace([this](tf::Subflow &subflow)
+		taskflow.emplace([this, &swapchainParam, pDrawcall](tf::Subflow &subflow)
 		{
 			__pipelineFactory.reset();
-			__buildPipelines(subflow);
+			__buildPipelines(swapchainParam, subflow);
 
-			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+			const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
-				subflow.emplace([this, imageIter]
+				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
 				{
-					__updatePrimaryCommandBuffer(imageIter);
+					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
 				});
 			}
 		});
@@ -420,11 +419,12 @@ namespace HyperFast
 		__needToPrimaryCommandBuffer = false;
 	}
 
-	void ScreenResource::__updateCommandBuffers() noexcept
+	void ScreenResource::__updateCommandBuffers(
+		const SwapchainParam &swapchainParam, Drawcall *const pDrawcall) noexcept
 	{
 		tf::Taskflow taskflow;
 		
-		taskflow.emplace([this](tf::Subflow &subflow)
+		taskflow.emplace([this, &swapchainParam, pDrawcall](tf::Subflow &subflow)
 		{
 			tf::Task t1
 			{
@@ -434,12 +434,12 @@ namespace HyperFast
 				})
 			};
 
-			const size_t numSwapchainImages{ __externalParam.swapChainImages.size() };
+			const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
-				subflow.emplace([this, imageIter]
+				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
 				{
-					__updatePrimaryCommandBuffer(imageIter);
+					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
 				}).succeed(t1);
 			}
 		});

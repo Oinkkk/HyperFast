@@ -60,8 +60,8 @@ namespace HyperFast
 
 			std::unique_ptr<Vulkan::Swapchain> __pSwapchain;
 			std::unique_ptr<Vulkan::Swapchain> __pOldSwapchain;
-
-			ScreenResource::ExternalParam __resourceParam;
+			ScreenResource::SwapchainParam __swapchainParam;
+			Drawcall *__pDrawcall{};
 
 			VkSemaphoreSubmitInfo __submitWaitInfo{};
 			VkCommandBufferSubmitInfo __submitCommandBufferInfo{};
@@ -81,7 +81,7 @@ namespace HyperFast
 
 			bool __needToUpdateSurfaceDependencies{ true };
 			bool __needToUpdatePipelineDependencies{};
-			bool __needToUpdateMainCommands{};
+			bool __needToUpdatePrimaryCommandBuffer{};
 			bool __needToUpdateResource{};
 			bool __needToAdvanceResource{};
 
@@ -199,7 +199,7 @@ namespace HyperFast
 
 	constexpr void ScreenManager::ScreenImpl::__advanceFrameCursor() noexcept
 	{
-		const size_t numSwapchainImages{ __resourceParam.swapChainImages.size() };
+		const size_t numSwapchainImages{ __swapchainParam.swapChainImages.size() };
 		__frameCursor = ((__frameCursor + 1ULL) % numSwapchainImages);
 	}
 }
