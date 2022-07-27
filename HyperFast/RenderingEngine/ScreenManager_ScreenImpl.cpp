@@ -99,7 +99,7 @@ namespace HyperFast
 
 		 __submitWaitInfo.semaphore = imageAcquireSemaphore.getHandle();
 
-		Vulkan::CommandBuffer &renderCommandBuffer{ __getCurrentRenderCommandBuffer() };
+		Vulkan::CommandBuffer &renderCommandBuffer{ __getCurrentPrimaryCommandBuffer() };
 		__submitCommandBufferInfo.commandBuffer = renderCommandBuffer.getHandle();
 
 		VkSemaphoreSubmitInfo &binarySignalInfo{ __submitSignalInfos[0] };
@@ -541,7 +541,7 @@ namespace HyperFast
 		return *__imageAcquireSemaphores[__frameCursor];
 	}
 
-	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__getCurrentRenderCommandBuffer() noexcept
+	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__getCurrentPrimaryCommandBuffer() noexcept
 	{
 		return __getCurrentResource().getPrimaryCommandBuffer(__imageIdx);
 	}
@@ -560,7 +560,6 @@ namespace HyperFast
 	{
 		return __renderCompletionSemaphoreValues[__imageIdx];
 	}
-
 
 	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept
 	{

@@ -133,7 +133,7 @@ namespace HyperFast
 			Vulkan::Semaphore &__getCurrentImageAcquireSemaphore() noexcept;
 
 			[[nodiscard]]
-			Vulkan::CommandBuffer &__getCurrentRenderCommandBuffer() noexcept;
+			Vulkan::CommandBuffer &__getCurrentPrimaryCommandBuffer() noexcept;
 
 			[[nodiscard]]
 			Vulkan::Semaphore &__getCurrentRenderCompletionBinarySemaphore() noexcept;
