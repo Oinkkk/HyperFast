@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="BufferCopyManager.cpp" />
     <ClCompile Include="BufferManager_BufferImpl.cpp" />
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="CommandBufferManager.cpp" />

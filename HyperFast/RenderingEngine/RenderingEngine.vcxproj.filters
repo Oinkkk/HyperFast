@@ -132,6 +132,9 @@
     <ClCompile Include="Drawcall_DrawcallSegment.cpp">
       <Filter>Drawcall</Filter>
     </ClCompile>
+    <ClCompile Include="BufferCopyManager.cpp">
+      <Filter>BufferCopyManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">

@@ -14,6 +14,7 @@
     <ClInclude Include="Device.h" />
     <ClInclude Include="CommandBuffer.h" />
     <ClInclude Include="DebugUtilsMessenger.h" />
+    <ClInclude Include="DescriptorSetLayout.h" />
     <ClInclude Include="Surface.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="Fence.h" />
@@ -39,6 +40,7 @@
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="CommandBuffer.cpp" />
     <ClCompile Include="DebugUtilsMessenger.cpp" />
+    <ClCompile Include="DescriptorSetLayout.cpp" />
     <ClCompile Include="Surface.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="Fence.cpp" />

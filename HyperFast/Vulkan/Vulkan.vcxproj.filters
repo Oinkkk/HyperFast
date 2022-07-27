@@ -67,6 +67,9 @@
     <Filter Include="Surface">
       <UniqueIdentifier>{5034ff35-2ff0-4979-9bc0-25905b189342}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DescriptorSetLayout">
+      <UniqueIdentifier>{65ea0b5d-30ae-45f2-83f3-963a4668d2b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanLoader.h">
@@ -138,6 +141,9 @@
     <ClInclude Include="Surface.h">
       <Filter>Surface</Filter>
     </ClInclude>
+    <ClInclude Include="DescriptorSetLayout.h">
+      <Filter>DescriptorSetLayout</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanLoader.cpp">
@@ -202,6 +208,9 @@
     </ClCompile>
     <ClCompile Include="Surface.cpp">
       <Filter>Surface</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorSetLayout.cpp">
+      <Filter>DescriptorSetLayout</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

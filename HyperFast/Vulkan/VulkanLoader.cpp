@@ -344,6 +344,14 @@ namespace Vulkan
 			reinterpret_cast<PFN_vkResetCommandBuffer>(
 				vkGetDeviceProcAddr(device, "vkResetCommandBuffer"));
 
+		retVal.vkCreateDescriptorSetLayout =
+			reinterpret_cast<PFN_vkCreateDescriptorSetLayout>(
+				vkGetDeviceProcAddr(device, "vkCreateDescriptorSetLayout"));
+		
+		retVal.vkDestroyDescriptorSetLayout =
+			reinterpret_cast<PFN_vkDestroyDescriptorSetLayout>(
+				vkGetDeviceProcAddr(device, "vkDestroyDescriptorSetLayout"));
+
 
 		// commands
 

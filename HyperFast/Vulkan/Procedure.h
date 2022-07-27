@@ -93,6 +93,8 @@ namespace Vulkan
 		PFN_vkUnmapMemory vkUnmapMemory{};
 		PFN_vkFlushMappedMemoryRanges vkFlushMappedMemoryRanges{};
 		PFN_vkResetCommandBuffer vkResetCommandBuffer{};
+		PFN_vkCreateDescriptorSetLayout vkCreateDescriptorSetLayout{};
+		PFN_vkDestroyDescriptorSetLayout vkDestroyDescriptorSetLayout{};
 
 		PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass{};
 		PFN_vkCmdEndRenderPass vkCmdEndRenderPass{};

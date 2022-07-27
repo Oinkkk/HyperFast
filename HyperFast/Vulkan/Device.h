@@ -185,6 +185,16 @@ namespace Vulkan
 
 		void vkUnmapMemory(VkDeviceMemory memory) noexcept;
 
+		// DescriptorSetLayout
+		VkResult vkCreateDescriptorSetLayout(
+			const VkDescriptorSetLayoutCreateInfo *const pCreateInfo,
+			const VkAllocationCallbacks *const pAllocator,
+			VkDescriptorSetLayout *const pSetLayout) noexcept;
+
+		void vkDestroyDescriptorSetLayout(
+			const VkDescriptorSetLayout descriptorSetLayout,
+			const VkAllocationCallbacks *const pAllocator) noexcept;
+
 		// Command buffer
 		VkResult vkBeginCommandBuffer(
 			const VkCommandBuffer commandBuffer, const VkCommandBufferBeginInfo *const pBeginInfo) noexcept;

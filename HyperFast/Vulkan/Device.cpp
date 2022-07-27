@@ -313,6 +313,21 @@ namespace Vulkan
 		__proc.vkUnmapMemory(getHandle(), memory);
 	}
 
+	VkResult Device::vkCreateDescriptorSetLayout(
+		const VkDescriptorSetLayoutCreateInfo *const pCreateInfo,
+		const VkAllocationCallbacks *const pAllocator,
+		VkDescriptorSetLayout *const pSetLayout) noexcept
+	{
+		return __proc.vkCreateDescriptorSetLayout(getHandle(), pCreateInfo, pAllocator, pSetLayout);
+	}
+
+	void Device::vkDestroyDescriptorSetLayout(
+		const VkDescriptorSetLayout descriptorSetLayout,
+		const VkAllocationCallbacks *const pAllocator) noexcept
+	{
+		__proc.vkDestroyDescriptorSetLayout(getHandle(), descriptorSetLayout, pAllocator);
+	}
+
 	VkResult Device::vkBeginCommandBuffer(
 		const VkCommandBuffer commandBuffer,
 		const VkCommandBufferBeginInfo *const pBeginInfo) noexcept

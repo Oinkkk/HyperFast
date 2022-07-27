@@ -92,6 +92,7 @@ namespace HyperFast
 		void __pickGraphicsQueueFamily() noexcept;
 		void __createDevice();
 		void __makeQueue() noexcept;
+		void __createDescriptorSetLayout();
 
 		void __createScreenManager() noexcept;
 		void __createMemoryManager() noexcept;

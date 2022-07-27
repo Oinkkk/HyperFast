@@ -389,6 +389,18 @@ namespace HyperFast
 		__pQueue = std::make_unique<Vulkan::Queue>(*__pDevice, __queueFamilyIndex, 0U);
 	}
 
+	void RenderingEngine::__createDescriptorSetLayout()
+	{
+		/*const VkDescriptorSetLayoutBinding binding
+		{
+			.binding = DESCRIPTOR_SET_BINDING_TRANSFORM,
+			.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.descriptorCount;
+			.stageFlags;
+			.pImmutableSamplers;
+		};*/
+	}
+
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
