@@ -87,15 +87,6 @@ namespace HyperFast
 		}
 	}
 
-	void ScreenResource::__reserveSwapchainImageDependencyPlaceholders(
-		const SwapchainParam &swapchainParam) noexcept
-	{
-		const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
-
-		__primaryCommandBufferManagers.resize(numSwapchainImages);
-		__swapChainImageViews.resize(numSwapchainImages);
-	}
-
 	void ScreenResource::__createRenderPasses(const SwapchainParam &swapchainParam)
 	{
 		std::vector<VkAttachmentDescription2> attachments;
@@ -243,16 +234,6 @@ namespace HyperFast
 			std::make_unique<Vulkan::ImageView>(__device, createInfo);
 	}
 
-	void ScreenResource::__createPrimaryCommandBufferManager(const size_t imageIdx)
-	{
-		auto &pManager{ __primaryCommandBufferManagers[imageIdx] };
-		if (pManager)
-			return;
-
-		pManager = std::make_unique<CommandBufferManager>(
-			__device, __queueFamilyIndex, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-	}
-
 	void ScreenResource::__updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept
 	{
 		/*
@@ -304,10 +285,7 @@ namespace HyperFast
 			.pClearValues = &clearColor
 		};
 
-		CommandBufferManager &commandBufferManager{ *(__primaryCommandBufferManagers[imageIdx]) };
-		commandBufferManager.advance();
-
-		Vulkan::CommandBuffer &commandBuffer{ commandBufferManager.get() };
+		Vulkan::CommandBuffer &commandBuffer{ __nextPrimaryCommandBuffer(imageIdx) };
 
 		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
 		commandBuffer.vkCmdBeginRenderPass(
@@ -331,18 +309,20 @@ namespace HyperFast
 	void ScreenResource::__updateSwapchainDependencies(
 		const SwapchainParam &swapchainParam, Drawcall *const pDrawcall)
 	{
+		const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
+
 		tf::Taskflow taskflow;
-
-		__pipelineFactory.reset();
-		__pFramebuffer = nullptr;
-		__pRenderPass = nullptr;
-		__swapChainImageViews.clear();
-
 		tf::Task t1
 		{
-			taskflow.emplace([this, &swapchainParam](tf::Subflow &subflow)
+			taskflow.emplace([this, &swapchainParam, numSwapchainImages](tf::Subflow &subflow)
 			{
-				__reserveSwapchainImageDependencyPlaceholders(swapchainParam);
+				__pipelineFactory.reset();
+				__pFramebuffer = nullptr;
+				__pRenderPass = nullptr;
+				__swapChainImageViews.clear();
+
+				__primaryCommandBufferManagers.resize(numSwapchainImages);
+				__swapChainImageViews.resize(numSwapchainImages);
 
 				tf::Task t1
 				{
@@ -374,14 +354,12 @@ namespace HyperFast
 
 		tf::Task t2
 		{
-			taskflow.emplace([this, &swapchainParam, pDrawcall](tf::Subflow &subflow)
+			taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
 			{
-				const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 				for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 				{
 					subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
 					{
-						__createPrimaryCommandBufferManager(imageIter);
 						__createSwapchainImageView(swapchainParam, imageIter);
 						__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
 					});
@@ -400,14 +378,14 @@ namespace HyperFast
 
 	void ScreenResource::__updatePipelineDependencies(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall)
 	{
+		const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
+
 		tf::Taskflow taskflow;
-		
-		taskflow.emplace([this, &swapchainParam, pDrawcall](tf::Subflow &subflow)
+		taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
 		{
 			__pipelineFactory.reset();
 			__buildPipelines(swapchainParam, subflow);
 
-			const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
 				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
@@ -427,9 +405,10 @@ namespace HyperFast
 	void ScreenResource::__updateCommandBuffers(
 		const SwapchainParam &swapchainParam, Drawcall *const pDrawcall) noexcept
 	{
+		const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
+
 		tf::Taskflow taskflow;
-		
-		taskflow.emplace([this, &swapchainParam, pDrawcall](tf::Subflow &subflow)
+		taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
 		{
 			tf::Task t1
 			{
@@ -439,7 +418,6 @@ namespace HyperFast
 				})
 			};
 
-			const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
 				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
@@ -453,5 +431,19 @@ namespace HyperFast
 		__job = executor.run(std::move(taskflow));
 
 		__needToPrimaryCommandBuffer = false;
+	}
+
+	Vulkan::CommandBuffer &ScreenResource::__nextPrimaryCommandBuffer(const size_t imageIdx) noexcept
+	{
+		auto &pCommandBufferManager{ __primaryCommandBufferManagers[imageIdx] };
+		if (!pCommandBufferManager)
+		{
+			pCommandBufferManager = std::make_unique<CommandBufferManager>(
+				__device, __queueFamilyIndex, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+		}
+		else
+			pCommandBufferManager->advance();
+
+		return pCommandBufferManager->get();
 	}
 }

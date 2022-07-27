@@ -67,13 +67,11 @@ namespace HyperFast
 
 		void __createSecondaryCommandBuffers() noexcept;
 
-		void __reserveSwapchainImageDependencyPlaceholders(const SwapchainParam &swapchainParam) noexcept;
 		void __createRenderPasses(const SwapchainParam &swapchainParam);
 		void __createFramebuffer(const SwapchainParam &swapchainParam);
 
 		void __buildPipelines(const SwapchainParam &swapchainParam, tf::Subflow &subflow);
 		void __createSwapchainImageView(const SwapchainParam &swapchainParam, const size_t imageIdx);
-		void __createPrimaryCommandBufferManager(const size_t imageIdx);
 		void __updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept;
 		void __updatePrimaryCommandBuffer(
 			const SwapchainParam &swapchainParam,
@@ -82,6 +80,9 @@ namespace HyperFast
 		void __updateSwapchainDependencies(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
 		void __updatePipelineDependencies(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
 		void __updateCommandBuffers(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall) noexcept;
+
+		[[nodiscard]]
+		Vulkan::CommandBuffer &__nextPrimaryCommandBuffer(const size_t imageIdx) noexcept;
 	};
 
 	constexpr void ScreenResource::needToUpdateSwapchainDependencies() noexcept
