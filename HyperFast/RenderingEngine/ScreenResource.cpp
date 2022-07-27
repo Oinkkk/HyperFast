@@ -11,11 +11,6 @@ namespace HyperFast
 	ScreenResource::~ScreenResource() noexcept
 	{
 		waitIdle();
-		__pipelineFactory.reset();
-		__pFramebuffer = nullptr;
-		__pRenderPass = nullptr;
-		__swapChainImageViews.clear();
-		__primaryCommandBufferManagers.clear();
 	}
 
 	Vulkan::CommandBuffer &ScreenResource::getPrimaryCommandBuffer(const size_t imageIdx) noexcept
@@ -316,11 +311,7 @@ namespace HyperFast
 		{
 			taskflow.emplace([this, &swapchainParam, numSwapchainImages](tf::Subflow &subflow)
 			{
-				__pipelineFactory.reset();
-				__pFramebuffer = nullptr;
-				__pRenderPass = nullptr;
 				__swapChainImageViews.clear();
-
 				__primaryCommandBufferManagers.resize(numSwapchainImages);
 				__swapChainImageViews.resize(numSwapchainImages);
 
@@ -383,7 +374,6 @@ namespace HyperFast
 		tf::Taskflow taskflow;
 		taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
 		{
-			__pipelineFactory.reset();
 			__buildPipelines(swapchainParam, subflow);
 
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
