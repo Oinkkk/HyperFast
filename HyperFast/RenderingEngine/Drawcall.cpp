@@ -1,133 +1,119 @@
 ﻿#include "Drawcall.h"
-#include <iostream>
+#include <thread>
 
 namespace HyperFast
 {
 	Drawcall::Drawcall(
 		Vulkan::Device &device, const uint32_t queueFamilyIndex,
-		BufferManager &bufferManager, MemoryManager &memoryManager) noexcept :
-		__device{ device }, __queueFamilyIndex{ queueFamilyIndex },
-		__bufferManager{ bufferManager }, __memoryManager{ memoryManager }
+		BufferManager &bufferManager, MemoryManager &memoryManager) noexcept
 	{
 		__initEventListeners();
+		__createSegments(device, queueFamilyIndex, bufferManager, memoryManager);
 	}
 
 	void Drawcall::addSubmesh(Submesh &submesh) noexcept
 	{
-		Mesh &mesh{ submesh.getMesh() };
-		std::unique_ptr<IndirectBufferBuilder> &pIndirectBufferBuilder{ __mesh2BuilderMap[&mesh] };
+		Mesh *const pMesh{ &(submesh.getMesh()) };
+		DrawcallSegment *&pSegment{ __mesh2SegmentMap[pMesh] };
 
-		if (!pIndirectBufferBuilder)
+		if (!pSegment)
 		{
-			pIndirectBufferBuilder =
-				std::make_unique<IndirectBufferBuilder>(__device, __bufferManager, __memoryManager);
+			pSegment = __getCurrentSegment();
+			__advanceSegment();
 
-			pIndirectBufferBuilder->getIndirectBufferUpdateEvent() += __pIndirectBufferUpdateEventListener;
-			pIndirectBufferBuilder->getIndirectBufferCreateEvent() += __pIndirectBufferCreateEventListener;
-
-			mesh.getBufferChangeEvent() += __pMeshBufferChangeEventListener;
-			mesh.getDestroyEvent() += __pMeshDestroyEventListener;
+			pMesh->getDestroyEvent() += __pMeshDestroyEventListener;
 		}
 
-		pIndirectBufferBuilder->addSubmesh(submesh);
-		submesh.getDestroyEvent() += __pSubmeshDestroyEventListener;
+		pSegment->addSubmesh(submesh);
 	}
 
 	void Drawcall::removeSubmesh(Submesh &submesh) noexcept
 	{
-		Mesh &mesh{ submesh.getMesh() };
-		const std::unique_ptr<IndirectBufferBuilder> &pIndirectBufferBuilder{ __mesh2BuilderMap[&mesh] };
+		Mesh *const pMesh{ &(submesh.getMesh()) };
+		DrawcallSegment *const pSegment{ __mesh2SegmentMap[pMesh] };
 
-		submesh.getDestroyEvent() -= __pSubmeshDestroyEventListener;
-		pIndirectBufferBuilder->removeSubmesh(submesh);
+		pSegment->removeSubmesh(submesh);
 	}
 
 	void Drawcall::update()
 	{
-		__updateIndirectBufferBuilders();
-
-		if (__indirectBufferUpdated)
-		{
-			__indirectBufferUpdateEvent.invoke(*this);
-			__indirectBufferUpdated = false;
-		}
-
-		if (__indirectBufferCreated)
-		{
-			__indirectBufferCreateEvent.invoke(*this);
-			__indirectBufferCreated = false;
-		}
-	}
-
-	void Drawcall::draw(Vulkan::CommandBuffer &commandBuffer) noexcept
-	{
-		for (const auto &[pMesh, pIndirectBufferBuilder] : __mesh2BuilderMap)
-		{
-			pMesh->bind(commandBuffer);
-			pIndirectBufferBuilder->draw(commandBuffer);
-		}
+		for (const auto &pSegment : __segments)
+			pSegment->update();
 	}
 
 	void Drawcall::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
 	{
-		for (const auto &[pMesh, _] : __mesh2BuilderMap)
-			pMesh->addSemaphoreDependency(pDependency);
+		for (const auto &pSegment : __segments)
+			pSegment->addSemaphoreDependency(pDependency);
+	}
+
+	void Drawcall::draw(const size_t segmentIndex, Vulkan::CommandBuffer &commandBuffer) noexcept
+	{
+		__segments[segmentIndex]->draw(commandBuffer);
 	}
 
 	void Drawcall::__initEventListeners() noexcept
 	{
-		__pMeshBufferChangeEventListener =
-			Infra::EventListener<Mesh &>::bind(
-				&Drawcall::__onMeshBufferChange, this, std::placeholders::_1);
-
 		__pMeshDestroyEventListener =
 			Infra::EventListener<Mesh &>::bind(
 				&Drawcall::__onMeshDestroy, this, std::placeholders::_1);
 
-		__pSubmeshDestroyEventListener =
-			Infra::EventListener<Submesh &>::bind(
-				&Drawcall::__onSubmeshDestroy, this, std::placeholders::_1);
+		__pSegmentMeshBufferChangeEventListener =
+			Infra::EventListener<DrawcallSegment &>::bind(
+				&Drawcall::__onSegmentMeshBufferChange, this, std::placeholders::_1);
 
-		__pIndirectBufferUpdateEventListener =
-			Infra::EventListener<IndirectBufferBuilder &>::bind(
-				&Drawcall::__onIndirectBufferUpdate, this, std::placeholders::_1);
+		__pSegmentIndirectBufferUpdateEventListener =
+			Infra::EventListener<DrawcallSegment &>::bind(
+				&Drawcall::__onSegmentIndirectBufferUpdate, this, std::placeholders::_1);
 
-		__pIndirectBufferCreateEventListener =
-			Infra::EventListener<IndirectBufferBuilder &>::bind(
-				&Drawcall::__onIndirectBufferCreate, this, std::placeholders::_1);
+		__pSegmentIndirectBufferCreateEventListener =
+			Infra::EventListener<DrawcallSegment &>::bind(
+				&Drawcall::__onSegmentIndirectBufferCreate, this, std::placeholders::_1);
 	}
 
-	void Drawcall::__updateIndirectBufferBuilders() noexcept
+	void Drawcall::__createSegments(
+		Vulkan::Device &device, const uint32_t queueFamilyIndex,
+		BufferManager &bufferManager, MemoryManager &memoryManager) noexcept
 	{
-		for (const auto &[_, pIndirectBufferBuilder] : __mesh2BuilderMap)
-			pIndirectBufferBuilder->update();
+		const size_t numSegments{ std::thread::hardware_concurrency() };
+		for (size_t segmentIter = 0ULL; segmentIter < numSegments; segmentIter++)
+		{
+			DrawcallSegment *const pSegment
+			{
+				__segments.emplace_back(
+					std::make_unique<DrawcallSegment>(
+						segmentIter, device, queueFamilyIndex,
+						bufferManager, memoryManager)).get()
+			};
+
+			pSegment->getMeshBufferChangeEvent() += __pSegmentMeshBufferChangeEventListener;
+			pSegment->getIndirectBufferUpdateEvent() += __pSegmentIndirectBufferUpdateEventListener;
+			pSegment->getIndirectBufferCreateEvent() += __pSegmentIndirectBufferCreateEventListener;
+		}
 	}
 
-	void Drawcall::__onMeshBufferChange(Mesh &mesh) noexcept
+	Drawcall::DrawcallSegment *Drawcall::__getCurrentSegment() noexcept
 	{
-		__meshBufferChanged = true;
+		return __segments[__segmentCursor].get();
 	}
 
 	void Drawcall::__onMeshDestroy(Mesh &mesh) noexcept
 	{
-		__mesh2BuilderMap.erase(&mesh);
+		__mesh2SegmentMap.erase(&mesh);
 	}
 
-	void Drawcall::__onSubmeshDestroy(Submesh &submesh) noexcept
+	void Drawcall::__onSegmentMeshBufferChange(DrawcallSegment &segment) noexcept
 	{
-		Mesh &mesh{ submesh.getMesh() };
-		const std::unique_ptr<IndirectBufferBuilder> &pIndirectBufferBuilder{ __mesh2BuilderMap[&mesh] };
-
-		pIndirectBufferBuilder->removeSubmesh(submesh);
+		__segmentMeshBufferChangeEvent.invoke(*this, segment.getSegmentIndex());
 	}
 
-	void Drawcall::__onIndirectBufferUpdate(IndirectBufferBuilder &builder) noexcept
+	void Drawcall::__onSegmentIndirectBufferUpdate(DrawcallSegment &segment) noexcept
 	{
-		__indirectBufferUpdated = true;
+		__segmentIndirectBufferUpdateEvent.invoke(*this, segment.getSegmentIndex());
 	}
 
-	void Drawcall::__onIndirectBufferCreate(IndirectBufferBuilder &builder) noexcept
+	void Drawcall::__onSegmentIndirectBufferCreate(DrawcallSegment &segment) noexcept
 	{
-		__indirectBufferCreated = true;
+		__segmentIndirectBufferCreateEvent.invoke(*this, segment.getSegmentIndex());
 	}
 }

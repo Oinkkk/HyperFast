@@ -45,9 +45,9 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pWindowDrawEventListener;
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pWindowDestroyEventListener;
 
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallMeshBufferChangeEventListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallIndirectBufferUpdateEventListener;
-			std::shared_ptr<Infra::EventListener<Drawcall &>> __pDrawcallIndirectBufferCreateEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &, size_t>> __pDrawcallMeshBufferChangeEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &, size_t>> __pDrawcallIndirectBufferUpdateEventListener;
+			std::shared_ptr<Infra::EventListener<Drawcall &, size_t>> __pDrawcallIndirectBufferCreateEventListener;
 
 			std::shared_ptr<Infra::EventListener<>> __pScreenUpdateListener;
 			std::shared_ptr<Infra::EventListener<>> __pRenderListener;
@@ -104,7 +104,7 @@ namespace HyperFast
 
 			void __updateSurfaceDependencies();
 			void __updatePipelineDependencies();
-			void __updateMainCommands();
+			void __updatePrimaryCommandBuffer();
 			void __updateResource();
 			void __advanceResource() noexcept;
 
@@ -150,9 +150,9 @@ namespace HyperFast
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
 
-			void __onDrawcallMeshBufferChange(Drawcall &drawcall) noexcept;
-			void __onDrawcallIndirectBufferUpdate(Drawcall &drawcall) noexcept;
-			void __onDrawcallIndirectBufferCreate(Drawcall &drawcall) noexcept;
+			void __onDrawcallMeshBufferChange(Drawcall &drawcall, const size_t segmentIndex) noexcept;
+			void __onDrawcallIndirectBufferUpdate(Drawcall &drawcall, const size_t segmentIndex) noexcept;
+			void __onDrawcallIndirectBufferCreate(Drawcall &drawcall, const size_t segmentIndex) noexcept;
 
 			void __onWindowDraw(Win::Window &window) noexcept;
 			void __onWindowDestroy(Win::Window &window) noexcept;

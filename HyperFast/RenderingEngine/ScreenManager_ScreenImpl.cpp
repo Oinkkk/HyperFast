@@ -69,7 +69,7 @@ namespace HyperFast
 			__updatePipelineDependencies();
 
 		if (__needToUpdateMainCommands)
-			__updateMainCommands();
+			__updatePrimaryCommandBuffer();
 
 		if (__needToUpdateResource)
 			__updateResource();
@@ -189,16 +189,19 @@ namespace HyperFast
 				&ScreenManager::ScreenImpl::__onWindowDestroy, this, std::placeholders::_1);
 
 		__pDrawcallMeshBufferChangeEventListener =
-			Infra::EventListener<Drawcall &>::bind(
-				&ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange, this, std::placeholders::_1);
+			Infra::EventListener<Drawcall &, size_t>::bind(
+				&ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange, this,
+				std::placeholders::_1, std::placeholders::_2);
 
 		__pDrawcallIndirectBufferUpdateEventListener =
-			Infra::EventListener<Drawcall &>::bind(
-				&ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate, this, std::placeholders::_1);
+			Infra::EventListener<Drawcall &, size_t>::bind(
+				&ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate, this,
+				std::placeholders::_1, std::placeholders::_2);
 
 		__pDrawcallIndirectBufferCreateEventListener =
-			Infra::EventListener<Drawcall &>::bind(
-				&ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate, this, std::placeholders::_1);
+			Infra::EventListener<Drawcall &, size_t>::bind(
+				&ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate, this,
+				std::placeholders::_1, std::placeholders::_2);
 
 		__pScreenUpdateListener =
 			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onScreenUpdate, this);
@@ -299,10 +302,10 @@ namespace HyperFast
 		__needToUpdateResource = true;
 	}
 
-	void ScreenManager::ScreenImpl::__updateMainCommands()
+	void ScreenManager::ScreenImpl::__updatePrimaryCommandBuffer()
 	{
 		for (auto &pResource : __resourceChain)
-			pResource->needToUpdateMainCommands();
+			pResource->needToUpdatePrimaryCommandBuffer();
 
 		__needToUpdateMainCommands = false;
 		__needToUpdateResource = true;
@@ -591,17 +594,20 @@ namespace HyperFast
 		__needToUpdateSurfaceDependencies = true;
 	}
 
-	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(Drawcall &drawcall) noexcept
+	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(
+		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
 		__needToUpdateMainCommands = true;
 	}
 
-	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(Drawcall &drawcall) noexcept
+	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(
+		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
 		__needToRender = true;
 	}
 
-	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(Drawcall &drawcall) noexcept
+	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(
+		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
 		__needToUpdateMainCommands = true;
 	}

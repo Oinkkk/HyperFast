@@ -18,7 +18,6 @@
     <ClInclude Include="CommandSubmitter.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
-    <ClInclude Include="DrawcallSegment.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
     <ClInclude Include="LifeCycleSignalType.h" />
     <ClInclude Include="Memory.h" />
@@ -47,6 +46,7 @@
     <ClCompile Include="CommandBufferManager.cpp" />
     <ClCompile Include="CommandSubmitter.cpp" />
     <ClCompile Include="Drawcall.cpp" />
+    <ClCompile Include="Drawcall_DrawcallSegment.cpp" />
     <ClCompile Include="IndirectBufferBuilder.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="MemoryManager_MemoryBank.cpp" />

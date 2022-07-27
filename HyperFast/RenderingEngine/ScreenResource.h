@@ -42,7 +42,7 @@ namespace HyperFast
 
 		constexpr void needToUpdateSwapchainDependencies() noexcept;
 		constexpr void needToUpdatePipelineDependencies() noexcept;
-		constexpr void needToUpdateMainCommands() noexcept;
+		constexpr void needToUpdatePrimaryCommandBuffer() noexcept;
 
 		void commit();
 
@@ -63,7 +63,7 @@ namespace HyperFast
 
 		bool __needToUpdateSwapchainDependencies{};
 		bool __needToUpdatePipelineDependencies{};
-		bool __needToUpdateMainCommands{};
+		bool __needToPrimaryCommandBuffer{};
 
 		tf::Future<void> __job;
 		SemaphoreDependencyCluster __semaphoreDependencyCluster;
@@ -78,7 +78,7 @@ namespace HyperFast
 		void __createSwapchainImageView(const size_t imageIdx);
 		void __createPrimaryCommandBufferManager(const size_t imageIdx);
 		void __updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept;
-		void __recordPrimaryCommand(const size_t imageIdx) noexcept;
+		void __updatePrimaryCommandBuffer(const size_t imageIdx) noexcept;
 
 		void __updateSwapchainDependencies();
 		void __updatePipelineDependencies();
@@ -95,8 +95,8 @@ namespace HyperFast
 		__needToUpdatePipelineDependencies = true;
 	}
 
-	constexpr void ScreenResource::needToUpdateMainCommands() noexcept
+	constexpr void ScreenResource::needToUpdatePrimaryCommandBuffer() noexcept
 	{
-		__needToUpdateMainCommands = true;
+		__needToPrimaryCommandBuffer = true;
 	}
 }

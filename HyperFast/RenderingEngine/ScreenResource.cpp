@@ -69,7 +69,7 @@ namespace HyperFast
 		if (__needToUpdatePipelineDependencies)
 			__updatePipelineDependencies();
 
-		if (__needToUpdateMainCommands)
+		if (__needToPrimaryCommandBuffer)
 			__updateCommandBuffers();
 	}
 
@@ -267,7 +267,7 @@ namespace HyperFast
 		// 2. Primary command buffer에서 사용
 	}
 
-	void ScreenResource::__recordPrimaryCommand(const size_t imageIdx) noexcept
+	void ScreenResource::__updatePrimaryCommandBuffer(const size_t imageIdx) noexcept
 	{
 		static constexpr VkCommandBufferBeginInfo commandBufferBeginInfo
 		{
@@ -315,7 +315,10 @@ namespace HyperFast
 			commandBuffer.vkCmdBindPipeline(
 				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
 
-			__externalParam.pDrawcall->draw(commandBuffer);
+			const size_t numSegments{ __externalParam.pDrawcall->getNumSegments() };
+
+			for (size_t segmentIter = 0ULL; segmentIter < numSegments; segmentIter++)
+				__externalParam.pDrawcall->draw(segmentIter, commandBuffer);
 		}
 
 		commandBuffer.vkCmdEndRenderPass();
@@ -376,7 +379,7 @@ namespace HyperFast
 					{
 						__createPrimaryCommandBufferManager(imageIter);
 						__createSwapchainImageView(imageIter);
-						__recordPrimaryCommand(imageIter);
+						__updatePrimaryCommandBuffer(imageIter);
 					});
 				}
 			})
@@ -388,7 +391,7 @@ namespace HyperFast
 
 		__needToUpdateSwapchainDependencies = false;
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdateMainCommands = false;
+		__needToPrimaryCommandBuffer = false;
 	}
 
 	void ScreenResource::__updatePipelineDependencies()
@@ -405,7 +408,7 @@ namespace HyperFast
 			{
 				subflow.emplace([this, imageIter]
 				{
-					__recordPrimaryCommand(imageIter);
+					__updatePrimaryCommandBuffer(imageIter);
 				});
 			}
 		});
@@ -414,7 +417,7 @@ namespace HyperFast
 		__job = executor.run(std::move(taskflow));
 
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdateMainCommands = false;
+		__needToPrimaryCommandBuffer = false;
 	}
 
 	void ScreenResource::__updateCommandBuffers() noexcept
@@ -436,7 +439,7 @@ namespace HyperFast
 			{
 				subflow.emplace([this, imageIter]
 				{
-					__recordPrimaryCommand(imageIter);
+					__updatePrimaryCommandBuffer(imageIter);
 				}).succeed(t1);
 			}
 		});
@@ -444,6 +447,6 @@ namespace HyperFast
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__job = executor.run(std::move(taskflow));
 
-		__needToUpdateMainCommands = false;
+		__needToPrimaryCommandBuffer = false;
 	}
 }

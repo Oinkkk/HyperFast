@@ -129,6 +129,9 @@
     <ClCompile Include="PipelineFactory_Resource.cpp">
       <Filter>PipelineFactory</Filter>
     </ClCompile>
+    <ClCompile Include="Drawcall_DrawcallSegment.cpp">
+      <Filter>Drawcall</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -211,9 +214,6 @@
     </ClInclude>
     <ClInclude Include="SemaphoreDependencyCluster.h">
       <Filter>SemaphoreDependency</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawcallSegment.h">
-      <Filter>Drawcall</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
