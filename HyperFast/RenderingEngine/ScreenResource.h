@@ -39,11 +39,18 @@ namespace HyperFast
 		constexpr void needToUpdateSwapchainDependencies() noexcept;
 		constexpr void needToUpdatePipelineDependencies() noexcept;
 		constexpr void needToUpdatePrimaryCommandBuffer() noexcept;
-		void needToUpdateSecondaryCommandBuffer(const size_t commandBufferIndex) noexcept;
+		void needToUpdateSecondaryCommandBuffer(const size_t drawcallSegmentIndex) noexcept;
 
 		void update(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
 
 	private:
+		class SecondaryCommandBufferResource
+		{
+		public:
+			std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>> managerMap;
+			std::vector<VkCommandBuffer> handles;
+		};
+
 		Vulkan::Device &__device;
 		const uint32_t __queueFamilyIndex;
 
@@ -55,24 +62,29 @@ namespace HyperFast
 		std::unique_ptr<Vulkan::Framebuffer> __pFramebuffer;
 
 		std::vector<std::unique_ptr<CommandBufferManager>> __primaryCommandBufferManagers;
-		std::vector<std::unique_ptr<CommandBufferManager>> __secondaryCommandBufferManagers;
+		std::vector<std::unique_ptr<SecondaryCommandBufferResource>> __secondaryCommandBufferResources;
+		VkCommandBufferInheritanceInfo __secondaryCommandBufferInheritanceInfo{};
+		VkCommandBufferBeginInfo __secondaryCommandBufferBeginInfo{};
 
 		bool __needToUpdateSwapchainDependencies{};
 		bool __needToUpdatePipelineDependencies{};
 		bool __needToPrimaryCommandBuffer{};
-		std::unordered_set<size_t> __updateNeededSecondaryCommandBufferIndices;
+		std::unordered_set<size_t> __updateNeededDrawcallSegmentIndices;
 
 		tf::Future<void> __job;
 		SemaphoreDependencyCluster __semaphoreDependencyCluster;
 
-		void __createSecondaryCommandBuffers() noexcept;
+		constexpr void __initSecondaryCommandBufferBeginInfos() noexcept;
 
 		void __createRenderPasses(const SwapchainParam &swapchainParam);
 		void __createFramebuffer(const SwapchainParam &swapchainParam);
 
 		void __buildPipelines(const SwapchainParam &swapchainParam, tf::Subflow &subflow);
 		void __createSwapchainImageView(const SwapchainParam &swapchainParam, const size_t imageIdx);
-		void __updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept;
+
+		void __updateSecondaryCommandBuffers(
+			Drawcall *const pDrawcall, const size_t imageIdx, tf::Subflow &subflow) noexcept;
+
 		void __updatePrimaryCommandBuffer(
 			const SwapchainParam &swapchainParam,
 			Drawcall *const pDrawcall, const size_t imageIdx) noexcept;
@@ -83,6 +95,18 @@ namespace HyperFast
 
 		[[nodiscard]]
 		Vulkan::CommandBuffer &__nextPrimaryCommandBuffer(const size_t imageIdx) noexcept;
+
+		[[nodiscard]]
+		SecondaryCommandBufferResource &__getSecondaryCommandBufferResource(const size_t imageIdx) noexcept;
+
+		[[nodiscard]]
+		Vulkan::CommandBuffer &__nextSecondaryCommandBuffer(
+			const size_t imageIdx, const size_t drawcallSegmentIdx) noexcept;
+
+		void __updateSecondaryCommandBufferHandles(const size_t imageIdx) noexcept;
+
+		[[nodiscard]]
+		std::vector<VkCommandBuffer> &__getSecondaryCommandBufferHandles(const size_t imageIdx) noexcept;
 	};
 
 	constexpr void ScreenResource::needToUpdateSwapchainDependencies() noexcept
@@ -98,5 +122,21 @@ namespace HyperFast
 	constexpr void ScreenResource::needToUpdatePrimaryCommandBuffer() noexcept
 	{
 		__needToPrimaryCommandBuffer = true;
+	}
+
+	constexpr void ScreenResource::__initSecondaryCommandBufferBeginInfos() noexcept
+	{
+		__secondaryCommandBufferInheritanceInfo.sType =
+			VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+
+		__secondaryCommandBufferInheritanceInfo.subpass = 0U;
+
+		__secondaryCommandBufferBeginInfo.sType =
+			VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		__secondaryCommandBufferBeginInfo.flags =
+			VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+
+		__secondaryCommandBufferBeginInfo.pInheritanceInfo = &__secondaryCommandBufferInheritanceInfo;
 	}
 }

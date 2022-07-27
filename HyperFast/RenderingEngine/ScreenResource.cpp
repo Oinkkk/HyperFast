@@ -5,7 +5,7 @@ namespace HyperFast
 	ScreenResource::ScreenResource(Vulkan::Device &device, const uint32_t queueFamilyIndex) noexcept :
 		__device{ device }, __queueFamilyIndex{ queueFamilyIndex }, __pipelineFactory{ device }
 	{
-		__createSecondaryCommandBuffers();
+		__initSecondaryCommandBufferBeginInfos();
 	}
 
 	ScreenResource::~ScreenResource() noexcept
@@ -32,15 +32,7 @@ namespace HyperFast
 			return false;
 
 		if (__job.valid())
-		{
-			if (__job.wait_for(0s) != std::future_status::ready)
-				return false;
-			else
-			{
-				__job.get();
-				return true;
-			}
-		}
+			return (__job.wait_for(0s) == std::future_status::ready);
 
 		return true;
 	}
@@ -53,9 +45,9 @@ namespace HyperFast
 		__job.wait();
 	}
 
-	void ScreenResource::needToUpdateSecondaryCommandBuffer(const size_t commandBufferIndex) noexcept
+	void ScreenResource::needToUpdateSecondaryCommandBuffer(const size_t drawcallSegmentIndex) noexcept
 	{
-		__updateNeededSecondaryCommandBufferIndices.emplace(commandBufferIndex);
+		__updateNeededDrawcallSegmentIndices.emplace(drawcallSegmentIndex);
 	}
 
 	void ScreenResource::update(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall)
@@ -68,18 +60,6 @@ namespace HyperFast
 
 		if (__needToPrimaryCommandBuffer)
 			__updateCommandBuffers(swapchainParam, pDrawcall);
-	}
-
-	void ScreenResource::__createSecondaryCommandBuffers() noexcept
-	{
-		const uint32_t numCores{ std::thread::hardware_concurrency() };
-		for (uint32_t iter = 0U; iter < numCores; iter++)
-		{
-			__secondaryCommandBufferManagers.emplace_back(
-				std::make_unique<CommandBufferManager>(
-					__device, __queueFamilyIndex,
-					VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY));
-		}
 	}
 
 	void ScreenResource::__createRenderPasses(const SwapchainParam &swapchainParam)
@@ -229,19 +209,41 @@ namespace HyperFast
 			std::make_unique<Vulkan::ImageView>(__device, createInfo);
 	}
 
-	void ScreenResource::__updateSecondaryCommandBuffers(tf::Subflow &subflow) noexcept
+	void ScreenResource::__updateSecondaryCommandBuffers(
+		Drawcall *const pDrawcall, const size_t imageIdx, tf::Subflow &subflow) noexcept
 	{
-		/*
-			- Secondary command buffer manager 별도 관리
-			- secondary command buffer 단위는 크게 잡아야 primary command buffer recoding overhead가 적음
-			- DrawcallGroup 만들기 (mesh 단위로 그룹에 편재되도록, 그룹 크기는 hardware_concurrency 크기와 동일)
-			- group resource update event 제공
-			- renderpass, framebuffer, pipeline 등 업데이트 시 secondary command buffer 갱신
-			- external param들은 명시적으로 setter 제공 (업데이트 타이밍 알아야됨)
-		*/
+		if (__updateNeededDrawcallSegmentIndices.empty())
+			return;
 
-		// 1. Secondary command buffer recoding
-		// 2. Primary command buffer에서 사용
+		__secondaryCommandBufferInheritanceInfo.renderPass = __pRenderPass->getHandle();
+		__secondaryCommandBufferInheritanceInfo.framebuffer = __pFramebuffer->getHandle();
+
+		tf::Task t1
+		{
+			subflow.emplace([this, imageIdx]
+			{
+				__updateSecondaryCommandBufferHandles(imageIdx);
+			})
+		};
+
+		for (const size_t drawcallSegmentIdx : __updateNeededDrawcallSegmentIndices)
+		{
+			subflow.emplace([this, pDrawcall, imageIdx, drawcallSegmentIdx](tf::Subflow &subflow)
+			{
+				Vulkan::CommandBuffer &commandBuffer{ __nextSecondaryCommandBuffer(imageIdx, drawcallSegmentIdx) };
+				commandBuffer.vkBeginCommandBuffer(&__secondaryCommandBufferBeginInfo);
+
+				if (pDrawcall)
+				{
+					commandBuffer.vkCmdBindPipeline(
+						VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
+
+					pDrawcall->draw(drawcallSegmentIdx, commandBuffer);
+				}
+
+				commandBuffer.vkEndCommandBuffer();
+			}).precede(t1);
+		}
 	}
 
 	void ScreenResource::__updatePrimaryCommandBuffer(
@@ -312,6 +314,7 @@ namespace HyperFast
 			taskflow.emplace([this, &swapchainParam, numSwapchainImages](tf::Subflow &subflow)
 			{
 				__swapChainImageViews.clear();
+				__secondaryCommandBufferResources.resize(numSwapchainImages);
 				__primaryCommandBufferManagers.resize(numSwapchainImages);
 				__swapChainImageViews.resize(numSwapchainImages);
 
@@ -349,9 +352,10 @@ namespace HyperFast
 			{
 				for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 				{
-					subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
+					subflow.emplace([this, imageIter, &swapchainParam, pDrawcall](tf::Subflow &subflow)
 					{
 						__createSwapchainImageView(swapchainParam, imageIter);
+						__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
 						__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
 					});
 				}
@@ -378,8 +382,9 @@ namespace HyperFast
 
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
-				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
+				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall](tf::Subflow &subflow)
 				{
+					__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
 					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
 				});
 			}
@@ -400,20 +405,13 @@ namespace HyperFast
 		tf::Taskflow taskflow;
 		taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
 		{
-			tf::Task t1
-			{
-				subflow.emplace([this](tf::Subflow &subflow)
-				{
-					__updateSecondaryCommandBuffers(subflow);
-				})
-			};
-
 			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 			{
-				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall]
+				subflow.emplace([this, imageIter, &swapchainParam, pDrawcall](tf::Subflow &subflow)
 				{
+					__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
 					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
-				}).succeed(t1);
+				});
 			}
 		});
 
@@ -435,5 +433,54 @@ namespace HyperFast
 			pCommandBufferManager->advance();
 
 		return pCommandBufferManager->get();
+	}
+
+	ScreenResource::SecondaryCommandBufferResource &
+		ScreenResource::__getSecondaryCommandBufferResource(const size_t imageIdx) noexcept
+	{
+		auto &pResource{ __secondaryCommandBufferResources[imageIdx] };
+		if (!pResource)
+			pResource = std::make_unique<SecondaryCommandBufferResource>();
+
+		return *pResource;
+	}
+
+	[[nodiscard]]
+	Vulkan::CommandBuffer &
+		ScreenResource::__nextSecondaryCommandBuffer(
+		const size_t imageIdx, const size_t drawcallSegmentIdx) noexcept
+	{
+		SecondaryCommandBufferResource &resource{ __getSecondaryCommandBufferResource(imageIdx) };
+		auto &pCommandBufferManager{ resource.managerMap[drawcallSegmentIdx] };
+		if (!pCommandBufferManager)
+		{
+			pCommandBufferManager =
+				std::make_unique<CommandBufferManager>(
+					__device, __queueFamilyIndex,
+					VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+		}
+		else
+			pCommandBufferManager->advance();
+
+		return pCommandBufferManager->get();
+	}
+
+	void ScreenResource::__updateSecondaryCommandBufferHandles(const size_t imageIdx) noexcept
+	{
+		SecondaryCommandBufferResource &resource{ __getSecondaryCommandBufferResource(imageIdx) };
+		resource.handles.clear();
+
+		for (const auto &[_, pManager] : resource.managerMap)
+		{
+			const VkCommandBuffer handle{ pManager->get().getHandle() };
+			resource.handles.emplace_back(handle);
+		}
+	}
+
+	std::vector<VkCommandBuffer> &
+		ScreenResource::__getSecondaryCommandBufferHandles(const size_t imageIdx) noexcept
+	{
+		SecondaryCommandBufferResource &resource{ __getSecondaryCommandBufferResource(imageIdx) };
+		return resource.handles;
 	}
 }
