@@ -275,8 +275,6 @@ namespace HyperFast
 		};
 
 		Vulkan::CommandBuffer &commandBuffer{ __nextPrimaryCommandBuffer(imageIdx) };
-
-		__updateSecondaryCommandBufferHandles(imageIdx);
 		const std::vector<VkCommandBuffer> &secondaryCommandBufferHandles{ __getSecondaryCommandBufferHandles(imageIdx) };
 
 		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
@@ -351,12 +349,18 @@ namespace HyperFast
 					subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
 					{
 						__createSwapchainImageView(swapchainParam, imageIter);
+						__updateSecondaryCommandBufferHandles(imageIter);
 						__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
 					}).succeed(t1);
 				}
 			})
 		};
 		t2.succeed(t1);
+
+		taskflow.emplace([this]
+		{
+			__updateNeededDrawcallSegmentIndices.clear();
+		}).succeed(t2);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__job = executor.run(std::move(taskflow));
@@ -371,26 +375,35 @@ namespace HyperFast
 		const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 
 		tf::Taskflow taskflow;
-		taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
+		tf::Task t1
 		{
-			__buildPipelines(swapchainParam, subflow);
-
-			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
+			taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
 			{
-				tf::Task t1
-				{
-					subflow.emplace([this, pDrawcall, imageIter](tf::Subflow &subflow)
-					{
-						__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
-					})
-				};
+				__buildPipelines(swapchainParam, subflow);
 
-				subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
+				for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 				{
-					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
-				}).succeed(t1);
-			}
-		});
+					tf::Task t1
+					{
+						subflow.emplace([this, pDrawcall, imageIter](tf::Subflow &subflow)
+						{
+							__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
+						})
+					};
+
+					subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
+					{
+						__updateSecondaryCommandBufferHandles(imageIter);
+						__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
+					}).succeed(t1);
+				}
+			})
+		};
+
+		taskflow.emplace([this]
+		{
+			__updateNeededDrawcallSegmentIndices.clear();
+		}).succeed(t1);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__job = executor.run(std::move(taskflow));
@@ -405,24 +418,33 @@ namespace HyperFast
 		const size_t numSwapchainImages{ swapchainParam.swapChainImages.size() };
 
 		tf::Taskflow taskflow;
-		taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
+		tf::Task t1
 		{
-			for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
+			taskflow.emplace([this, &swapchainParam, numSwapchainImages, pDrawcall](tf::Subflow &subflow)
 			{
-				tf::Task t1
+				for (size_t imageIter = 0ULL; imageIter < numSwapchainImages; imageIter++)
 				{
-					subflow.emplace([this, pDrawcall, imageIter](tf::Subflow &subflow)
+					tf::Task t1
 					{
-						__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
-					})
-				};
+						subflow.emplace([this, pDrawcall, imageIter](tf::Subflow &subflow)
+						{
+							__updateSecondaryCommandBuffers(pDrawcall, imageIter, subflow);
+						})
+					};
 
-				subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
-				{
-					__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
-				}).succeed(t1);
-			}
-		});
+					subflow.emplace([this, &swapchainParam, pDrawcall, imageIter](tf::Subflow &subflow)
+					{
+						__updateSecondaryCommandBufferHandles(imageIter);
+						__updatePrimaryCommandBuffer(swapchainParam, pDrawcall, imageIter);
+					}).succeed(t1);
+				}
+			})
+		};
+
+		taskflow.emplace([this]
+		{
+			__updateNeededDrawcallSegmentIndices.clear();
+		}).succeed(t1);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__job = executor.run(std::move(taskflow));
