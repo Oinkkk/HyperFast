@@ -28,7 +28,7 @@ namespace HyperFast
 		~ScreenResource() noexcept;
 
 		[[nodiscard]]
-		Vulkan::CommandBuffer &getRenderCommandBuffer(const size_t imageIdx) noexcept;
+		Vulkan::CommandBuffer &getPrimaryCommandBuffer(const size_t imageIdx) noexcept;
 
 		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
 
@@ -39,6 +39,7 @@ namespace HyperFast
 		constexpr void needToUpdateSwapchainDependencies() noexcept;
 		constexpr void needToUpdatePipelineDependencies() noexcept;
 		constexpr void needToUpdatePrimaryCommandBuffer() noexcept;
+		void needToUpdateSecondaryCommandBuffer(const size_t commandBufferIndex) noexcept;
 
 		void update(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
 
@@ -59,6 +60,7 @@ namespace HyperFast
 		bool __needToUpdateSwapchainDependencies{};
 		bool __needToUpdatePipelineDependencies{};
 		bool __needToPrimaryCommandBuffer{};
+		std::unordered_set<size_t> __updateNeededSecondaryCommandBufferIndices;
 
 		tf::Future<void> __job;
 		SemaphoreDependencyCluster __semaphoreDependencyCluster;

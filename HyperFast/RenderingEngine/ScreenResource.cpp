@@ -18,7 +18,7 @@ namespace HyperFast
 		__primaryCommandBufferManagers.clear();
 	}
 
-	Vulkan::CommandBuffer &ScreenResource::getRenderCommandBuffer(const size_t imageIdx) noexcept
+	Vulkan::CommandBuffer &ScreenResource::getPrimaryCommandBuffer(const size_t imageIdx) noexcept
 	{
 		return __primaryCommandBufferManagers[imageIdx]->get();
 	}
@@ -56,6 +56,11 @@ namespace HyperFast
 			return;
 
 		__job.wait();
+	}
+
+	void ScreenResource::needToUpdateSecondaryCommandBuffer(const size_t commandBufferIndex) noexcept
+	{
+		__updateNeededSecondaryCommandBufferIndices.emplace(commandBufferIndex);
 	}
 
 	void ScreenResource::update(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall)

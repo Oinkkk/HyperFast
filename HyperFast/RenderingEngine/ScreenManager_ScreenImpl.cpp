@@ -156,6 +156,16 @@ namespace HyperFast
 		if (__destroyed)
 			return;
 
+		__pWindowResizeEventListener = nullptr;
+		__pWindowDrawEventListener = nullptr;
+		__pWindowDestroyEventListener = nullptr;
+		__pDrawcallMeshBufferChangeEventListener = nullptr;
+		__pDrawcallIndirectBufferUpdateEventListener = nullptr;
+		__pDrawcallIndirectBufferCreateEventListener = nullptr;
+		__pScreenUpdateListener = nullptr;
+		__pRenderListener = nullptr;
+		__pPresentListener = nullptr;
+
 		__device.vkDeviceWaitIdle();
 
 		__renderCompletionTimelineSemaphores.clear();
@@ -533,7 +543,7 @@ namespace HyperFast
 
 	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__getCurrentRenderCommandBuffer() noexcept
 	{
-		return __getCurrentResource().getRenderCommandBuffer(__imageIdx);
+		return __getCurrentResource().getPrimaryCommandBuffer(__imageIdx);
 	}
 
 	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getCurrentRenderCompletionBinarySemaphore() noexcept
@@ -593,6 +603,9 @@ namespace HyperFast
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
 		__needToUpdatePrimaryCommandBuffer = true;
+
+		for (auto &pResource : __resourceChain)
+			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(
@@ -605,6 +618,9 @@ namespace HyperFast
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
 		__needToUpdatePrimaryCommandBuffer = true;
+
+		for (auto &pResource : __resourceChain)
+			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept
