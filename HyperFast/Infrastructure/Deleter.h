@@ -8,7 +8,7 @@ namespace Infra
 	class Deleter final : public Unique
 	{
 	public:
-		virtual ~Deleter() noexcept;
+		~Deleter() noexcept;
 
 		void reserve(Deletable *const pDeletable) noexcept;
 		void commit();

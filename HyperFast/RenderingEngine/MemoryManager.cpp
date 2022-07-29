@@ -4,7 +4,7 @@ namespace HyperFast
 {
 	MemoryManager::MemoryManager(
 		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-		Vulkan::Device &device, Infra::Deleter &resourceDeleter) noexcept :
+		Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter) noexcept :
 		__instance{ instance }, __physicalDevice{ physicalDevice },
 		__device{ device }, __resourceDeleter{ resourceDeleter }
 	{

@@ -406,7 +406,7 @@ namespace HyperFast
 
 	void RenderingEngine::__createResourceDeleter() noexcept
 	{
-		__pResourceDeleter = std::make_unique<Infra::Deleter>();
+		__pResourceDeleter = std::make_unique<Infra::TemporalDeleter>();
 	}
 
 	void RenderingEngine::__createScreenManager() noexcept

@@ -2,7 +2,7 @@
 
 namespace HyperFast
 {
-	BufferManager::BufferManager(Vulkan::Device &device, Infra::Deleter &resourceDeleter) noexcept :
+	BufferManager::BufferManager(Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter) noexcept :
 		__device{ device }, __resourceDeleter{ resourceDeleter }
 	{}
 

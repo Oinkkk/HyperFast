@@ -62,7 +62,7 @@ namespace HyperFast
 			void __queryMemoryRequirements() noexcept;
 		};
 
-		BufferManager(Vulkan::Device &device, Infra::Deleter &resourceDeleter) noexcept;
+		BufferManager(Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter) noexcept;
 
 		[[nodiscard]]
 		BufferImpl *create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
@@ -70,7 +70,7 @@ namespace HyperFast
 
 	private:
 		Vulkan::Device &__device;
-		Infra::Deleter &__resourceDeleter;
+		Infra::TemporalDeleter &__resourceDeleter;
 	};
 
 	constexpr VkDeviceSize BufferManager::BufferImpl::getSize() const noexcept

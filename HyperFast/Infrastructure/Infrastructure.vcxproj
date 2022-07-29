@@ -20,6 +20,7 @@
     <ClInclude Include="LogSeverityType.h" />
     <ClInclude Include="LruCache.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="TemporalDeleter.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Unique.h" />
   </ItemGroup>
@@ -28,6 +29,7 @@
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="IdAllocator.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="TemporalDeleter.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

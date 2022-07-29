@@ -10,7 +10,7 @@
 #include "../Vulkan/DebugUtilsMessenger.h"
 #include "CommandSubmitter.h"
 #include "LifeCycleSignalType.h"
-#include "../Infrastructure/Deleter.h"
+#include "../Infrastructure/TemporalDeleter.h"
 
 namespace HyperFast
 {
@@ -74,7 +74,7 @@ namespace HyperFast
 		std::unique_ptr<MemoryManager> __pMemoryManager;
 		std::unique_ptr<BufferManager> __pBufferManager;
 		std::unique_ptr<CommandSubmitter> __pCommandSubmitter;
-		std::unique_ptr<Infra::Deleter> __pResourceDeleter;
+		std::unique_ptr<Infra::TemporalDeleter> __pResourceDeleter;
 
 		std::map<LifeCycleSignalType, std::unique_ptr<Infra::Event<>>> __lifeCycleSignalEventMap;
 		std::shared_ptr<Infra::EventListener<>> __pSubmitEventListener;

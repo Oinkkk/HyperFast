@@ -5,7 +5,7 @@
 #include <optional>
 #include <map>
 #include "../Vulkan/Memory.h"
-#include "../Infrastructure/Deleter.h"
+#include "../Infrastructure/TemporalDeleter.h"
 
 namespace HyperFast
 {
@@ -86,7 +86,7 @@ namespace HyperFast
 
 		MemoryManager(
 			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-			Vulkan::Device &device, Infra::Deleter &resourceDeleter) noexcept;
+			Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter) noexcept;
 
 		[[nodiscard]]
 		MemoryImpl *create(
@@ -99,7 +99,7 @@ namespace HyperFast
 		Vulkan::Instance &__instance;
 		Vulkan::PhysicalDevice &__physicalDevice;
 		Vulkan::Device &__device;
-		Infra::Deleter &__resourceDeleter;
+		Infra::TemporalDeleter &__resourceDeleter;
 
 		VkPhysicalDeviceMemoryProperties2 __deviceMemProps2{};
 		VkPhysicalDeviceMemoryBudgetPropertiesEXT __deviceMemBudget{};
