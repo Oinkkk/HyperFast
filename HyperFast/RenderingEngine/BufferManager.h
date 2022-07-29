@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Infrastructure/Deleter.h"
 #include "Memory.h"
 #include <memory>
 #include "../Vulkan/Buffer.h"
@@ -11,12 +12,14 @@ namespace HyperFast
 	class BufferManager final : public Infra::Unique
 	{
 	public:
-		class BufferImpl final : public Infra::Unique
+		class BufferImpl final : public Infra::Deletable
 		{
 		public:
 			BufferImpl(
 				Vulkan::Device &device,
 				const VkDeviceSize size, const VkBufferUsageFlags usage);
+
+			virtual ~BufferImpl() noexcept = default;
 
 			[[nodiscard]]
 			constexpr VkDeviceSize getSize() const noexcept;
@@ -59,8 +62,7 @@ namespace HyperFast
 			void __queryMemoryRequirements() noexcept;
 		};
 
-		BufferManager(Vulkan::Device &device, Infra::EventView<> &gcEvent) noexcept;
-		~BufferManager() noexcept;
+		BufferManager(Vulkan::Device &device, Infra::Deleter &resourceDeleter) noexcept;
 
 		[[nodiscard]]
 		BufferImpl *create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
@@ -68,10 +70,7 @@ namespace HyperFast
 
 	private:
 		Vulkan::Device &__device;
-		std::list<BufferImpl *> __destroyReserved;
-		std::shared_ptr<Infra::EventListener<>> __pGCEventListener;
-
-		void __onGarbageCollect() noexcept;
+		Infra::Deleter &__resourceDeleter;
 	};
 
 	constexpr VkDeviceSize BufferManager::BufferImpl::getSize() const noexcept

@@ -5,6 +5,7 @@
 #include <optional>
 #include <map>
 #include "../Vulkan/Memory.h"
+#include "../Infrastructure/Deleter.h"
 
 namespace HyperFast
 {
@@ -58,11 +59,11 @@ namespace HyperFast
 			void __unmap() noexcept;
 		};
 
-		class MemoryImpl final : public Infra::Unique
+		class MemoryImpl final : public Infra::Deletable
 		{
 		public:
 			MemoryImpl(MemoryBank &bank, const MemoryBank::MemorySegment &segment) noexcept;
-			~MemoryImpl() noexcept;
+			virtual ~MemoryImpl() noexcept;
 
 			[[nodiscard]]
 			VkDeviceMemory getBank() noexcept;
@@ -84,8 +85,8 @@ namespace HyperFast
 		};
 
 		MemoryManager(
-			Vulkan::Instance &instance,
-			Vulkan::PhysicalDevice &physicalDevice, Vulkan::Device &device) noexcept;
+			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
+			Vulkan::Device &device, Infra::Deleter &resourceDeleter) noexcept;
 
 		[[nodiscard]]
 		MemoryImpl *create(
@@ -98,6 +99,7 @@ namespace HyperFast
 		Vulkan::Instance &__instance;
 		Vulkan::PhysicalDevice &__physicalDevice;
 		Vulkan::Device &__device;
+		Infra::Deleter &__resourceDeleter;
 
 		VkPhysicalDeviceMemoryProperties2 __deviceMemProps2{};
 		VkPhysicalDeviceMemoryBudgetPropertiesEXT __deviceMemBudget{};

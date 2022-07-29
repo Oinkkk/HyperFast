@@ -1,4 +1,4 @@
-#include "CommandSubmitter.h"
+﻿#include "CommandSubmitter.h"
 
 namespace HyperFast
 {
@@ -38,6 +38,7 @@ namespace HyperFast
 		if (__infoStream.empty())
 			return;
 
+		// deletion queue 모듈 추가
 		__queue.vkQueueSubmit2(uint32_t(__infoStream.size()), __infoStream.data(), VK_NULL_HANDLE);
 	}
 }

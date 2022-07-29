@@ -32,6 +32,8 @@ namespace HyperFast
 		__pickGraphicsQueueFamily();
 		__createDevice();
 		__makeQueue();
+
+		__createResourceDeleter();
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
@@ -42,6 +44,7 @@ namespace HyperFast
 	{
 		// The only time you should wait for a device to idle is when you want to destroy the device.
 		__pDevice->vkDeviceWaitIdle();
+		__pResourceDeleter = nullptr;
 		__pCommandSubmitter = nullptr;
 		__pBufferManager = nullptr;
 		__pMemoryManager = nullptr;
@@ -401,6 +404,11 @@ namespace HyperFast
 		};*/
 	}
 
+	void RenderingEngine::__createResourceDeleter() noexcept
+	{
+		__pResourceDeleter = std::make_unique<Infra::Deleter>();
+	}
+
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
@@ -411,13 +419,12 @@ namespace HyperFast
 	void RenderingEngine::__createMemoryManager() noexcept
 	{
 		__pMemoryManager = std::make_unique<MemoryManager>(
-			*__pInstance, *__pPhysicalDevice, *__pDevice);
+			*__pInstance, *__pPhysicalDevice, *__pDevice, *__pResourceDeleter);
 	}
 
 	void RenderingEngine::__createBufferManager() noexcept
 	{
-		__pBufferManager = std::make_unique<BufferManager>(
-			*__pDevice, getLifeCycleSignalEvent(LifeCycleSignalType::GARBAGE_COLLECT));
+		__pBufferManager = std::make_unique<BufferManager>(*__pDevice, *__pResourceDeleter);
 	}
 
 	void RenderingEngine::__createCommandSubmitter() noexcept

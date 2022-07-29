@@ -3,9 +3,10 @@
 namespace HyperFast
 {
 	MemoryManager::MemoryManager(
-		Vulkan::Instance &instance,
-		Vulkan::PhysicalDevice &physicalDevice, Vulkan::Device &device) noexcept :
-		__instance{ instance }, __physicalDevice{ physicalDevice }, __device{ device }
+		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
+		Vulkan::Device &device, Infra::Deleter &resourceDeleter) noexcept :
+		__instance{ instance }, __physicalDevice{ physicalDevice },
+		__device{ device }, __resourceDeleter{ resourceDeleter }
 	{
 		__setupDeviceMemProps();
 	}
@@ -70,7 +71,7 @@ namespace HyperFast
 
 	void MemoryManager::destroy(MemoryImpl *const pImpl) noexcept
 	{
-		delete pImpl;
+		__resourceDeleter.reserve(pImpl);
 	}
 
 	void MemoryManager::__updateDeviceMemProps() noexcept

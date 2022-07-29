@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Deletable.h" />
+    <ClInclude Include="Deleter.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="IdAllocator.h" />
@@ -22,6 +24,7 @@
     <ClInclude Include="Unique.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Deleter.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="IdAllocator.cpp" />
     <ClCompile Include="Logger.cpp" />

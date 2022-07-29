@@ -28,6 +28,12 @@
     <ClInclude Include="Math.h">
       <Filter>Math</Filter>
     </ClInclude>
+    <ClInclude Include="Deleter.h">
+      <Filter>Deletable</Filter>
+    </ClInclude>
+    <ClInclude Include="Deletable.h">
+      <Filter>Deletable</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Unique">
@@ -54,6 +60,9 @@
     <Filter Include="Math">
       <UniqueIdentifier>{65971f57-f77e-43e3-ac76-528287f65e67}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Deletable">
+      <UniqueIdentifier>{76fd5d37-f212-45f3-abb1-251cde5964c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Logger.cpp">
@@ -64,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="Environment.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Deleter.cpp">
+      <Filter>Deletable</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
