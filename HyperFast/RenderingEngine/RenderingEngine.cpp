@@ -11,7 +11,6 @@ namespace HyperFast
 		Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName) :
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
-		__createLifeCycleSignalEventMap();
 		__initListeners();
 		__registerListeners();
 		__getInstanceVersion();
@@ -34,10 +33,10 @@ namespace HyperFast
 		__makeQueue();
 
 		__createResourceDeleter();
+		__createCommandSubmitter();
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
-		__createCommandSubmitter();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
@@ -84,34 +83,9 @@ namespace HyperFast
 		return std::make_shared<Mesh>(*__pDevice);
 	}
 
-	void RenderingEngine::enqueueCommands(
-		const SubmitLayerType layerType,
-		const uint32_t waitSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
-		const uint32_t commandBufferInfoCount, const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
-		const uint32_t signalSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept
-	{
-		__pCommandSubmitter->enqueue(
-			layerType,
-			waitSemaphoreInfoCount, pWaitSemaphoreInfos,
-			commandBufferInfoCount, pCommandBufferInfos,
-			signalSemaphoreInfoCount, pSignalSemaphoreInfos);
-	}
-
 	void RenderingEngine::tick()
 	{
-		for (const auto &[_, pEvent] : __lifeCycleSignalEventMap)
-			pEvent->invoke();
-	}
-
-	Infra::EventView<> &RenderingEngine::getLifeCycleSignalEvent(const LifeCycleSignalType signalType) noexcept
-	{
-		return *(__lifeCycleSignalEventMap.at(signalType));
-	}
-
-	void RenderingEngine::__createLifeCycleSignalEventMap() noexcept
-	{
-		for (int iter = (int(LifeCycleSignalType::START) + 1); iter < int(LifeCycleSignalType::END); iter++)
-			__lifeCycleSignalEventMap.emplace(LifeCycleSignalType(iter), std::make_unique<Infra::Event<>>());
+		__lifeCycle.tick();
 	}
 
 	void RenderingEngine::__initListeners() noexcept
@@ -124,7 +98,7 @@ namespace HyperFast
 
 	void RenderingEngine::__registerListeners() noexcept
 	{
-		getLifeCycleSignalEvent(LifeCycleSignalType::SUBMIT) += __pSubmitEventListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::SUBMIT) += __pSubmitEventListener;
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -409,11 +383,16 @@ namespace HyperFast
 		__pResourceDeleter = std::make_unique<Infra::TemporalDeleter>();
 	}
 
+	void RenderingEngine::__createCommandSubmitter() noexcept
+	{
+		__pCommandSubmitter = std::make_unique<CommandSubmitter>(*__pDevice, *__pQueue);
+	}
+
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
-			*this, *__pInstance, *__pPhysicalDevice,
-			__queueFamilyIndex, *__pDevice, *__pQueue);
+			*__pInstance, *__pPhysicalDevice, __queueFamilyIndex,
+			*__pDevice, *__pQueue, __lifeCycle, *__pCommandSubmitter);
 	}
 
 	void RenderingEngine::__createMemoryManager() noexcept
@@ -425,11 +404,6 @@ namespace HyperFast
 	void RenderingEngine::__createBufferManager() noexcept
 	{
 		__pBufferManager = std::make_unique<BufferManager>(*__pDevice, *__pResourceDeleter);
-	}
-
-	void RenderingEngine::__createCommandSubmitter() noexcept
-	{
-		__pCommandSubmitter = std::make_unique<CommandSubmitter>(*__pDevice, *__pQueue);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

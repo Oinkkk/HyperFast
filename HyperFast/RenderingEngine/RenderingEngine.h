@@ -9,7 +9,7 @@
 #include "Drawcall.h"
 #include "../Vulkan/DebugUtilsMessenger.h"
 #include "CommandSubmitter.h"
-#include "LifeCycleSignalType.h"
+#include "LifeCycle.h"
 #include "../Infrastructure/TemporalDeleter.h"
 
 namespace HyperFast
@@ -19,6 +19,9 @@ namespace HyperFast
 	public:
 		RenderingEngine(Infra::Logger &logger, const std::string_view &appName, const std::string_view &engineName);
 		~RenderingEngine() noexcept;
+
+		[[nodiscard]]
+		constexpr LifeCycle &getLifeCycle() noexcept;
 
 		[[nodiscard]]
 		std::shared_ptr<Screen> createScreen(Win::Window &window);
@@ -38,21 +41,13 @@ namespace HyperFast
 		[[nodiscard]]
 		std::shared_ptr<Mesh> createMesh() noexcept;
 
-		void enqueueCommands(
-			const SubmitLayerType layerType,
-			const uint32_t waitSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
-			const uint32_t commandBufferInfoCount, const VkCommandBufferSubmitInfo *const pCommandBufferInfos,
-			const uint32_t signalSemaphoreInfoCount, const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
-
 		void tick();
-
-		[[nodiscard]]
-		Infra::EventView<> &getLifeCycleSignalEvent(const LifeCycleSignalType signalType) noexcept;
 
 	private:
 		Infra::Logger &__logger;
 		const std::string __appName;
 		const std::string __engineName;
+		LifeCycle __lifeCycle;
 
 		uint32_t __instanceVersion{};
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{};
@@ -76,12 +71,10 @@ namespace HyperFast
 		std::unique_ptr<CommandSubmitter> __pCommandSubmitter;
 		std::unique_ptr<Infra::TemporalDeleter> __pResourceDeleter;
 
-		std::map<LifeCycleSignalType, std::unique_ptr<Infra::Event<>>> __lifeCycleSignalEventMap;
 		std::shared_ptr<Infra::EventListener<>> __pSubmitEventListener;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
-		void __createLifeCycleSignalEventMap() noexcept;
 		void __initListeners() noexcept;
 		void __registerListeners() noexcept;
 		void __getInstanceVersion() noexcept;
@@ -97,14 +90,19 @@ namespace HyperFast
 		void __createDescriptorSetLayout();
 
 		void __createResourceDeleter() noexcept;
+		void __createCommandSubmitter() noexcept;
 		void __createScreenManager() noexcept;
 		void __createMemoryManager() noexcept;
 		void __createBufferManager() noexcept;
-		void __createCommandSubmitter() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
 			const VkDebugUtilsMessengerCallbackDataEXT *const pCallbackData, void *const pUserData);
 	};
+
+	constexpr LifeCycle &RenderingEngine::getLifeCycle() noexcept
+	{
+		return __lifeCycle;
+	}
 }

@@ -4,13 +4,14 @@
 namespace HyperFast
 {
 	ScreenManager::ScreenImpl::ScreenImpl(
-		RenderingEngine &renderingEngine,
 		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 		const uint32_t queueFamilyIndex, Vulkan::Device &device,
-		Vulkan::Queue &queue, Win::Window &window) :
-		__renderingEngine{ renderingEngine }, __instance { instance },
-		__physicalDevice{ physicalDevice }, __queueFamilyIndex{ queueFamilyIndex },
-		__device{ device }, __queue{ queue }, __window{ window }
+		Vulkan::Queue &queue, Win::Window &window,
+		LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter) :
+		__instance{ instance }, __physicalDevice{ physicalDevice },
+		__queueFamilyIndex{ queueFamilyIndex }, __device{ device },
+		__queue{ queue }, __window{ window },
+		__lifeCycle{ lifeCycle }, __commandSubmitter{ commandSubmitter }
 	{
 		__initListeners();
 		__registerListeners();
@@ -112,7 +113,7 @@ namespace HyperFast
 		timelineSignalInfo.semaphore = renderCompletionTimelineSemaphore.getHandle();
 		timelineSignalInfo.value = renderCompletionSemaphoreValue;
 
-		__renderingEngine.enqueueCommands(
+		__commandSubmitter.enqueue(
 			SubmitLayerType::GRAPHICS,
 			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo,
 			uint32_t(std::size(__submitSignalInfos)), __submitSignalInfos);
@@ -227,9 +228,9 @@ namespace HyperFast
 		__window.getDrawEvent() += __pWindowDrawEventListener;
 		__window.getDestroyEvent() += __pWindowDestroyEventListener;
 
-		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::SCREEN_UPDATE) += __pScreenUpdateListener;
-		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::RENDER) += __pRenderListener;
-		__renderingEngine.getLifeCycleSignalEvent(LifeCycleSignalType::PRESENT) += __pPresentListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::SCREEN_UPDATE) += __pScreenUpdateListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::RENDER) += __pRenderListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::PRESENT) += __pPresentListener;
 	}
 
 	void ScreenManager::ScreenImpl::__createResourceChain() noexcept

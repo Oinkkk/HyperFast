@@ -19,7 +19,8 @@
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
-    <ClInclude Include="LifeCycleSignalType.h" />
+    <ClInclude Include="LifeCycle.h" />
+    <ClInclude Include="LifeCycleType.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="Mesh.h" />
@@ -49,6 +50,7 @@
     <ClCompile Include="Drawcall.cpp" />
     <ClCompile Include="Drawcall_DrawcallSegment.cpp" />
     <ClCompile Include="IndirectBufferBuilder.cpp" />
+    <ClCompile Include="LifeCycle.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="MemoryManager_MemoryBank.cpp" />
     <ClCompile Include="MemoryManager_MemoryImpl.cpp" />

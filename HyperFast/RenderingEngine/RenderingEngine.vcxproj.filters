@@ -52,6 +52,9 @@
     <Filter Include="SemaphoreDependency">
       <UniqueIdentifier>{19a48576-5f7e-4627-aace-d86b9d1cd6c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="LifeCycle">
+      <UniqueIdentifier>{4de44828-38c1-4e4f-806a-0e3ac6cfb99a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -135,6 +138,9 @@
     <ClCompile Include="BufferCopyManager.cpp">
       <Filter>BufferCopyManager</Filter>
     </ClCompile>
+    <ClCompile Include="LifeCycle.cpp">
+      <Filter>LifeCycle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderingEngine.h">
@@ -209,14 +215,17 @@
     <ClInclude Include="SemaphoreDependencyManager.h">
       <Filter>SemaphoreDependency</Filter>
     </ClInclude>
-    <ClInclude Include="LifeCycleSignalType.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
     <ClInclude Include="SemaphoreDependency.h">
       <Filter>SemaphoreDependency</Filter>
     </ClInclude>
     <ClInclude Include="SemaphoreDependencyCluster.h">
       <Filter>SemaphoreDependency</Filter>
+    </ClInclude>
+    <ClInclude Include="LifeCycleType.h">
+      <Filter>LifeCycle</Filter>
+    </ClInclude>
+    <ClInclude Include="LifeCycle.h">
+      <Filter>LifeCycle</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

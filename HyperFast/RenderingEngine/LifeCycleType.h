@@ -1,8 +1,10 @@
 ﻿#pragma once
 
+#include <cstdint>
+
 namespace HyperFast
 {
-	enum class LifeCycleSignalType
+	enum class LifeCycleType : uint32_t
 	{
 		START,
 
@@ -25,5 +27,10 @@ namespace HyperFast
 		GARBAGE_COLLECT,
 
 		END
+	};
+
+	static constexpr uint32_t NUM_LIFE_CYCLE_TYPES
+	{
+		uint32_t(LifeCycleType::END) - (uint32_t(LifeCycleType::START) + 1U)
 	};
 }

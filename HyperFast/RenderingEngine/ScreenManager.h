@@ -6,11 +6,11 @@
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
 #include "ScreenResource.h"
+#include "LifeCycle.h"
+#include "CommandSubmitter.h"
 
 namespace HyperFast
 {
-	class RenderingEngine;
-
 	class ScreenManager final : public Infra::Unique
 	{
 	public:
@@ -18,23 +18,25 @@ namespace HyperFast
 		{
 		public:
 			ScreenImpl(
-				RenderingEngine &renderingEngine,
 				Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 				const uint32_t queueFamilyIndex, Vulkan::Device &device,
-				Vulkan::Queue &queue, Win::Window &window);
+				Vulkan::Queue &queue, Win::Window &window,
+				LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter);
 
 			~ScreenImpl() noexcept;
 
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
 		private:
-			RenderingEngine &__renderingEngine;
 			Vulkan::Instance &__instance;
 			Vulkan::PhysicalDevice &__physicalDevice;
 			Vulkan::Device &__device;
 
 			const uint32_t __queueFamilyIndex;
 			Vulkan::Queue &__queue;
+
+			LifeCycle &__lifeCycle;
+			CommandSubmitter &__commandSubmitter;
 
 			std::unique_ptr<ScreenResource> __resourceChain[3];
 			size_t __resourceCursor{};
@@ -163,10 +165,9 @@ namespace HyperFast
 		};
 
 		ScreenManager(
-			RenderingEngine &renderingEngine,
 			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
-			const uint32_t graphicsQueueFamilyIndex,
-			Vulkan::Device &device, Vulkan::Queue &queue) noexcept;
+			const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device, Vulkan::Queue &queue,
+			LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter) noexcept;
 
 		~ScreenManager() noexcept = default;
 
@@ -174,13 +175,15 @@ namespace HyperFast
 		std::unique_ptr<ScreenImpl> create(Win::Window &window) noexcept;
 
 	private:
-		RenderingEngine &__renderingEngine;
 		Vulkan::Instance &__instance;
 		Vulkan::PhysicalDevice &__physicalDevice;
 		Vulkan::Device &__device;
 
 		const uint32_t __queueFamilyIndex;
 		Vulkan::Queue &__queue;
+
+		LifeCycle &__lifeCycle;
+		CommandSubmitter &__commandSubmitter;
 	};
 
 	constexpr void ScreenManager::ScreenImpl::__initSubmitInfo() noexcept
