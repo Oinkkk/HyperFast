@@ -2,6 +2,7 @@
 
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
+#include "../Infrastructure/TemporalDeleter.h"
 #include "../Vulkan/ShaderModule.h"
 #include "../Vulkan/PipelineLayout.h"
 #include "../Vulkan/PipelineCache.h"
@@ -20,11 +21,11 @@ namespace HyperFast
 			VkRect2D scissor{};
 		};
 
-		PipelineFactory(Vulkan::Device &device) noexcept;
+		PipelineFactory(Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter) noexcept;
 		~PipelineFactory() noexcept;
-
-		void build(const BuildParam &buildParam, tf::Subflow &subflow);
+		
 		void reset() noexcept;
+		void build(const BuildParam &buildParam, tf::Subflow &subflow);
 
 		[[nodiscard]]
 		VkPipeline get() noexcept;
@@ -34,41 +35,42 @@ namespace HyperFast
 		{
 		public:
 			PipelineResource(
-				Vulkan::Device &device, const VkPipelineLayout pipelineLayout) noexcept;
+				Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter,
+				const VkPipelineLayout pipelineLayout) noexcept;
 			
 			~PipelineResource() noexcept;
 
-			void build(const BuildParam &buildParam);
 			void reset() noexcept;
+			void build(const BuildParam &buildParam);
 
 			[[nodiscard]]
 			VkPipeline getPipeline() noexcept;
 
 		private:
 			Vulkan::Device &__device;
+			Infra::TemporalDeleter &__resourceDeleter;
 			const VkPipelineLayout __pipelineLayout;
 
-			std::unique_ptr<Vulkan::ShaderModule> __pVertexShader;
-			std::unique_ptr<Vulkan::ShaderModule> __pFragShader;
-			std::unique_ptr<Vulkan::PipelineCache> __pPipelineCache;
+			Vulkan::ShaderModule *__pVertexShader{};
+			Vulkan::ShaderModule *__pFragShader{};
+			Vulkan::PipelineCache *__pPipelineCache{};
+			Vulkan::Pipeline *__pPipeline{};
 
 			std::vector<VkPipelineShaderStageCreateInfo> __shaderStageInfos;
 			std::vector<VkVertexInputBindingDescription> __vertexBindingDescs;
 			std::vector<VkVertexInputAttributeDescription> __vertexAttribDescs;
 			VkPipelineVertexInputStateCreateInfo __vertexInputInfo;
 
-			std::unique_ptr<Vulkan::Pipeline> __pPipeline;
-
 			void __createShaderModules();
 			void __createPipelineCache();
 			void __populatePipelineCreateInfos() noexcept;
-
-			void __buildPipeline(const BuildParam &buildParam);
+			void __buildPipelines(const BuildParam &buildParam);
 		};
 
 		Vulkan::Device &__device;
+		Infra::TemporalDeleter &__resourceDeleter;
 
-		std::unique_ptr<Vulkan::PipelineLayout> __pPipelineLayout;
+		Vulkan::PipelineLayout *__pPipelineLayout{};
 		std::unique_ptr<PipelineResource> __pResource;
 
 		void __createPipelineLayouts();

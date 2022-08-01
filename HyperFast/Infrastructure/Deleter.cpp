@@ -10,21 +10,27 @@ namespace Infra
 
 	void Deleter::reserve(Deletable *const pDeletable) noexcept
 	{
-		__deleteReserved.emplace_back(pDeletable);
+		if (__reservedObjects.contains(pDeletable))
+			return;
+
+		__reservationQueue.emplace_back(pDeletable);
+		__reservedObjects.emplace(pDeletable);
 	}
 
 	void Deleter::commit()
 	{
 		std::vector<Deletable *> placeholder;
 
-		while (!(__deleteReserved.empty()))
+		while (!(__reservationQueue.empty()))
 		{
-			placeholder.swap(__deleteReserved);
+			placeholder.swap(__reservationQueue);
 
 			for (Deletable *const pDeletable : placeholder)
 				delete pDeletable;
 
 			placeholder.clear();
 		}
+
+		__reservedObjects.clear();
 	}
 }

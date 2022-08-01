@@ -66,7 +66,10 @@
     <ClCompile Include="ScreenManager_Old.cpp" />
     <ClCompile Include="ScreenManager_ScreenImpl.cpp" />
     <ClCompile Include="ScreenManager_Old_ScreenImpl.cpp" />
-    <ClCompile Include="ScreenResource_Old.cpp" />
+    <ClCompile Include="ScreenResource_Old.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="SemaphoreDependency.cpp" />
     <ClCompile Include="SemaphoreDependencyManager.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />

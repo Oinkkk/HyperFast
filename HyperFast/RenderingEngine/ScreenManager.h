@@ -6,11 +6,13 @@
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
 #include "../Vulkan/Swapchain.h"
+#include "../Vulkan/ImageView.h"
 #include "../Vulkan/RenderPass.h"
 #include "../Vulkan/Framebuffer.h"
 #include "LifeCycle.h"
 #include "CommandSubmitter.h"
 #include "Drawcall.h"
+#include "PipelineFactory.h"
 
 namespace HyperFast
 {
@@ -32,7 +34,7 @@ namespace HyperFast
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
 		private:
-
+			
 			// External params
 
 			Vulkan::Instance &__instance;
@@ -62,16 +64,28 @@ namespace HyperFast
 			VkFormat __swapchainFormat{};
 			VkExtent2D __swapchainExtent{};
 			std::vector<VkImage> __swapChainImages;
+			std::vector<Vulkan::ImageView *> __swapChainImageViews;
 
 			Vulkan::RenderPass *__pRenderPass;
 			Vulkan::Framebuffer *__pFramebuffer;
 
+			PipelineFactory::BuildParam __pipelineBuildParam;
+			std::unique_ptr<PipelineFactory> __pPipelineFactory;
+
+			// ResourceBundle __resourceBundleChain[2];
+			size_t __resourceBundleCursor{};
+
+			tf::Future<void> __updateJob;
+
 
 			// Flags
 
-			bool __needToUpdateSwapchainDependencies{};
-			bool __needToUpdatePipelineDependencies{};
-			bool __needToUpdateCommandBuffers{};
+			bool __swapchainDependencDirty{};
+			bool __pipelineDependencyDirty{};
+			bool __commandBufferDirty{};
+
+			bool __allDrawcallSegmentDirty{};
+			std::unordered_set<size_t> __drawcallSegmentDirties;
 
 			bool __needToRender{};
 			bool __needToPresent{};
@@ -97,10 +111,16 @@ namespace HyperFast
 			// functions
 
 			[[nodiscard]]
-			bool __isValid() const noexcept;
+			bool __isUpdateInFlight() const noexcept;
+
+			[[nodiscard]]
+			bool __isUpdatable() const noexcept;
 
 			[[nodiscard]]
 			bool __isRenderable() const noexcept;
+
+			[[nodiscard]]
+			bool __isPresentable() const noexcept;
 
 			void __update();
 			void __render() noexcept;
@@ -111,10 +131,13 @@ namespace HyperFast
 			void __initListeners() noexcept;
 			void __registerListeners() noexcept;
 			void __createSurface();
+			void __createPipelineFactory() noexcept;
+
+			void __resetSwapchainDependencies() noexcept;
 
 			void __updateSwapchainDependencies();
 			void __updatePipelineDependencies();
-			void __updateCommandBuffers();
+			void __updateCommandBuffers(tf::Taskflow *const pTaskFlow);
 
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
@@ -122,8 +145,10 @@ namespace HyperFast
 			void __querySupportedSurfacePresentModes() noexcept;
 
 			void __createSwapchain();
+			void __createSwapchainImageViews();
 			void __createRenderPass();
 			void __createFramebuffer();
+			void __buildPipelines(tf::Subflow &subflow);
 
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
@@ -138,6 +163,14 @@ namespace HyperFast
 			void __onScreenUpdate();
 			void __onRender() noexcept;
 			void __onPresent() noexcept;
+
+			//constexpr void __swapResourceBundle() noexcept;
+
+			/*[[nodiscard]]
+			constexpr ResourceBundle &__getFrontResourceBundle() noexcept;
+
+			[[nodiscard]]
+			constexpr ResourceBundle &__getBackResourceBundle() noexcept;*/
 		};
 
 		ScreenManager(
@@ -163,4 +196,20 @@ namespace HyperFast
 		CommandSubmitter &__commandSubmitter;
 		Infra::TemporalDeleter &__resourceDeleter;
 	};
+
+	/*constexpr void ScreenManager::ScreenImpl::__swapResourceBundle() noexcept
+	{
+		__resourceBundleCursor = ((__resourceBundleCursor + 1ULL) % std::size(__resourceBundleChain));
+	}*/
+
+	/*constexpr ScreenManager::ScreenImpl::ResourceBundle &ScreenManager::ScreenImpl::__getFrontResourceBundle() noexcept
+	{
+		return __resourceBundleChain[__resourceBundleCursor];
+	}
+
+	constexpr ScreenManager::ScreenImpl::ResourceBundle &ScreenManager::ScreenImpl::__getBackResourceBundle() noexcept
+	{
+		const size_t backCursor{ (__resourceBundleCursor + 1ULL) % std::size(__resourceBundleChain) };
+		return __resourceBundleChain[backCursor];
+	}*/
 }

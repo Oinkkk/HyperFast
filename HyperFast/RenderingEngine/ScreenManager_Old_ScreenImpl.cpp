@@ -56,18 +56,18 @@ namespace HyperFast
 				+= __pDrawcallIndirectBufferCreateEventListener;
 		}
 
-		__needToUpdatePipelineDependencies = true;
+		__pipelineDependencyDirty = true;
 	}
 
 	void ScreenManager_Old::ScreenImpl::__update()
 	{
-		if (__needToUpdateSwapchainDependencies)
+		if (__swapchainDependencDirty)
 			__updateSwapchainDependencies();
 
-		if (__needToUpdatePipelineDependencies)
+		if (__pipelineDependencyDirty)
 			__updatePipelineDependencies();
 
-		if (__needToUpdateCommandBuffers)
+		if (__commandBufferDirty)
 			__updateCommandBuffers();
 
 		if (__needToUpdateResource)
@@ -145,7 +145,7 @@ namespace HyperFast
 		if ((presentResult == VkResult::VK_SUBOPTIMAL_KHR) ||
 			(presentResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
-			__needToUpdateSwapchainDependencies = true;
+			__swapchainDependencDirty = true;
 		}
 
 		if (presentResult == VkResult::VK_SUCCESS)
@@ -291,9 +291,9 @@ namespace HyperFast
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSwapchainDependencies();
 
-		__needToUpdateSwapchainDependencies = false;
-		__needToUpdatePipelineDependencies = false;
-		__needToUpdateCommandBuffers = false;
+		__swapchainDependencDirty = false;
+		__pipelineDependencyDirty = false;
+		__commandBufferDirty = false;
 		__needToUpdateResource = true;
 		__needToRender = false;
 	}
@@ -303,8 +303,8 @@ namespace HyperFast
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdatePipelineDependencies();
 
-		__needToUpdatePipelineDependencies = false;
-		__needToUpdateCommandBuffers = false;
+		__pipelineDependencyDirty = false;
+		__commandBufferDirty = false;
 		__needToUpdateResource = true;
 	}
 
@@ -313,7 +313,7 @@ namespace HyperFast
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateCommandBuffer();
 
-		__needToUpdateCommandBuffers = false;
+		__commandBufferDirty = false;
 		__needToUpdateResource = true;
 	}
 
@@ -504,7 +504,7 @@ namespace HyperFast
 			std::make_unique<Vulkan::Semaphore>(__device, timelineCreateInfo);
 	}
 
-	bool ScreenManager_Old::ScreenImpl::__isValid() const noexcept
+	bool ScreenManager_Old::ScreenImpl::__isUpdatable() const noexcept
 	{
 		if (__destroyed)
 			return false;
@@ -584,7 +584,7 @@ namespace HyperFast
 		if ((acquireResult == VkResult::VK_SUBOPTIMAL_KHR) ||
 			(acquireResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
-			__needToUpdateSwapchainDependencies = true;
+			__swapchainDependencDirty = true;
 		}
 
 		return false;
@@ -596,13 +596,13 @@ namespace HyperFast
 		if (resizingType == Win::Window::ResizingType::MINIMIZED)
 			return;
 
-		__needToUpdateSwapchainDependencies = true;
+		__swapchainDependencDirty = true;
 	}
 
 	void ScreenManager_Old::ScreenImpl::__onDrawcallMeshBufferChange(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateCommandBuffers = true;
+		__commandBufferDirty = true;
 
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);
@@ -617,7 +617,7 @@ namespace HyperFast
 	void ScreenManager_Old::ScreenImpl::__onDrawcallIndirectBufferCreate(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateCommandBuffers = true;
+		__commandBufferDirty = true;
 
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);
@@ -635,7 +635,7 @@ namespace HyperFast
 
 	void ScreenManager_Old::ScreenImpl::__onScreenUpdate()
 	{
-		if (!(__isValid()))
+		if (!(__isUpdatable()))
 			return;
 
 		__update();
@@ -646,7 +646,7 @@ namespace HyperFast
 		if (!__needToRender)
 			return;
 
-		if (!(__isValid()))
+		if (!(__isUpdatable()))
 			return;
 			
 		if (!(__isRenderable()))
@@ -660,7 +660,7 @@ namespace HyperFast
 		if (!__needToPresent)
 			return;
 
-		if (!(__isValid()))
+		if (!(__isUpdatable()))
 			return;
 
 		__present();

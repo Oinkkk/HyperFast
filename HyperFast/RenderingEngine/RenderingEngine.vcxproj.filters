@@ -46,14 +46,14 @@
     <Filter Include="Screen\Manager">
       <UniqueIdentifier>{d3063ed4-d584-47cb-811b-f270372cc5bf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Screen\Resource">
-      <UniqueIdentifier>{fed5750a-aace-4714-98db-6a2fa1790546}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SemaphoreDependency">
       <UniqueIdentifier>{19a48576-5f7e-4627-aace-d86b9d1cd6c0}</UniqueIdentifier>
     </Filter>
     <Filter Include="LifeCycle">
       <UniqueIdentifier>{4de44828-38c1-4e4f-806a-0e3ac6cfb99a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Screen\Manager\Resource">
+      <UniqueIdentifier>{fed5750a-aace-4714-98db-6a2fa1790546}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -118,7 +118,7 @@
       <Filter>CommandSubmitter</Filter>
     </ClCompile>
     <ClCompile Include="ScreenResource_Old.cpp">
-      <Filter>Screen\Resource</Filter>
+      <Filter>Screen\Manager\Resource</Filter>
     </ClCompile>
     <ClCompile Include="SemaphoreDependencyManager.cpp">
       <Filter>SemaphoreDependency</Filter>
@@ -216,7 +216,7 @@
       <Filter>BufferCopyManager</Filter>
     </ClInclude>
     <ClInclude Include="ScreenResource_Old.h">
-      <Filter>Screen\Resource</Filter>
+      <Filter>Screen\Manager\Resource</Filter>
     </ClInclude>
     <ClInclude Include="SemaphoreDependencyManager.h">
       <Filter>SemaphoreDependency</Filter>

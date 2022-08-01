@@ -2,8 +2,8 @@
 
 namespace HyperFast
 {
-	PipelineFactory::PipelineFactory(Vulkan::Device &device) noexcept :
-		__device{ device }
+	PipelineFactory::PipelineFactory(Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter) noexcept :
+		__device{ device }, __resourceDeleter{ resourceDeleter }
 	{
 		__createPipelineLayouts();
 		__createResource();
@@ -12,20 +12,21 @@ namespace HyperFast
 	PipelineFactory::~PipelineFactory() noexcept
 	{
 		__pResource = nullptr;
-		__pPipelineLayout = nullptr;
-	}
-
-	void PipelineFactory::build(const BuildParam &buildParam, tf::Subflow &subflow)
-	{
-		subflow.emplace([this, &buildParam]
-		{
-			__pResource->build(buildParam);
-		});
+		__resourceDeleter.reserve(__pPipelineLayout);
 	}
 
 	void PipelineFactory::reset() noexcept
 	{
 		__pResource->reset();
+	}
+
+	void PipelineFactory::build(const BuildParam &buildParam, tf::Subflow &subflow)
+	{
+		// TODO: shading type별로 resource 생성
+		subflow.emplace([this, &buildParam]
+		{
+			__pResource->build(buildParam);
+		});
 	}
 
 	VkPipeline PipelineFactory::get() noexcept
@@ -40,11 +41,12 @@ namespace HyperFast
 			.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
 		};
 
-		__pPipelineLayout = std::make_unique<Vulkan::PipelineLayout>(__device, createInfo);
+		__pPipelineLayout = new Vulkan::PipelineLayout{ __device, createInfo };
 	}
 
 	void PipelineFactory::__createResource() noexcept
 	{
-		__pResource = std::make_unique<PipelineResource>(__device, __pPipelineLayout->getHandle());
+		__pResource = std::make_unique<PipelineResource>(
+			__device, __resourceDeleter, __pPipelineLayout->getHandle());
 	}
 }

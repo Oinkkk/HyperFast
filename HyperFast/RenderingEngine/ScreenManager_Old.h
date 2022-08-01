@@ -83,9 +83,9 @@ namespace HyperFast
 			bool __imageAcquired{};
 			uint32_t __imageIdx{};
 
-			bool __needToUpdateSwapchainDependencies{ true };
-			bool __needToUpdatePipelineDependencies{};
-			bool __needToUpdateCommandBuffers{};
+			bool __swapchainDependencDirty{ true };
+			bool __pipelineDependencyDirty{};
+			bool __commandBufferDirty{};
 			bool __needToUpdateResource{};
 			bool __needToAdvanceResource{};
 
@@ -122,7 +122,7 @@ namespace HyperFast
 			constexpr void __advanceFrameCursor() noexcept;
 
 			[[nodiscard]]
-			bool __isValid() const noexcept;
+			bool __isUpdatable() const noexcept;
 
 			[[nodiscard]]
 			bool __isRenderable() const noexcept;

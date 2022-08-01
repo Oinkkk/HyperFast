@@ -5,8 +5,9 @@
 namespace HyperFast
 {
 	PipelineFactory::PipelineResource::PipelineResource(
-		Vulkan::Device &device, const VkPipelineLayout pipelineLayout) noexcept :
-		__device{ device }, __pipelineLayout{ pipelineLayout }
+		Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter,
+		const VkPipelineLayout pipelineLayout) noexcept :
+		__device{ device }, __resourceDeleter{ resourceDeleter }, __pipelineLayout{pipelineLayout}
 	{
 		__createShaderModules();
 		__createPipelineCache();
@@ -15,20 +16,20 @@ namespace HyperFast
 
 	PipelineFactory::PipelineResource::~PipelineResource() noexcept
 	{
-		reset();
-		__pPipelineCache = nullptr;
-		__pFragShader = nullptr;
-		__pVertexShader = nullptr;
-	}
-
-	void PipelineFactory::PipelineResource::build(const BuildParam &buildParam)
-	{
-		__buildPipeline(buildParam);
+		__resourceDeleter.reserve(__pVertexShader);
+		__resourceDeleter.reserve(__pFragShader);
+		__resourceDeleter.reserve(__pPipelineCache);
+		__resourceDeleter.reserve(__pPipeline);
 	}
 
 	void PipelineFactory::PipelineResource::reset() noexcept
 	{
-		__pPipeline = nullptr;
+		__resourceDeleter.reserve(__pPipeline);
+	}
+
+	void PipelineFactory::PipelineResource::build(const BuildParam &buildParam)
+	{
+		__buildPipelines(buildParam);
 	}
 
 	VkPipeline PipelineFactory::PipelineResource::getPipeline() noexcept
@@ -70,8 +71,8 @@ namespace HyperFast
 			.pCode = fragShader.data()
 		};
 
-		__pVertexShader = std::make_unique<Vulkan::ShaderModule>(__device, vertexShaderCreateInfo);
-		__pFragShader = std::make_unique<Vulkan::ShaderModule>(__device, fragShaderCreateInfo);
+		__pVertexShader = new Vulkan::ShaderModule{ __device, vertexShaderCreateInfo };
+		__pFragShader = new Vulkan::ShaderModule{ __device, fragShaderCreateInfo };
 	}
 
 	void PipelineFactory::PipelineResource::__createPipelineCache()
@@ -82,7 +83,7 @@ namespace HyperFast
 			.flags = VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT
 		};
 
-		__pPipelineCache = std::make_unique<Vulkan::PipelineCache>(__device, createInfo);
+		__pPipelineCache = new Vulkan::PipelineCache{ __device, createInfo };
 	}
 
 	void PipelineFactory::PipelineResource::__populatePipelineCreateInfos() noexcept
@@ -150,7 +151,7 @@ namespace HyperFast
 		__vertexInputInfo.pVertexAttributeDescriptions = __vertexAttribDescs.data();
 	}
 
-	void PipelineFactory::PipelineResource::__buildPipeline(const BuildParam &buildParam)
+	void PipelineFactory::PipelineResource::__buildPipelines(const BuildParam &buildParam)
 	{
 		static constexpr VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
 		{
@@ -242,7 +243,6 @@ namespace HyperFast
 			.basePipelineIndex = -1
 		};
 
-		__pPipeline = std::make_unique<Vulkan::Pipeline>(
-			__device, __pPipelineCache->getHandle(), createInfo);
+		__pPipeline = new Vulkan::Pipeline{ __device, __pPipelineCache->getHandle(), createInfo };
 	}
 }

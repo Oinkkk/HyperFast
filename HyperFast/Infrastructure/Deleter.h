@@ -2,6 +2,7 @@
 
 #include "Deletable.h"
 #include <vector>
+#include <unordered_set>
 
 namespace Infra
 {
@@ -14,6 +15,7 @@ namespace Infra
 		void commit();
 
 	private:
-		std::vector<Deletable *> __deleteReserved;
+		std::vector<Deletable *> __reservationQueue;
+		std::unordered_set<Deletable *> __reservedObjects;
 	};
 }

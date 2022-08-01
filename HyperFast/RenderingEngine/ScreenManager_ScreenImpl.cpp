@@ -17,6 +17,7 @@ namespace HyperFast
 		__initListeners();
 		__registerListeners();
 		__createSurface();
+		__createPipelineFactory();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
@@ -41,41 +42,70 @@ namespace HyperFast
 			pNewDrawcall->getMeshBufferChangeEvent() += __pDrawcallMeshBufferChangeEventListener;
 			pNewDrawcall->getIndirectBufferUpdateEvent() += __pDrawcallIndirectBufferUpdateEventListener;
 			pNewDrawcall->getIndirectBufferCreateEvent() += __pDrawcallIndirectBufferCreateEventListener;
+			__allDrawcallSegmentDirty = true;
 		}
 
 		pCurDrawcall = pNewDrawcall;
-		__needToUpdatePipelineDependencies = true;
+		__pipelineDependencyDirty = true;
 	}
 
-	bool ScreenManager::ScreenImpl::__isValid() const noexcept
+	bool ScreenManager::ScreenImpl::__isUpdateInFlight() const noexcept
+	{
+		using namespace std;
+
+		if (__updateJob.valid())
+			return (__updateJob.wait_for(0s) != std::future_status::ready);
+
+		return false;
+	}
+
+	bool ScreenManager::ScreenImpl::__isUpdatable() const noexcept
 	{
 		if (__destroyed)
 			return false;
 
 		const bool validSize{ __window.getWidth() && __window.getHeight() };
-		return validSize;
+		if (!validSize)
+			return false;
+
+		if (__isUpdateInFlight())
+			return false;
+
+		return true;
 	}
 
 	bool ScreenManager::ScreenImpl::__isRenderable() const noexcept
 	{
-		if (!(__isValid()))
+		if (!(__isUpdatable()))
 			return false;
 
-		// TODO: 추가 로직
+		if (!__needToRender)
+			return false;
+
+		return true;
+	}
+
+	bool ScreenManager::ScreenImpl::__isPresentable() const noexcept
+	{
+		if (!(__isUpdatable()))
+			return false;
+
+		if (!__needToPresent)
+			return false;
 
 		return true;
 	}
 
 	void ScreenManager::ScreenImpl::__update()
 	{
-		if (__needToUpdateSwapchainDependencies)
+		if (__swapchainDependencDirty)
 			__updateSwapchainDependencies();
 
-		if (__needToUpdatePipelineDependencies)
+		if (__pipelineDependencyDirty)
 			__updatePipelineDependencies();
 
-		if (__needToUpdateCommandBuffers)
-			__updateCommandBuffers();
+		if (__commandBufferDirty)
+			__updateCommandBuffers(nullptr);
 	}
 
 	void ScreenManager::ScreenImpl::__render() noexcept
@@ -106,9 +136,7 @@ namespace HyperFast
 		__pRenderListener = nullptr;
 		__pPresentListener = nullptr;
 
-		__resourceDeleter.reserve(__pFramebuffer);
-		__resourceDeleter.reserve(__pRenderPass);
-		__resourceDeleter.reserve(__pSwapchain);
+		__resetSwapchainDependencies();
 		__resourceDeleter.reserve(__pSurface);
 
 		__destroyed = true;
@@ -175,7 +203,24 @@ namespace HyperFast
 		};
 
 		__pSurface = new Vulkan::Surface{ __instance, createInfo };
-		__needToUpdateSwapchainDependencies = true;
+		__swapchainDependencDirty = true;
+	}
+
+	void ScreenManager::ScreenImpl::__createPipelineFactory() noexcept
+	{
+		__pPipelineFactory = std::make_unique<PipelineFactory>(__device, __resourceDeleter);
+	}
+
+	void ScreenManager::ScreenImpl::__resetSwapchainDependencies() noexcept
+	{
+		__resourceDeleter.reserve(__pFramebuffer);
+		__resourceDeleter.reserve(__pRenderPass);
+
+		for (Vulkan::ImageView *const pImageView : __swapChainImageViews)
+			__resourceDeleter.reserve(pImageView);
+
+		__swapChainImageViews.clear();
+		__resourceDeleter.reserve(__pSwapchain);
 	}
 
 	void ScreenManager::ScreenImpl::__updateSwapchainDependencies()
@@ -185,29 +230,39 @@ namespace HyperFast
 		__querySupportedSurfaceFormats();
 		__querySupportedSurfacePresentModes();
 
-		__resourceDeleter.reserve(__pFramebuffer);
-		__resourceDeleter.reserve(__pRenderPass);
-		__resourceDeleter.reserve(__pSwapchain);
+		__resetSwapchainDependencies();
 
 		__createSwapchain();
+		__createSwapchainImageViews();
 		__createRenderPass();
 		__createFramebuffer();
 
 		__updatePipelineDependencies();
-		__needToUpdateSwapchainDependencies = false;
+		__swapchainDependencDirty = false;
 	}
 
 	void ScreenManager::ScreenImpl::__updatePipelineDependencies()
 	{
-		// TODO: 파이프라인 업데이트
-		__updateCommandBuffers();
-		__needToUpdatePipelineDependencies = false;
+		__pPipelineFactory->reset();
+
+		tf::Taskflow taskflow;
+		taskflow.emplace([this](tf::Subflow &subflow)
+		{
+			__buildPipelines(subflow);
+		});
+
+		__updateCommandBuffers(&taskflow);
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		__updateJob = executor.run(std::move(taskflow));
+
+		__pipelineDependencyDirty = false;
 	}
 
-	void ScreenManager::ScreenImpl::__updateCommandBuffers()
+	void ScreenManager::ScreenImpl::__updateCommandBuffers(tf::Taskflow *const pTaskFlow)
 	{
 		// TODO: 커맨드 버퍼 업데이트
-		__needToUpdateCommandBuffers = false;
+		__commandBufferDirty = false;
 		__needToRender = true;
 	}
 
@@ -334,6 +389,37 @@ namespace HyperFast
 		__pSwapchain->vkGetSwapchainImagesKHR(&numImages, __swapChainImages.data());
 	}
 
+	void ScreenManager::ScreenImpl::__createSwapchainImageViews()
+	{
+		for (const VkImage swapchainImage : __swapChainImages)
+		{
+			const VkImageViewCreateInfo createInfo
+			{
+				.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+				.image = swapchainImage,
+				.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
+				.format = __swapchainFormat,
+				.components =
+				{
+					.r = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+					.g = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+					.b = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+					.a = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY
+				},
+				.subresourceRange =
+				{
+					.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,
+					.baseMipLevel = 0U,
+					.levelCount = 1U,
+					.baseArrayLayer = 0U,
+					.layerCount = 1U
+				}
+			};
+
+			__swapChainImageViews.emplace_back(new Vulkan::ImageView{ __device, createInfo });
+		}
+	}
+
 	void ScreenManager::ScreenImpl::__createRenderPass()
 	{
 		std::vector<VkAttachmentDescription2> attachments;
@@ -429,19 +515,41 @@ namespace HyperFast
 		__pFramebuffer = new Vulkan::Framebuffer{ __device, createInfo };
 	}
 
+	void ScreenManager::ScreenImpl::__buildPipelines(tf::Subflow &subflow)
+	{
+		__pipelineBuildParam.renderPass = __pRenderPass->getHandle();
+		__pipelineBuildParam.viewport =
+		{
+			.x = 0.0f,
+			.y = 0.0f,
+			.width = float(__swapchainExtent.width),
+			.height = float(__swapchainExtent.height),
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+
+		__pipelineBuildParam.scissor =
+		{
+			.offset = { 0, 0 },
+			.extent = __swapchainExtent
+		};
+
+		__pPipelineFactory->build(__pipelineBuildParam, subflow);
+	}
+
 	void ScreenManager::ScreenImpl::__onWindowResize(
 		Win::Window &window, const Win::Window::ResizingType resizingType) noexcept
 	{
 		if (resizingType == Win::Window::ResizingType::MINIMIZED)
 			return;
 
-		__needToUpdateSwapchainDependencies = true;
+		__swapchainDependencDirty = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateCommandBuffers = true;
+		__commandBufferDirty = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(
@@ -453,7 +561,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateCommandBuffers = true;
+		__commandBufferDirty = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept
@@ -468,7 +576,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__onScreenUpdate()
 	{
-		if (!(__isValid()))
+		if (!(__isUpdatable()))
 			return;
 
 		__update();
@@ -476,9 +584,6 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__onRender() noexcept
 	{
-		if (!__needToRender)
-			return;
-
 		if (!(__isRenderable()))
 			return;
 
@@ -487,10 +592,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__onPresent() noexcept
 	{
-		if (!__needToPresent)
-			return;
-
-		if (!(__isValid()))
+		if (!(__isPresentable()))
 			return;
 
 		__present();
