@@ -11,7 +11,7 @@ namespace Infra
 		TemporalDeleter() noexcept;
 		~TemporalDeleter() noexcept;
 
-		void advanceTimestamp() noexcept;
+		void advance() noexcept;
 
 		void reserve(Deletable *const pDeletable) noexcept;
 		void commit(const size_t timestamp);

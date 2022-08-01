@@ -12,7 +12,6 @@ namespace HyperFast
 		__logger{ logger }, __appName{ appName }, __engineName{ engineName }
 	{
 		__initListeners();
-		__registerListeners();
 		__getInstanceVersion();
 		__checkInstanceVersionSupport();
 
@@ -37,6 +36,8 @@ namespace HyperFast
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
+
+		__registerListeners();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
@@ -92,18 +93,15 @@ namespace HyperFast
 	{
 		__pSubmitEventListener = Infra::EventListener<>::make([this]
 		{
-			__pCommandSubmitter->submit();
+			const bool validSubmission{ __pCommandSubmitter->submit() };
+			if (validSubmission)
+				__pResourceDeleter->advance();
 		});
 
-		__pGCEventListener = Infra::EventListener<>::make([this]
+		__pSubmitFinishEventListener = Infra::EventListener<size_t>::make([this](const size_t timestamp)
 		{
+			__pResourceDeleter->commit(timestamp);
 		});
-	}
-
-	void RenderingEngine::__registerListeners() noexcept
-	{
-		__lifeCycle.getSignalEvent(LifeCycleType::SUBMIT) += __pSubmitEventListener;
-		__lifeCycle.getSignalEvent(LifeCycleType::GARBAGE_COLLECT) += __pGCEventListener;
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -409,6 +407,12 @@ namespace HyperFast
 	void RenderingEngine::__createBufferManager() noexcept
 	{
 		__pBufferManager = std::make_unique<BufferManager>(*__pDevice, *__pResourceDeleter);
+	}
+
+	void RenderingEngine::__registerListeners() noexcept
+	{
+		__lifeCycle.getSignalEvent(LifeCycleType::SUBMIT) += __pSubmitEventListener;
+		__pCommandSubmitter->getFinishEvent() += __pSubmitFinishEventListener;
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(

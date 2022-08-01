@@ -5,6 +5,7 @@
 #include "../Vulkan/Queue.h"
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
+#include "../Vulkan/Swapchain.h"
 #include "LifeCycle.h"
 #include "CommandSubmitter.h"
 #include "Drawcall.h"
@@ -51,6 +52,7 @@ namespace HyperFast
 			// Internal params
 
 			std::unique_ptr<Vulkan::Surface> __pSurface;
+			Vulkan::Swapchain *__pSwapchain{};
 
 
 			// Flags

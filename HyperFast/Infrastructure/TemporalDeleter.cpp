@@ -17,7 +17,7 @@ namespace Infra
 			delete pDeleter;
 	}
 
-	void TemporalDeleter::advanceTimestamp() noexcept
+	void TemporalDeleter::advance() noexcept
 	{
 		__pendingDeleters.emplace_back(__pCurrentDeleter);
 

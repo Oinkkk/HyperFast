@@ -70,12 +70,11 @@ namespace HyperFast
 		std::unique_ptr<Infra::TemporalDeleter> __pResourceDeleter;
 
 		std::shared_ptr<Infra::EventListener<>> __pSubmitEventListener;
-		std::shared_ptr<Infra::EventListener<>> __pGCEventListener;
+		std::shared_ptr<Infra::EventListener<size_t>> __pSubmitFinishEventListener;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 
 		void __initListeners() noexcept;
-		void __registerListeners() noexcept;
 		void __getInstanceVersion() noexcept;
 		void __checkInstanceVersionSupport() const;
 		void __populateDebugMessengerCreateInfo() noexcept;
@@ -93,6 +92,8 @@ namespace HyperFast
 		void __createScreenManager() noexcept;
 		void __createMemoryManager() noexcept;
 		void __createBufferManager() noexcept;
+
+		void __registerListeners() noexcept;
 
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

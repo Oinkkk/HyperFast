@@ -34,7 +34,9 @@
     <ClInclude Include="Deletable.h">
       <Filter>Deletable</Filter>
     </ClInclude>
-    <ClInclude Include="TemporalDeleter.h" />
+    <ClInclude Include="TemporalDeleter.h">
+      <Filter>Deletable</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Unique">

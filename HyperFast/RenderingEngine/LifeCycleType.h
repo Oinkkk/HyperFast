@@ -6,7 +6,7 @@ namespace HyperFast
 {
 	enum class LifeCycleType : uint32_t
 	{
-		START,
+		START = 0U,
 
 		// buffer, image 등 업데이트 command submit 요청
 		DATA_UPDATE,
@@ -22,9 +22,6 @@ namespace HyperFast
 
 		// swapchain present
 		PRESENT,
-
-		// 사용 만료된 리소스 삭제
-		GARBAGE_COLLECT,
 
 		END
 	};

@@ -5,8 +5,8 @@
 #include "SubmitLayerType.h"
 #include <map>
 #include <vector>
-#include <memory>
-#include <future>
+#include <queue>
+#include "../Infrastructure/Event.h"
 
 namespace HyperFast
 {
@@ -14,6 +14,7 @@ namespace HyperFast
 	{
 	public:
 		CommandSubmitter(Vulkan::Device &device, Vulkan::Queue &queue) noexcept;
+		~CommandSubmitter() noexcept;
 
 		void enqueue(
 			const SubmitLayerType layerType,
@@ -24,13 +25,38 @@ namespace HyperFast
 			const uint32_t signalSemaphoreInfoCount,
 			const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
 
-		void submit() noexcept;
+		bool submit();
+
+		[[nodiscard]]
+		constexpr Infra::EventView<size_t> &getFinishEvent() noexcept;
 
 	private:
 		Vulkan::Device &__device;
 		Vulkan::Queue &__queue;
 
-		std::map<SubmitLayerType, std::vector<VkSubmitInfo2>> __layer2InfosMap;
+		std::vector<VkSubmitInfo2> __submitInfos[NUM_SUBMIT_LAYER_TYPES];
 		std::vector<VkSubmitInfo2> __infoStream;
+
+		size_t __timestamp{};
+		std::deque<Vulkan::Fence *> __idleFences;
+		std::deque<std::pair<Vulkan::Fence *, size_t>> __pendingFences;
+
+		Infra::Event<size_t> __finishEvent;
+
+		[[nodiscard]]
+		bool __submit();
+		void __flush() noexcept;
+
+		[[nodiscard]]
+		Vulkan::Fence *__getIdleFence();
+
+		[[nodiscard]]
+		Vulkan::Fence *__createFence();
 	};
+
+	constexpr Infra::EventView<size_t> &CommandSubmitter::getFinishEvent() noexcept
+	{
+		return __finishEvent;
+
+	}
 }
