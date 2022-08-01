@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		Swapchain(Device &device, const VkSwapchainCreateInfoKHR &createInfo);
-		~Swapchain() noexcept;
+		virtual ~Swapchain() noexcept;
 
 		VkResult vkGetSwapchainImagesKHR(
 			uint32_t *const pSwapchainImageCount, VkImage *const pSwapchainImages) noexcept;

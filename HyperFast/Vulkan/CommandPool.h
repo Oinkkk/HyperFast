@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		CommandPool(Device &device, const VkCommandPoolCreateInfo &createInfo);
-		~CommandPool() noexcept;
+		virtual ~CommandPool() noexcept;
 
 		VkResult vkResetCommandPool(const VkCommandPoolResetFlags flags) noexcept;
 		VkResult vkAllocateCommandBuffers(

@@ -1,35 +1,35 @@
-#include "Memory.h"
+#include "VulkanMemory.h"
 #include <exception>
 
 namespace Vulkan
 {
-	Memory::Memory(Device &device, const VkMemoryAllocateInfo &allocInfo) :
+	VulkanMemory::VulkanMemory(Device &device, const VkMemoryAllocateInfo &allocInfo) :
 		Handle{ __alloc(device, allocInfo) }, __device{ device }
 	{}
 
-	Memory::~Memory() noexcept
+	VulkanMemory::~VulkanMemory() noexcept
 	{
 		__destroy();
 	}
 
-	VkResult Memory::vkMapMemory(
+	VkResult VulkanMemory::vkMapMemory(
 		const VkDeviceSize offset, const VkDeviceSize size,
 		const VkMemoryMapFlags flags, void **const ppData) noexcept
 	{
 		return __device.vkMapMemory(getHandle(), offset, size, flags, ppData);
 	}
 
-	void Memory::vkUnmapMemory() noexcept
+	void VulkanMemory::vkUnmapMemory() noexcept
 	{
 		__device.vkUnmapMemory(getHandle());
 	}
 
-	void Memory::__destroy() noexcept
+	void VulkanMemory::__destroy() noexcept
 	{
 		__device.vkFreeMemory(getHandle(), nullptr);
 	}
 
-	VkDeviceMemory Memory::__alloc(Device &device, const VkMemoryAllocateInfo &allocInfo)
+	VkDeviceMemory VulkanMemory::__alloc(Device &device, const VkMemoryAllocateInfo &allocInfo)
 	{
 		VkDeviceMemory retVal{};
 		device.vkAllocateMemory(&allocInfo, nullptr, &retVal);

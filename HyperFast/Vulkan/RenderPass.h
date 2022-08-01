@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		RenderPass(Device &device, const VkRenderPassCreateInfo2 &createInfo);
-		~RenderPass() noexcept;
+		virtual ~RenderPass() noexcept;
 
 	private:
 		Device &__device;

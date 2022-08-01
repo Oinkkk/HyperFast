@@ -4,11 +4,11 @@
 
 namespace Vulkan
 {
-	class Memory final : public Handle<VkDeviceMemory>
+	class VulkanMemory final : public Handle<VkDeviceMemory>
 	{
 	public:
-		Memory(Device &device, const VkMemoryAllocateInfo &allocInfo);
-		~Memory() noexcept;
+		VulkanMemory(Device &device, const VkMemoryAllocateInfo &allocInfo);
+		virtual ~VulkanMemory() noexcept;
 
 		VkResult vkMapMemory(
 			const VkDeviceSize offset, const VkDeviceSize size,

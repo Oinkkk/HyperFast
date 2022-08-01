@@ -4,7 +4,7 @@
 #include <memory>
 #include <optional>
 #include <map>
-#include "../Vulkan/Memory.h"
+#include "../Vulkan/VulkanMemory.h"
 #include "../Infrastructure/TemporalDeleter.h"
 
 namespace HyperFast
@@ -50,7 +50,7 @@ namespace HyperFast
 			const uint32_t __memoryTypeIndex;
 			const VkDeviceSize __size;
 
-			std::unique_ptr<Vulkan::Memory> __pBank{};
+			std::unique_ptr<Vulkan::VulkanMemory> __pBank{};
 			std::map<VkDeviceAddress, VkDeviceSize> __segmentMap;
 
 			void *__mapped{};

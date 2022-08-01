@@ -94,11 +94,16 @@ namespace HyperFast
 		{
 			__pCommandSubmitter->submit();
 		});
+
+		__pGCEventListener = Infra::EventListener<>::make([this]
+		{
+		});
 	}
 
 	void RenderingEngine::__registerListeners() noexcept
 	{
 		__lifeCycle.getSignalEvent(LifeCycleType::SUBMIT) += __pSubmitEventListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::GARBAGE_COLLECT) += __pGCEventListener;
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -392,7 +397,7 @@ namespace HyperFast
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(
 			*__pInstance, *__pPhysicalDevice, __queueFamilyIndex,
-			*__pDevice, *__pQueue, __lifeCycle, *__pCommandSubmitter);
+			*__pDevice, *__pQueue, __lifeCycle, *__pCommandSubmitter, *__pResourceDeleter);
 	}
 
 	void RenderingEngine::__createMemoryManager() noexcept

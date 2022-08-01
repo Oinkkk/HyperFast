@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		PipelineCache(Device &device, const VkPipelineCacheCreateInfo &createInfo);
-		~PipelineCache() noexcept;
+		virtual ~PipelineCache() noexcept;
 
 	private:
 		Device &__device;

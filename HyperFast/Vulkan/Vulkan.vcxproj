@@ -16,9 +16,9 @@
     <ClInclude Include="DebugUtilsMessenger.h" />
     <ClInclude Include="DescriptorSetLayout.h" />
     <ClInclude Include="Surface.h" />
-    <ClInclude Include="Memory.h" />
+    <ClInclude Include="VulkanMemory.h" />
     <ClInclude Include="Fence.h" />
-    <ClInclude Include="Buffer.h" />
+    <ClInclude Include="VulkanBuffer.h" />
     <ClInclude Include="Semaphore.h" />
     <ClInclude Include="Pipeline.h" />
     <ClInclude Include="PipelineCache.h" />
@@ -42,9 +42,9 @@
     <ClCompile Include="DebugUtilsMessenger.cpp" />
     <ClCompile Include="DescriptorSetLayout.cpp" />
     <ClCompile Include="Surface.cpp" />
-    <ClCompile Include="Memory.cpp" />
+    <ClCompile Include="VulkanMemory.cpp" />
     <ClCompile Include="Fence.cpp" />
-    <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="VulkanBuffer.cpp" />
     <ClCompile Include="Semaphore.cpp" />
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="PipelineCache.cpp" />

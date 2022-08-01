@@ -7,8 +7,8 @@ namespace Vulkan
 	class PhysicalDevice final : public Handle<VkPhysicalDevice>
 	{
 	public:
-		constexpr PhysicalDevice(Instance &instance, const VkPhysicalDevice handle) noexcept;
-		~PhysicalDevice() noexcept = default;
+		PhysicalDevice(Instance &instance, const VkPhysicalDevice handle) noexcept;
+		virtual ~PhysicalDevice() noexcept = default;
 
 		void vkGetPhysicalDeviceProperties2(
 			VkPhysicalDeviceProperties2 *const pProperties) const noexcept;
@@ -46,8 +46,4 @@ namespace Vulkan
 	private:
 		Instance &__instance;
 	};
-
-	constexpr PhysicalDevice::PhysicalDevice(Instance &instance, const VkPhysicalDevice handle) noexcept :
-		Handle{ handle }, __instance { instance }
-	{}
 }

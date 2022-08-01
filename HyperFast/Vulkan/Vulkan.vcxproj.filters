@@ -126,10 +126,10 @@
     <ClInclude Include="Fence.h">
       <Filter>Fence</Filter>
     </ClInclude>
-    <ClInclude Include="Buffer.h">
+    <ClInclude Include="VulkanBuffer.h">
       <Filter>Buffer</Filter>
     </ClInclude>
-    <ClInclude Include="Memory.h">
+    <ClInclude Include="VulkanMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="CommandBuffer.h">
@@ -194,10 +194,10 @@
     <ClCompile Include="Fence.cpp">
       <Filter>Fence</Filter>
     </ClCompile>
-    <ClCompile Include="Buffer.cpp">
+    <ClCompile Include="VulkanBuffer.cpp">
       <Filter>Buffer</Filter>
     </ClCompile>
-    <ClCompile Include="Memory.cpp">
+    <ClCompile Include="VulkanMemory.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
     <ClCompile Include="CommandBuffer.cpp">

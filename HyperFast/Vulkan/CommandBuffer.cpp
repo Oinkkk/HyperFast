@@ -1,8 +1,11 @@
 #include "CommandBuffer.h"
-#include <exception>
 
 namespace Vulkan
 {
+	CommandBuffer::CommandBuffer(Device &device, const VkCommandBuffer handle) noexcept :
+		Handle{ handle }, __device{ device }
+	{}
+
 	VkResult CommandBuffer::vkBeginCommandBuffer(
 		const VkCommandBufferBeginInfo *const pBeginInfo) noexcept
 	{

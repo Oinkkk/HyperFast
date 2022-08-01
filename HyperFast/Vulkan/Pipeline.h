@@ -11,7 +11,7 @@ namespace Vulkan
 			Device &device, const VkPipelineCache pipelineCache,
 			const VkGraphicsPipelineCreateInfo &createInfo);
 
-		~Pipeline() noexcept;
+		virtual ~Pipeline() noexcept;
 
 	private:
 		Device &__device;

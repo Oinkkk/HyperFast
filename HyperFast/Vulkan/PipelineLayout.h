@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		PipelineLayout(Device &device, const VkPipelineLayoutCreateInfo &createInfo);
-		~PipelineLayout() noexcept;
+		virtual ~PipelineLayout() noexcept;
 
 	private:
 		Device &__device;

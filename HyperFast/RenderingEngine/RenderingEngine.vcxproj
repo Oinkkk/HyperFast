@@ -29,7 +29,8 @@
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="ScreenManager.h" />
-    <ClInclude Include="ScreenResource.h" />
+    <ClInclude Include="ScreenManager_Old.h" />
+    <ClInclude Include="ScreenResource_Old.h" />
     <ClInclude Include="SemaphoreDependency.h" />
     <ClInclude Include="SemaphoreDependencyCluster.h" />
     <ClInclude Include="SemaphoreDependencyManager.h" />
@@ -62,8 +63,10 @@
     <ClCompile Include="RenderingEngine.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="ScreenManager.cpp" />
+    <ClCompile Include="ScreenManager_Old.cpp" />
     <ClCompile Include="ScreenManager_ScreenImpl.cpp" />
-    <ClCompile Include="ScreenResource.cpp" />
+    <ClCompile Include="ScreenManager_Old_ScreenImpl.cpp" />
+    <ClCompile Include="ScreenResource_Old.cpp" />
     <ClCompile Include="SemaphoreDependency.cpp" />
     <ClCompile Include="SemaphoreDependencyManager.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />

@@ -50,7 +50,7 @@ namespace HyperFast
 			.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE
 		};
 
-		__pBuffer = std::make_unique<Vulkan::Buffer>(__device, createInfo);
+		__pBuffer = std::make_unique<Vulkan::VulkanBuffer>(__device, createInfo);
 	}
 
 	void BufferManager::BufferImpl::__queryMemoryRequirements() noexcept

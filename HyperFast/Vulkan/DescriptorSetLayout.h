@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		DescriptorSetLayout(Device &device, const VkDescriptorSetLayoutCreateInfo &createInfo);
-		~DescriptorSetLayout() noexcept;
+		virtual ~DescriptorSetLayout() noexcept;
 
 	private:
 		Device &__device;

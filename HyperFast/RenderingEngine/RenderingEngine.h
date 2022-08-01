@@ -6,11 +6,9 @@
 #include "ShaderCompiler.h"
 #include "../Infrastructure/Environment.h"
 #include "Screen.h"
-#include "Drawcall.h"
 #include "../Vulkan/DebugUtilsMessenger.h"
 #include "CommandSubmitter.h"
 #include "LifeCycle.h"
-#include "../Infrastructure/TemporalDeleter.h"
 
 namespace HyperFast
 {
@@ -72,6 +70,7 @@ namespace HyperFast
 		std::unique_ptr<Infra::TemporalDeleter> __pResourceDeleter;
 
 		std::shared_ptr<Infra::EventListener<>> __pSubmitEventListener;
+		std::shared_ptr<Infra::EventListener<>> __pGCEventListener;
 
 		static constexpr inline std::string_view VK_KHRONOS_VALIDATION_LAYER_NAME{ "VK_LAYER_KHRONOS_validation" };
 

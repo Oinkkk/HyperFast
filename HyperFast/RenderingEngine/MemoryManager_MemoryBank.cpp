@@ -81,7 +81,7 @@ namespace HyperFast
 			.memoryTypeIndex = __memoryTypeIndex
 		};
 
-		__pBank = std::make_unique<Vulkan::Memory>(__device, allocInfo);
+		__pBank = std::make_unique<Vulkan::VulkanMemory>(__device, allocInfo);
 	}
 
 	void MemoryManager::MemoryBank::__unmap() noexcept

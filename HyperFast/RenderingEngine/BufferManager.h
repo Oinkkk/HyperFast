@@ -3,7 +3,7 @@
 #include "../Infrastructure/Deleter.h"
 #include "Memory.h"
 #include <memory>
-#include "../Vulkan/Buffer.h"
+#include "../Vulkan/VulkanBuffer.h"
 #include "SemaphoreDependencyCluster.h"
 #include "../Infrastructure/Event.h"
 
@@ -50,7 +50,7 @@ namespace HyperFast
 			const VkDeviceSize __size;
 			const VkBufferUsageFlags __usage;
 
-			std::unique_ptr<Vulkan::Buffer> __pBuffer;
+			std::unique_ptr<Vulkan::VulkanBuffer> __pBuffer;
 			VkMemoryRequirements __memRequirements{};
 
 			std::shared_ptr<Memory> __pMemory;

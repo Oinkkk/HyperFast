@@ -1,4 +1,4 @@
-﻿#include "ScreenResource.h"
+﻿#include "ScreenResource_Old.h"
 
 namespace HyperFast
 {

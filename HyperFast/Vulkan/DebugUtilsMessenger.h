@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		DebugUtilsMessenger(Instance &instance, const VkDebugUtilsMessengerCreateInfoEXT &createInfo);
-		~DebugUtilsMessenger() noexcept;
+		virtual ~DebugUtilsMessenger() noexcept;
 
 	private:
 		Instance &__instance;

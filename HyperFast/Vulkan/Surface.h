@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		Surface(Instance &instance, const VkWin32SurfaceCreateInfoKHR &createInfo);
-		~Surface() noexcept;
+		virtual ~Surface() noexcept;
 
 	private:
 		Instance &__instance;

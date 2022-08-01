@@ -11,7 +11,7 @@ namespace Vulkan
 			Instance &instance, PhysicalDevice &physicalDevice,
 			const VkDeviceCreateInfo &createInfo);
 
-		~Device() noexcept;
+		virtual ~Device() noexcept;
 
 		// Device
 		VkResult vkDeviceWaitIdle() noexcept;

@@ -34,6 +34,7 @@
     <ClInclude Include="Deletable.h">
       <Filter>Deletable</Filter>
     </ClInclude>
+    <ClInclude Include="TemporalDeleter.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Unique">
@@ -75,6 +76,9 @@
       <Filter>Environment</Filter>
     </ClCompile>
     <ClCompile Include="Deleter.cpp">
+      <Filter>Deletable</Filter>
+    </ClCompile>
+    <ClCompile Include="TemporalDeleter.cpp">
       <Filter>Deletable</Filter>
     </ClCompile>
   </ItemGroup>

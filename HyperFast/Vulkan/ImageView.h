@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		ImageView(Device &device, const VkImageViewCreateInfo &createInfo);
-		~ImageView() noexcept;
+		virtual ~ImageView() noexcept;
 
 	private:
 		Device &__device;

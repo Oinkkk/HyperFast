@@ -2,6 +2,10 @@
 
 namespace Vulkan
 {
+	PhysicalDevice::PhysicalDevice(Instance &instance, const VkPhysicalDevice handle) noexcept :
+		Handle{ handle }, __instance{ instance }
+	{}
+
 	void PhysicalDevice::vkGetPhysicalDeviceProperties2(
 		VkPhysicalDeviceProperties2 *const pProperties) const noexcept
 	{

@@ -8,6 +8,7 @@ namespace Vulkan
 	{
 	public:
 		Queue(Device &device, const uint32_t queueFamilyIndex, const uint32_t queueIndex) noexcept;
+		virtual ~Queue() noexcept = default;
 
 		VkResult vkQueueWaitIdle() noexcept;
 

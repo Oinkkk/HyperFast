@@ -1,8 +1,8 @@
-﻿#include "ScreenManager.h"
+﻿#include "ScreenManager_Old.h"
 
 namespace HyperFast
 {
-	ScreenManager::ScreenManager(
+	ScreenManager_Old::ScreenManager_Old(
 		Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 		const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device, Vulkan::Queue &queue,
 		LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter,
@@ -13,10 +13,10 @@ namespace HyperFast
 		__resourceDeleter{ resourceDeleter }
 	{}
 
-	std::unique_ptr<ScreenManager::ScreenImpl> ScreenManager::create(Win::Window &window) noexcept
+	std::unique_ptr<ScreenManager_Old::ScreenImpl> ScreenManager_Old::create(Win::Window &window) noexcept
 	{
 		return std::make_unique<ScreenImpl>(
 			__instance, __physicalDevice, __queueFamilyIndex,
-			__device, __queue, __lifeCycle, __commandSubmitter, __resourceDeleter, window);
+			__device, __queue, window, __lifeCycle, __commandSubmitter, __resourceDeleter);
 	}
 }

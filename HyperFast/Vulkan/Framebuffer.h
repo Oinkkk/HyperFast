@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		Framebuffer(Device &device, const VkFramebufferCreateInfo &createInfo);
-		~Framebuffer() noexcept;
+		virtual ~Framebuffer() noexcept;
 
 	private:
 		Device &__device;

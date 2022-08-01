@@ -9,7 +9,7 @@ namespace Vulkan
 	{
 	public:
 		Instance(const VkInstanceCreateInfo &createInfo);
-		~Instance() noexcept;
+		virtual ~Instance() noexcept;
 
 		VkResult vkCreateDebugUtilsMessengerEXT(
 			const VkDebugUtilsMessengerCreateInfoEXT *const pCreateInfo,

@@ -1,13 +1,13 @@
 ﻿#pragma once
 
+#include "../Infrastructure/TemporalDeleter.h"
 #include "../Window/Window.h"
-#include "../Infrastructure/Logger.h"
 #include "../Vulkan/Queue.h"
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
-#include "ScreenResource.h"
 #include "LifeCycle.h"
 #include "CommandSubmitter.h"
+#include "Drawcall.h"
 
 namespace HyperFast
 {
@@ -20,8 +20,9 @@ namespace HyperFast
 			ScreenImpl(
 				Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 				const uint32_t queueFamilyIndex, Vulkan::Device &device,
-				Vulkan::Queue &queue, Win::Window &window,
-				LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter);
+				Vulkan::Queue &queue, LifeCycle &lifeCycle,
+				CommandSubmitter &commandSubmitter, Infra::TemporalDeleter &resourceDeleter,
+				Win::Window &window);
 
 			~ScreenImpl() noexcept;
 
@@ -37,10 +38,7 @@ namespace HyperFast
 
 			LifeCycle &__lifeCycle;
 			CommandSubmitter &__commandSubmitter;
-
-			std::unique_ptr<ScreenResource> __resourceChain[3];
-			size_t __resourceCursor{};
-			bool __resourceChainInit{};
+			Infra::TemporalDeleter &__resourceDeleter;
 
 			Win::Window &__window;
 			std::shared_ptr<Infra::EventListener<Win::Window &, Win::Window::ResizingType>> __pWindowResizeEventListener;
@@ -55,42 +53,10 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<>> __pRenderListener;
 			std::shared_ptr<Infra::EventListener<>> __pPresentListener;
 
-			std::unique_ptr<Vulkan::Surface> __pSurface;
-			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
-			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
-			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
-
-			std::unique_ptr<Vulkan::Swapchain> __pSwapchain;
-			std::unique_ptr<Vulkan::Swapchain> __pOldSwapchain;
-			ScreenResource::SwapchainParam __swapchainParam;
-			Drawcall *__pDrawcall{};
-
-			VkSemaphoreSubmitInfo __submitWaitInfo{};
-			VkCommandBufferSubmitInfo __submitCommandBufferInfo{};
-			VkSemaphoreSubmitInfo __submitSignalInfos[2]{};
-
-			SemaphoreDependencyManager __submitDependencyManager;
-			std::shared_ptr<SemaphoreDependency> __pCurrentSubmitDependency;
-
-			std::vector<std::unique_ptr<Vulkan::Semaphore>> __imageAcquireSemaphores;
-			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionBinarySemaphores;
-			std::vector<std::unique_ptr<Vulkan::Semaphore>> __renderCompletionTimelineSemaphores;
-			std::vector<uint64_t> __renderCompletionSemaphoreValues;
-
-			size_t __frameCursor{};
-			bool __imageAcquired{};
-			uint32_t __imageIdx{};
-
-			bool __needToUpdateSurfaceDependencies{ true };
-			bool __needToUpdatePipelineDependencies{};
-			bool __needToUpdateCommandBuffer{};
-			bool __needToUpdateResource{};
-			bool __needToAdvanceResource{};
-
-			bool __needToRender{};
-			bool __needToPresent{};
-
 			bool __destroyed{};
+
+			[[nodiscard]]
+			bool __isValid() const noexcept;
 
 			void __update();
 			void __render() noexcept;
@@ -100,54 +66,6 @@ namespace HyperFast
 
 			void __initListeners() noexcept;
 			void __registerListeners() noexcept;
-			void __createResourceChain() noexcept;
-			void __createSurface();
-			constexpr void __initSubmitInfo() noexcept;
-
-			void __updateSurfaceDependencies();
-			void __updatePipelineDependencies();
-			void __updateCommandBuffer();
-			void __updateResource();
-			void __advanceResource() noexcept;
-
-			void __checkSurfaceSupport() const;
-			void __querySurfaceCapabilities() noexcept;
-			void __querySupportedSurfaceFormats() noexcept;
-			void __querySupportedSurfacePresentModes() noexcept;
-			void __createSwapchain();
-			void __createRenderSemaphores(const size_t imageIdx);
-
-			constexpr void __advanceFrameCursor() noexcept;
-
-			[[nodiscard]]
-			bool __isValid() const noexcept;
-
-			[[nodiscard]]
-			bool __isRenderable() const noexcept;
-
-			[[nodiscard]]
-			ScreenResource &__getCurrentResource() noexcept;
-
-			[[nodiscard]]
-			ScreenResource &__getNextResource() noexcept;
-
-			[[nodiscard]]
-			Vulkan::Semaphore &__getCurrentImageAcquireSemaphore() noexcept;
-
-			[[nodiscard]]
-			Vulkan::CommandBuffer &__getCurrentPrimaryCommandBuffer() noexcept;
-
-			[[nodiscard]]
-			Vulkan::Semaphore &__getCurrentRenderCompletionBinarySemaphore() noexcept;
-
-			[[nodiscard]]
-			Vulkan::Semaphore &__getCurrentRenderCompletionTimelineSemaphore() noexcept;
-
-			[[nodiscard]]
-			uint64_t &__getCurrentRenderCompletionSemaphoreValue() noexcept;
-
-			[[nodiscard]]
-			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;
 
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
@@ -167,7 +85,8 @@ namespace HyperFast
 		ScreenManager(
 			Vulkan::Instance &instance, Vulkan::PhysicalDevice &physicalDevice,
 			const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device, Vulkan::Queue &queue,
-			LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter) noexcept;
+			LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter,
+			Infra::TemporalDeleter &resourceDeleter) noexcept;
 
 		~ScreenManager() noexcept = default;
 
@@ -184,25 +103,6 @@ namespace HyperFast
 
 		LifeCycle &__lifeCycle;
 		CommandSubmitter &__commandSubmitter;
+		Infra::TemporalDeleter &__resourceDeleter;
 	};
-
-	constexpr void ScreenManager::ScreenImpl::__initSubmitInfo() noexcept
-	{
-		__submitWaitInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		__submitWaitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		__submitCommandBufferInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
-
-		__submitSignalInfos[0].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		__submitSignalInfos[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		__submitSignalInfos[1].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		__submitSignalInfos[1].stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
-	}
-
-	constexpr void ScreenManager::ScreenImpl::__advanceFrameCursor() noexcept
-	{
-		const size_t numSwapchainImages{ __swapchainParam.swapChainImages.size() };
-		__frameCursor = ((__frameCursor + 1ULL) % numSwapchainImages);
-	}
 }

@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		ShaderModule(Device &device, const VkShaderModuleCreateInfo &createInfo);
-		~ShaderModule() noexcept;
+		virtual ~ShaderModule() noexcept;
 
 	private:
 		Device &__device;

@@ -7,7 +7,8 @@ namespace Vulkan
 	class CommandBuffer final : public Handle<VkCommandBuffer>
 	{
 	public:
-		constexpr CommandBuffer(Device &device, const VkCommandBuffer handle) noexcept;
+		CommandBuffer(Device &device, const VkCommandBuffer handle) noexcept;
+		virtual ~CommandBuffer() noexcept = default;
 
 		VkResult vkBeginCommandBuffer(const VkCommandBufferBeginInfo *const pBeginInfo) noexcept;
 		VkResult vkEndCommandBuffer() noexcept;
@@ -48,8 +49,4 @@ namespace Vulkan
 	private:
 		Device &__device;
 	};
-
-	constexpr CommandBuffer::CommandBuffer(Device &device, const VkCommandBuffer handle) noexcept :
-		Handle{ handle }, __device{ device }
-	{}
 }

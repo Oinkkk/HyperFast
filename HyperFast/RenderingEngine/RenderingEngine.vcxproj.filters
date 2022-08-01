@@ -78,10 +78,10 @@
     <ClCompile Include="Drawcall.cpp">
       <Filter>Drawcall</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenManager.cpp">
+    <ClCompile Include="ScreenManager_Old.cpp">
       <Filter>Screen\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenManager_ScreenImpl.cpp">
+    <ClCompile Include="ScreenManager_Old_ScreenImpl.cpp">
       <Filter>Screen\Manager</Filter>
     </ClCompile>
     <ClCompile Include="BufferManager.cpp">
@@ -117,7 +117,7 @@
     <ClCompile Include="CommandSubmitter.cpp">
       <Filter>CommandSubmitter</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenResource.cpp">
+    <ClCompile Include="ScreenResource_Old.cpp">
       <Filter>Screen\Resource</Filter>
     </ClCompile>
     <ClCompile Include="SemaphoreDependencyManager.cpp">
@@ -140,6 +140,12 @@
     </ClCompile>
     <ClCompile Include="LifeCycle.cpp">
       <Filter>LifeCycle</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenManager.cpp">
+      <Filter>Screen\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenManager_ScreenImpl.cpp">
+      <Filter>Screen\Manager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -173,7 +179,7 @@
     <ClInclude Include="VertexAttributeUtil.h">
       <Filter>Vertex</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenManager.h">
+    <ClInclude Include="ScreenManager_Old.h">
       <Filter>Screen\Manager</Filter>
     </ClInclude>
     <ClInclude Include="BufferManager.h">
@@ -209,7 +215,7 @@
     <ClInclude Include="BufferCopyManager.h">
       <Filter>BufferCopyManager</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenResource.h">
+    <ClInclude Include="ScreenResource_Old.h">
       <Filter>Screen\Resource</Filter>
     </ClInclude>
     <ClInclude Include="SemaphoreDependencyManager.h">
@@ -226,6 +232,9 @@
     </ClInclude>
     <ClInclude Include="LifeCycle.h">
       <Filter>LifeCycle</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenManager.h">
+      <Filter>Screen\Manager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -8,7 +8,7 @@ namespace Vulkan
 	{
 	public:
 		Fence(Device &device, const VkFenceCreateInfo &createInfo);
-		~Fence() noexcept;
+		virtual ~Fence() noexcept;
 
 		VkResult wait(const uint64_t timeout) noexcept;
 		VkResult reset() noexcept;

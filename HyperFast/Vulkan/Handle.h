@@ -1,14 +1,15 @@
 #pragma once
 
-#include "../Infrastructure/Unique.h"
+#include "../Infrastructure/Deletable.h"
 
 namespace Vulkan
 {
 	template <typename $Type>
-	class Handle : public Infra::Unique
+	class Handle : public Infra::Deletable
 	{
 	public:
-		constexpr Handle(const $Type handle) noexcept;
+		Handle(const $Type handle) noexcept;
+		virtual ~Handle() noexcept = default;
 
 		[[nodiscard]]
 		constexpr const $Type &getHandle() noexcept;
@@ -22,7 +23,7 @@ namespace Vulkan
 	};
 
 	template <typename $Type>
-	constexpr Handle<$Type>::Handle(const $Type handle) noexcept :
+	Handle<$Type>::Handle(const $Type handle) noexcept :
 		__handle{ handle }
 	{}
 

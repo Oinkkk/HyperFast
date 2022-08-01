@@ -4,11 +4,11 @@
 
 namespace Vulkan
 {
-	class Buffer final : public Handle<VkBuffer>
+	class VulkanBuffer final : public Handle<VkBuffer>
 	{
 	public:
-		Buffer(Device &device, const VkBufferCreateInfo &createInfo);
-		~Buffer() noexcept;
+		VulkanBuffer(Device &device, const VkBufferCreateInfo &createInfo);
+		virtual ~VulkanBuffer() noexcept;
 
 		void vkGetBufferMemoryRequirements(
 			VkMemoryRequirements *const pMemoryRequirements) noexcept;
