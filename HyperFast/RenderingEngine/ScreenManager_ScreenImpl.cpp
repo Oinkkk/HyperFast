@@ -67,8 +67,8 @@ namespace HyperFast
 		if (__needToUpdatePipelineDependencies)
 			__updatePipelineDependencies();
 
-		if (__needToUpdatePrimaryCommandBuffer)
-			__updatePrimaryCommandBuffer();
+		if (__needToUpdateCommandBuffer)
+			__updateCommandBuffer();
 
 		if (__needToUpdateResource)
 			__updateResource();
@@ -293,7 +293,7 @@ namespace HyperFast
 
 		__needToUpdateSurfaceDependencies = false;
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdatePrimaryCommandBuffer = false;
+		__needToUpdateCommandBuffer = false;
 		__needToUpdateResource = true;
 		__needToRender = false;
 	}
@@ -304,16 +304,16 @@ namespace HyperFast
 			pResource->needToUpdatePipelineDependencies();
 
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdatePrimaryCommandBuffer = false;
+		__needToUpdateCommandBuffer = false;
 		__needToUpdateResource = true;
 	}
 
-	void ScreenManager::ScreenImpl::__updatePrimaryCommandBuffer()
+	void ScreenManager::ScreenImpl::__updateCommandBuffer()
 	{
 		for (auto &pResource : __resourceChain)
-			pResource->needToUpdatePrimaryCommandBuffer();
+			pResource->needToUpdateCommandBuffer();
 
-		__needToUpdatePrimaryCommandBuffer = false;
+		__needToUpdateCommandBuffer = false;
 		__needToUpdateResource = true;
 	}
 
@@ -602,7 +602,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdatePrimaryCommandBuffer = true;
+		__needToUpdateCommandBuffer = true;
 
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);
@@ -617,7 +617,7 @@ namespace HyperFast
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdatePrimaryCommandBuffer = true;
+		__needToUpdateCommandBuffer = true;
 
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);

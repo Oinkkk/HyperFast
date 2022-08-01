@@ -83,7 +83,7 @@ namespace HyperFast
 
 			bool __needToUpdateSurfaceDependencies{ true };
 			bool __needToUpdatePipelineDependencies{};
-			bool __needToUpdatePrimaryCommandBuffer{};
+			bool __needToUpdateCommandBuffer{};
 			bool __needToUpdateResource{};
 			bool __needToAdvanceResource{};
 
@@ -106,7 +106,7 @@ namespace HyperFast
 
 			void __updateSurfaceDependencies();
 			void __updatePipelineDependencies();
-			void __updatePrimaryCommandBuffer();
+			void __updateCommandBuffer();
 			void __updateResource();
 			void __advanceResource() noexcept;
 

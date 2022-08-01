@@ -38,7 +38,7 @@ namespace HyperFast
 
 		constexpr void needToUpdateSwapchainDependencies() noexcept;
 		constexpr void needToUpdatePipelineDependencies() noexcept;
-		constexpr void needToUpdatePrimaryCommandBuffer() noexcept;
+		constexpr void needToUpdateCommandBuffer() noexcept;
 		void needToUpdateSecondaryCommandBuffer(const size_t drawcallSegmentIndex) noexcept;
 
 		void update(const SwapchainParam &swapchainParam, Drawcall *const pDrawcall);
@@ -119,7 +119,7 @@ namespace HyperFast
 		__needToUpdatePipelineDependencies = true;
 	}
 
-	constexpr void ScreenResource::needToUpdatePrimaryCommandBuffer() noexcept
+	constexpr void ScreenResource::needToUpdateCommandBuffer() noexcept
 	{
 		__needToPrimaryCommandBuffer = true;
 	}
