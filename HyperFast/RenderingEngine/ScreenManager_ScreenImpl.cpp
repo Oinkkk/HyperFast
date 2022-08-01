@@ -105,7 +105,7 @@ namespace HyperFast
 			__updatePipelineDependencies();
 
 		if (__commandBufferDirty)
-			__updateCommandBuffers(nullptr);
+			__updateCommandBuffers();
 	}
 
 	void ScreenManager::ScreenImpl::__render() noexcept
@@ -246,12 +246,20 @@ namespace HyperFast
 		__pPipelineFactory->reset();
 
 		tf::Taskflow taskflow;
-		taskflow.emplace([this](tf::Subflow &subflow)
-		{
-			__buildPipelines(subflow);
-		});
 
-		__updateCommandBuffers(&taskflow);
+		tf::Task t1
+		{
+			taskflow.emplace([this](tf::Subflow &subflow)
+			{
+				__buildPipelines(subflow);
+			})
+		};
+
+		taskflow.emplace([this, drawcallSegmentDirties = __drawcallSegmentDirties](tf::Subflow &subflow)
+		{
+			__populateSecondaryCommandBufferInheritanceInfo();
+
+		}).succeed(t1);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		__updateJob = executor.run(std::move(taskflow));
@@ -259,8 +267,13 @@ namespace HyperFast
 		__pipelineDependencyDirty = false;
 	}
 
-	void ScreenManager::ScreenImpl::__updateCommandBuffers(tf::Taskflow *const pTaskFlow)
+	void ScreenManager::ScreenImpl::__updateCommandBuffers()
 	{
+		if (!__pDrawcall)
+			return;
+
+		__populateSecondaryCommandBufferInheritanceInfo();
+
 		// TODO: 커맨드 버퍼 업데이트
 		__commandBufferDirty = false;
 		__needToRender = true;
@@ -302,6 +315,12 @@ namespace HyperFast
 		__supportedSurfacePresentModes.resize(numModes);
 		__physicalDevice.vkGetPhysicalDeviceSurfacePresentModesKHR(
 			__pSurface->getHandle(), &numModes, __supportedSurfacePresentModes.data());
+	}
+
+	void ScreenManager::ScreenImpl::__populateSecondaryCommandBufferInheritanceInfo() noexcept
+	{
+		__secondaryCommandBufferInheritanceInfo.renderPass = __pRenderPass->getHandle();
+		__secondaryCommandBufferInheritanceInfo.framebuffer = __pFramebuffer->getHandle();
 	}
 
 	void ScreenManager::ScreenImpl::__createSwapchain()
@@ -550,10 +569,10 @@ namespace HyperFast
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
 		__commandBufferDirty = true;
+		__drawcallSegmentDirties.emplace(segmentIndex);
 	}
 
-	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(
-		Drawcall &drawcall, const size_t segmentIndex) noexcept
+	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(Drawcall &, size_t) noexcept
 	{
 		__needToRender = true;
 	}
@@ -562,6 +581,7 @@ namespace HyperFast
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
 		__commandBufferDirty = true;
+		__drawcallSegmentDirties.emplace(segmentIndex);
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept

@@ -34,7 +34,8 @@ namespace HyperFast
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
 		private:
-			
+			using PerImageCommandBufferManagerMap = std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>>;
+
 			// External params
 
 			Vulkan::Instance &__instance;
@@ -72,8 +73,19 @@ namespace HyperFast
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			std::unique_ptr<PipelineFactory> __pPipelineFactory;
 
-			// ResourceBundle __resourceBundleChain[2];
-			size_t __resourceBundleCursor{};
+			/*
+				TODO:
+					1. CommandBufferManager reset 타이밍 문제
+						-> CommandPool을 여러 개 두고 최종 사용한 timestamp 값 저장,
+						이후 submitter의 finish event에서 timestamp 값 받아 command pool reset
+
+					2. Secondary command buffer를 per image, per drawcall segment로 공급해야하는 문제
+			*/
+
+			std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>> __primaryCommandBufferManagers;
+			std::unordered_map<size_t, PerImageCommandBufferManagerMap> __secondaryCommandBufferManagers;
+			VkCommandBufferInheritanceInfo __secondaryCommandBufferInheritanceInfo{};
+			VkCommandBufferBeginInfo __secondaryCommandBufferBeginInfo{};
 
 			tf::Future<void> __updateJob;
 
@@ -132,17 +144,19 @@ namespace HyperFast
 			void __registerListeners() noexcept;
 			void __createSurface();
 			void __createPipelineFactory() noexcept;
+			constexpr void __initSecondaryCommandBufferBeginInfos() noexcept;
 
 			void __resetSwapchainDependencies() noexcept;
 
 			void __updateSwapchainDependencies();
 			void __updatePipelineDependencies();
-			void __updateCommandBuffers(tf::Taskflow *const pTaskFlow);
+			void __updateCommandBuffers();
 
 			void __checkSurfaceSupport() const;
 			void __querySurfaceCapabilities() noexcept;
 			void __querySupportedSurfaceFormats() noexcept;
 			void __querySupportedSurfacePresentModes() noexcept;
+			void __populateSecondaryCommandBufferInheritanceInfo() noexcept;
 
 			void __createSwapchain();
 			void __createSwapchainImageViews();
@@ -197,19 +211,19 @@ namespace HyperFast
 		Infra::TemporalDeleter &__resourceDeleter;
 	};
 
-	/*constexpr void ScreenManager::ScreenImpl::__swapResourceBundle() noexcept
+	constexpr void ScreenManager::ScreenImpl::__initSecondaryCommandBufferBeginInfos() noexcept
 	{
-		__resourceBundleCursor = ((__resourceBundleCursor + 1ULL) % std::size(__resourceBundleChain));
-	}*/
+		__secondaryCommandBufferInheritanceInfo.sType =
+			VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 
-	/*constexpr ScreenManager::ScreenImpl::ResourceBundle &ScreenManager::ScreenImpl::__getFrontResourceBundle() noexcept
-	{
-		return __resourceBundleChain[__resourceBundleCursor];
+		__secondaryCommandBufferInheritanceInfo.subpass = 0U;
+
+		__secondaryCommandBufferBeginInfo.sType =
+			VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		__secondaryCommandBufferBeginInfo.flags =
+			VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+
+		__secondaryCommandBufferBeginInfo.pInheritanceInfo = &__secondaryCommandBufferInheritanceInfo;
 	}
-
-	constexpr ScreenManager::ScreenImpl::ResourceBundle &ScreenManager::ScreenImpl::__getBackResourceBundle() noexcept
-	{
-		const size_t backCursor{ (__resourceBundleCursor + 1ULL) % std::size(__resourceBundleChain) };
-		return __resourceBundleChain[backCursor];
-	}*/
 }
