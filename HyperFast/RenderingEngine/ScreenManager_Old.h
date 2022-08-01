@@ -83,9 +83,9 @@ namespace HyperFast
 			bool __imageAcquired{};
 			uint32_t __imageIdx{};
 
-			bool __needToUpdateSurfaceDependencies{ true };
+			bool __needToUpdateSwapchainDependencies{ true };
 			bool __needToUpdatePipelineDependencies{};
-			bool __needToUpdateCommandBuffer{};
+			bool __needToUpdateCommandBuffers{};
 			bool __needToUpdateResource{};
 			bool __needToAdvanceResource{};
 
@@ -106,9 +106,9 @@ namespace HyperFast
 			void __createSurface();
 			constexpr void __initSubmitInfo() noexcept;
 
-			void __updateSurfaceDependencies();
+			void __updateSwapchainDependencies();
 			void __updatePipelineDependencies();
-			void __updateCommandBuffer();
+			void __updateCommandBuffers();
 			void __updateResource();
 			void __advanceResource() noexcept;
 

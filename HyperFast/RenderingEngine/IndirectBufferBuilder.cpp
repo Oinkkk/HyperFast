@@ -131,7 +131,6 @@ namespace HyperFast
 	void IndirectBufferBuilder::__updateHostBuffer() noexcept
 	{
 		// TODO: 스테이징 버퍼 사용 시 host buffer race condition 해결 필요.
-		// TODO: Device synchronizer 모듈 추가
 		__drawCount = 0U;
 		__hostBuffer.clear();
 

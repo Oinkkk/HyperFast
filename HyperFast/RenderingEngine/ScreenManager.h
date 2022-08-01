@@ -29,6 +29,9 @@ namespace HyperFast
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
 		private:
+
+			// External params
+
 			Vulkan::Instance &__instance;
 			Vulkan::PhysicalDevice &__physicalDevice;
 			Vulkan::Device &__device;
@@ -41,6 +44,29 @@ namespace HyperFast
 			Infra::TemporalDeleter &__resourceDeleter;
 
 			Win::Window &__window;
+
+			Drawcall *__pDrawcall{};
+
+
+			// Internal params
+
+			std::unique_ptr<Vulkan::Surface> __pSurface;
+
+
+			// Flags
+
+			bool __needToUpdateSwapchainDependencies{};
+			bool __needToUpdatePipelineDependencies{};
+			bool __needToUpdateCommandBuffers{};
+
+			bool __needToRender{};
+			bool __needToPresent{};
+
+			bool __destroyed{};
+
+
+			// Event listeners
+
 			std::shared_ptr<Infra::EventListener<Win::Window &, Win::Window::ResizingType>> __pWindowResizeEventListener;
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pWindowDrawEventListener;
 			std::shared_ptr<Infra::EventListener<Win::Window &>> __pWindowDestroyEventListener;
@@ -53,10 +79,14 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<>> __pRenderListener;
 			std::shared_ptr<Infra::EventListener<>> __pPresentListener;
 
-			bool __destroyed{};
+
+			// functions
 
 			[[nodiscard]]
 			bool __isValid() const noexcept;
+
+			[[nodiscard]]
+			bool __isRenderable() const noexcept;
 
 			void __update();
 			void __render() noexcept;
@@ -66,6 +96,11 @@ namespace HyperFast
 
 			void __initListeners() noexcept;
 			void __registerListeners() noexcept;
+			void __createSurface();
+
+			void __updateSwapchainDependencies();
+			void __updatePipelineDependencies();
+			void __updateCommandBuffers();
 
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;

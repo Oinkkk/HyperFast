@@ -61,14 +61,14 @@ namespace HyperFast
 
 	void ScreenManager_Old::ScreenImpl::__update()
 	{
-		if (__needToUpdateSurfaceDependencies)
-			__updateSurfaceDependencies();
+		if (__needToUpdateSwapchainDependencies)
+			__updateSwapchainDependencies();
 
 		if (__needToUpdatePipelineDependencies)
 			__updatePipelineDependencies();
 
-		if (__needToUpdateCommandBuffer)
-			__updateCommandBuffer();
+		if (__needToUpdateCommandBuffers)
+			__updateCommandBuffers();
 
 		if (__needToUpdateResource)
 			__updateResource();
@@ -145,7 +145,7 @@ namespace HyperFast
 		if ((presentResult == VkResult::VK_SUBOPTIMAL_KHR) ||
 			(presentResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
-			__needToUpdateSurfaceDependencies = true;
+			__needToUpdateSwapchainDependencies = true;
 		}
 
 		if (presentResult == VkResult::VK_SUCCESS)
@@ -253,7 +253,7 @@ namespace HyperFast
 		__pSurface = std::make_unique<Vulkan::Surface>(__instance, createInfo);
 	}
 
-	void ScreenManager_Old::ScreenImpl::__updateSurfaceDependencies()
+	void ScreenManager_Old::ScreenImpl::__updateSwapchainDependencies()
 	{
 		tf::Taskflow taskflow;
 
@@ -291,9 +291,9 @@ namespace HyperFast
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSwapchainDependencies();
 
-		__needToUpdateSurfaceDependencies = false;
+		__needToUpdateSwapchainDependencies = false;
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdateCommandBuffer = false;
+		__needToUpdateCommandBuffers = false;
 		__needToUpdateResource = true;
 		__needToRender = false;
 	}
@@ -304,16 +304,16 @@ namespace HyperFast
 			pResource->needToUpdatePipelineDependencies();
 
 		__needToUpdatePipelineDependencies = false;
-		__needToUpdateCommandBuffer = false;
+		__needToUpdateCommandBuffers = false;
 		__needToUpdateResource = true;
 	}
 
-	void ScreenManager_Old::ScreenImpl::__updateCommandBuffer()
+	void ScreenManager_Old::ScreenImpl::__updateCommandBuffers()
 	{
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateCommandBuffer();
 
-		__needToUpdateCommandBuffer = false;
+		__needToUpdateCommandBuffers = false;
 		__needToUpdateResource = true;
 	}
 
@@ -584,7 +584,7 @@ namespace HyperFast
 		if ((acquireResult == VkResult::VK_SUBOPTIMAL_KHR) ||
 			(acquireResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
 		{
-			__needToUpdateSurfaceDependencies = true;
+			__needToUpdateSwapchainDependencies = true;
 		}
 
 		return false;
@@ -596,13 +596,13 @@ namespace HyperFast
 		if (resizingType == Win::Window::ResizingType::MINIMIZED)
 			return;
 
-		__needToUpdateSurfaceDependencies = true;
+		__needToUpdateSwapchainDependencies = true;
 	}
 
 	void ScreenManager_Old::ScreenImpl::__onDrawcallMeshBufferChange(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateCommandBuffer = true;
+		__needToUpdateCommandBuffers = true;
 
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);
@@ -617,7 +617,7 @@ namespace HyperFast
 	void ScreenManager_Old::ScreenImpl::__onDrawcallIndirectBufferCreate(
 		Drawcall &drawcall, const size_t segmentIndex) noexcept
 	{
-		__needToUpdateCommandBuffer = true;
+		__needToUpdateCommandBuffers = true;
 
 		for (auto &pResource : __resourceChain)
 			pResource->needToUpdateSecondaryCommandBuffer(segmentIndex);

@@ -7,7 +7,7 @@ namespace HyperFast
 		const uint32_t graphicsQueueFamilyIndex, Vulkan::Device &device, Vulkan::Queue &queue,
 		LifeCycle &lifeCycle, CommandSubmitter &commandSubmitter,
 		Infra::TemporalDeleter &resourceDeleter) noexcept :
-		__instance{instance}, __physicalDevice{ physicalDevice },
+		__instance{ instance }, __physicalDevice{ physicalDevice },
 		__queueFamilyIndex{ graphicsQueueFamilyIndex }, __device{ device }, __queue{ queue },
 		__lifeCycle{ lifeCycle }, __commandSubmitter{ commandSubmitter },
 		__resourceDeleter{ resourceDeleter }
