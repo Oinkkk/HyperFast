@@ -32,6 +32,9 @@ namespace Infra
 
 	void TemporalDeleter::reserve(Deletable *const pDeletable) noexcept
 	{
+		if (!pDeletable)
+			return;
+
 		__pCurrentDeleter->reserve(pDeletable);
 	}
 

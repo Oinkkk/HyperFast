@@ -6,6 +6,8 @@
 #include "../Vulkan/Fence.h"
 #include "../Vulkan/Surface.h"
 #include "../Vulkan/Swapchain.h"
+#include "../Vulkan/RenderPass.h"
+#include "../Vulkan/Framebuffer.h"
 #include "LifeCycle.h"
 #include "CommandSubmitter.h"
 #include "Drawcall.h"
@@ -51,8 +53,18 @@ namespace HyperFast
 
 			// Internal params
 
-			std::unique_ptr<Vulkan::Surface> __pSurface;
+			Vulkan::Surface *__pSurface{};
+			VkSurfaceCapabilitiesKHR __surfaceCapabilities{};
+			std::vector<VkSurfaceFormatKHR> __supportedSurfaceFormats;
+			std::vector<VkPresentModeKHR> __supportedSurfacePresentModes;
+
 			Vulkan::Swapchain *__pSwapchain{};
+			VkFormat __swapchainFormat{};
+			VkExtent2D __swapchainExtent{};
+			std::vector<VkImage> __swapChainImages;
+
+			Vulkan::RenderPass *__pRenderPass;
+			Vulkan::Framebuffer *__pFramebuffer;
 
 
 			// Flags
@@ -103,6 +115,15 @@ namespace HyperFast
 			void __updateSwapchainDependencies();
 			void __updatePipelineDependencies();
 			void __updateCommandBuffers();
+
+			void __checkSurfaceSupport() const;
+			void __querySurfaceCapabilities() noexcept;
+			void __querySupportedSurfaceFormats() noexcept;
+			void __querySupportedSurfacePresentModes() noexcept;
+
+			void __createSwapchain();
+			void __createRenderPass();
+			void __createFramebuffer();
 
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
