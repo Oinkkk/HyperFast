@@ -26,6 +26,7 @@ namespace HyperFast
 			const VkSemaphoreSubmitInfo *const pSignalSemaphoreInfos) noexcept;
 
 		bool submit();
+		void flush() noexcept;
 
 		[[nodiscard]]
 		constexpr Infra::EventView<size_t> &getFinishEvent() noexcept;
@@ -42,10 +43,6 @@ namespace HyperFast
 		std::deque<std::pair<Vulkan::Fence *, size_t>> __pendingFences;
 
 		Infra::Event<size_t> __finishEvent;
-
-		[[nodiscard]]
-		bool __submit();
-		void __flush() noexcept;
 
 		[[nodiscard]]
 		Vulkan::Fence *__getIdleFence();

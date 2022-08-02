@@ -38,14 +38,6 @@ namespace HyperFast
 
 	bool CommandSubmitter::submit()
 	{
-		const bool retVal{ __submit() };
-		__flush();
-
-		return retVal;
-	}
-
-	bool CommandSubmitter::__submit()
-	{
 		__infoStream.clear();
 
 		for (std::vector<VkSubmitInfo2> &infos : __submitInfos)
@@ -66,19 +58,20 @@ namespace HyperFast
 		return true;
 	}
 
-	void CommandSubmitter::__flush() noexcept
+	void CommandSubmitter::flush() noexcept
 	{
 		bool valid{};
 		size_t lastTimestamp{};
 
 		while (!(__pendingFences.empty()))
 		{
-			const auto [pFence, timestamp]{ __pendingFences.front() };
-			
+			const auto [pFence, timestamp] { __pendingFences.front() };
+
 			const VkResult result{ pFence->wait(0ULL) };
 			if (result != VkResult::VK_SUCCESS)
 				break;
 
+			pFence->reset();
 			valid = true;
 			lastTimestamp = timestamp;
 

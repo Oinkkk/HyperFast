@@ -97,6 +97,8 @@ namespace HyperFast
 			const bool validSubmission{ __pCommandSubmitter->submit() };
 			if (validSubmission)
 				__pResourceDeleter->advance();
+
+			__pCommandSubmitter->flush();
 		});
 
 		__pSubmitFinishEventListener = Infra::EventListener<size_t>::make([this](const size_t timestamp)

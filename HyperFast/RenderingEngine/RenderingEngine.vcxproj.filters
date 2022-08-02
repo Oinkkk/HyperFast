@@ -52,9 +52,6 @@
     <Filter Include="LifeCycle">
       <UniqueIdentifier>{4de44828-38c1-4e4f-806a-0e3ac6cfb99a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Screen\Manager\Resource">
-      <UniqueIdentifier>{fed5750a-aace-4714-98db-6a2fa1790546}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -77,12 +74,6 @@
     </ClCompile>
     <ClCompile Include="Drawcall.cpp">
       <Filter>Drawcall</Filter>
-    </ClCompile>
-    <ClCompile Include="ScreenManager_Old.cpp">
-      <Filter>Screen\Manager</Filter>
-    </ClCompile>
-    <ClCompile Include="ScreenManager_Old_ScreenImpl.cpp">
-      <Filter>Screen\Manager</Filter>
     </ClCompile>
     <ClCompile Include="BufferManager.cpp">
       <Filter>Buffer</Filter>
@@ -116,9 +107,6 @@
     </ClCompile>
     <ClCompile Include="CommandSubmitter.cpp">
       <Filter>CommandSubmitter</Filter>
-    </ClCompile>
-    <ClCompile Include="ScreenResource_Old.cpp">
-      <Filter>Screen\Manager\Resource</Filter>
     </ClCompile>
     <ClCompile Include="SemaphoreDependencyManager.cpp">
       <Filter>SemaphoreDependency</Filter>
@@ -179,9 +167,6 @@
     <ClInclude Include="VertexAttributeUtil.h">
       <Filter>Vertex</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenManager_Old.h">
-      <Filter>Screen\Manager</Filter>
-    </ClInclude>
     <ClInclude Include="BufferManager.h">
       <Filter>Buffer</Filter>
     </ClInclude>
@@ -214,9 +199,6 @@
     </ClInclude>
     <ClInclude Include="BufferCopyManager.h">
       <Filter>BufferCopyManager</Filter>
-    </ClInclude>
-    <ClInclude Include="ScreenResource_Old.h">
-      <Filter>Screen\Manager\Resource</Filter>
     </ClInclude>
     <ClInclude Include="SemaphoreDependencyManager.h">
       <Filter>SemaphoreDependency</Filter>

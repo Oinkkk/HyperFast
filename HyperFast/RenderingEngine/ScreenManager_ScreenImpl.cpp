@@ -18,6 +18,8 @@ namespace HyperFast
 		__registerListeners();
 		__createSurface();
 		__createPipelineFactory();
+
+		__initSubmitInfos();
 		__initSecondaryCommandBufferBeginInfos();
 	}
 
@@ -85,7 +87,7 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__update()
 	{
-		if (__swapchainDependencDirty)
+		if (__swapchainDependencyDirty)
 			__updateSwapchainDependencies();
 
 		if (__pipelineDependencyDirty)
@@ -97,7 +99,43 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__render() noexcept
 	{
-		// TODO: 렌더링 로직
+		Vulkan::Semaphore &imageAcquireSemaphore{ __getImageAcquireSemaphore() };
+
+		const bool validAcquire{ __acquireNextSwapchainImageIdx(imageAcquireSemaphore) };
+		if (!validAcquire)
+			return;
+
+		Vulkan::Semaphore &renderCompletionTimelineSemaphore{ __getRenderCompletionTimelineSemaphore() };
+		uint64_t &renderCompletionSemaphoreValue{ __getRenderCompletionSemaphoreValue() };
+
+		const VkResult waitResult
+		{
+			renderCompletionTimelineSemaphore.wait(renderCompletionSemaphoreValue, 0ULL)
+		};
+
+		// 앞전에 submit된 command buffer가 아직 처리 중
+		if (waitResult == VkResult::VK_TIMEOUT)
+			return;
+
+		__submitWaitInfo.semaphore = imageAcquireSemaphore.getHandle();
+
+		Vulkan::CommandBuffer &renderCommandBuffer{ __getPrimaryCommandBuffer() };
+		__submitCommandBufferInfo.commandBuffer = renderCommandBuffer.getHandle();
+
+		VkSemaphoreSubmitInfo &binarySignalInfo{ __submitSignalInfos[0] };
+		VkSemaphoreSubmitInfo &timelineSignalInfo{ __submitSignalInfos[1] };
+
+		Vulkan::Semaphore &renderCompletionBinarySemaphore{ __getRenderCompletionBinarySemaphore() };
+		binarySignalInfo.semaphore = renderCompletionBinarySemaphore.getHandle();
+
+		renderCompletionSemaphoreValue++;
+		timelineSignalInfo.semaphore = renderCompletionTimelineSemaphore.getHandle();
+		timelineSignalInfo.value = renderCompletionSemaphoreValue;
+
+		__commandSubmitter.enqueue(
+			SubmitLayerType::GRAPHICS,
+			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo,
+			uint32_t(std::size(__submitSignalInfos)), __submitSignalInfos);
 
 		__needToRender = false;
 		__needToPresent = true;
@@ -105,7 +143,29 @@ namespace HyperFast
 
 	void ScreenManager::ScreenImpl::__present() noexcept
 	{
-		// TODO: present 로직
+		Vulkan::Semaphore &attachmentOutputSemaphore{ __getRenderCompletionBinarySemaphore() };
+
+		const VkPresentInfoKHR presentInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.waitSemaphoreCount = 1U,
+			.pWaitSemaphores = &(attachmentOutputSemaphore.getHandle()),
+			.swapchainCount = 1U,
+			.pSwapchains = &(__pSwapchain->getHandle()),
+			.pImageIndices = &__imageIdx
+		};
+
+		const VkResult presentResult{ __queue.vkQueuePresentKHR(&presentInfo) };
+		__imageAcquired = false;
+
+		if ((presentResult == VkResult::VK_SUBOPTIMAL_KHR) ||
+			(presentResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
+		{
+			__swapchainDependencyDirty = true;
+		}
+
+		if (presentResult == VkResult::VK_SUCCESS)
+			__needToPresent = false;
 	}
 
 	void ScreenManager::ScreenImpl::__destroy() noexcept
@@ -191,7 +251,7 @@ namespace HyperFast
 		};
 
 		__pSurface = new Vulkan::Surface{ __instance, createInfo };
-		__swapchainDependencDirty = true;
+		__swapchainDependencyDirty = true;
 	}
 
 	void ScreenManager::ScreenImpl::__createPipelineFactory() noexcept
@@ -225,9 +285,10 @@ namespace HyperFast
 		__createRenderPass();
 		__createFramebuffer();
 		__populateSecondaryCommandBufferInheritanceInfo();
+		__frameIdx %= __swapChainImages.size();
 
 		__updatePipelineDependencies();
-		__swapchainDependencDirty = false;
+		__swapchainDependencyDirty = false;
 	}
 
 	void ScreenManager::ScreenImpl::__updatePipelineDependencies()
@@ -707,7 +768,7 @@ namespace HyperFast
 		if (resizingType == Win::Window::ResizingType::MINIMIZED)
 			return;
 
-		__swapchainDependencDirty = true;
+		__swapchainDependencyDirty = true;
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(
@@ -816,5 +877,99 @@ namespace HyperFast
 			pPrimaryManager->advance();
 
 		return pPrimaryManager->get();
+	}
+
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getImageAcquireSemaphore() noexcept
+	{
+		auto &pSemaphore{ __imageAcquireSemaphores[__frameIdx] };
+		if (!pSemaphore)
+		{
+			static constexpr VkSemaphoreCreateInfo createInfo
+			{
+				.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+			};
+
+			pSemaphore = std::make_unique<Vulkan::Semaphore>(__device, createInfo);
+		}
+
+		return *pSemaphore;
+	}
+
+	[[nodiscard]]
+	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__getPrimaryCommandBuffer() noexcept
+	{
+		return __getPerImageCommandBufferResource(__imageIdx).primaryManager->get();
+	}
+
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getRenderCompletionBinarySemaphore() noexcept
+	{
+		auto &pSemaphore{ __renderCompletionBinarySemaphores[__imageIdx] };
+		if (!pSemaphore)
+		{
+			static constexpr VkSemaphoreCreateInfo createInfo
+			{
+				.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+			};
+
+			pSemaphore = std::make_unique<Vulkan::Semaphore>(__device, createInfo);
+		}
+
+		return *pSemaphore;
+	}
+
+	Vulkan::Semaphore &ScreenManager::ScreenImpl::__getRenderCompletionTimelineSemaphore() noexcept
+	{
+		auto &pSemaphore{ __renderCompletionTimelineSemaphores[__imageIdx] };
+		if (!pSemaphore)
+		{
+			static constexpr VkSemaphoreTypeCreateInfo timelineInfo
+			{
+				.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+				.semaphoreType = VkSemaphoreType::VK_SEMAPHORE_TYPE_TIMELINE
+			};
+
+			static constexpr VkSemaphoreCreateInfo createInfo
+			{
+				.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+				.pNext = &timelineInfo
+			};
+
+			pSemaphore = std::make_unique<Vulkan::Semaphore>(__device, createInfo);
+		}
+
+		return *pSemaphore;
+	}
+
+	uint64_t &ScreenManager::ScreenImpl::__getRenderCompletionSemaphoreValue() noexcept
+	{
+		return __renderCompletionSemaphoreValues[__imageIdx];
+	}
+
+	bool ScreenManager::ScreenImpl::__acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept
+	{
+		if (__imageAcquired)
+			return true;
+
+		const VkResult acquireResult
+		{
+			__pSwapchain->vkAcquireNextImageKHR(
+				0ULL, semaphore.getHandle(), VK_NULL_HANDLE, &__imageIdx)
+		};
+
+		const bool valid{ acquireResult == VkResult::VK_SUCCESS };
+		if (valid)
+		{
+			__imageAcquired = true;
+			__frameIdx = ((__frameIdx + 1ULL) % __swapChainImages.size());
+			return true;
+		}
+
+		if ((acquireResult == VkResult::VK_SUBOPTIMAL_KHR) ||
+			(acquireResult == VkResult::VK_ERROR_OUT_OF_DATE_KHR))
+		{
+			__swapchainDependencyDirty = true;
+		}
+
+		return false;
 	}
 }

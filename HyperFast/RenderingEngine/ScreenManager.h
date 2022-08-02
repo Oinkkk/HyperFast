@@ -83,9 +83,22 @@ namespace HyperFast
 			VkCommandBufferInheritanceInfo __secondaryCommandBufferInheritanceInfo{};
 			VkCommandBufferBeginInfo __secondaryCommandBufferBeginInfo{};
 
+			std::unordered_map<size_t, std::unique_ptr<Vulkan::Semaphore>> __imageAcquireSemaphores;
+			std::unordered_map<size_t, std::unique_ptr<Vulkan::Semaphore>> __renderCompletionBinarySemaphores;
+			std::unordered_map<size_t, std::unique_ptr<Vulkan::Semaphore>> __renderCompletionTimelineSemaphores;
+			std::unordered_map<size_t, uint64_t> __renderCompletionSemaphoreValues;
+
+			VkSemaphoreSubmitInfo __submitWaitInfo{};
+			VkCommandBufferSubmitInfo __submitCommandBufferInfo{};
+			VkSemaphoreSubmitInfo __submitSignalInfos[2]{};
+
+			size_t __frameIdx{};
+			uint32_t __imageIdx{};
+			bool __imageAcquired{};
+
 			// Flags
 
-			bool __swapchainDependencDirty{};
+			bool __swapchainDependencyDirty{};
 			bool __pipelineDependencyDirty{};
 			bool __commandBufferDirty{};
 			std::unordered_set<size_t> __drawcallSegmentDirties;
@@ -132,6 +145,8 @@ namespace HyperFast
 			void __registerListeners() noexcept;
 			void __createSurface();
 			void __createPipelineFactory() noexcept;
+
+			constexpr void __initSubmitInfos() noexcept;
 			constexpr void __initSecondaryCommandBufferBeginInfos() noexcept;
 
 			void __resetSwapchainDependencies() noexcept;
@@ -185,6 +200,24 @@ namespace HyperFast
 
 			[[nodiscard]]
 			Vulkan::CommandBuffer &__nextPrimaryCommandBuffer(PerImageCommandBufferResource &resource);
+
+			[[nodiscard]]
+			Vulkan::Semaphore &__getImageAcquireSemaphore() noexcept;
+
+			[[nodiscard]]
+			Vulkan::CommandBuffer &__getPrimaryCommandBuffer() noexcept;
+
+			[[nodiscard]]
+			Vulkan::Semaphore &__getRenderCompletionBinarySemaphore() noexcept;
+
+			[[nodiscard]]
+			Vulkan::Semaphore &__getRenderCompletionTimelineSemaphore() noexcept;
+
+			[[nodiscard]]
+			uint64_t &__getRenderCompletionSemaphoreValue() noexcept;
+
+			[[nodiscard]]
+			bool __acquireNextSwapchainImageIdx(Vulkan::Semaphore &semaphore) noexcept;
 		};
 
 		ScreenManager(
@@ -210,6 +243,20 @@ namespace HyperFast
 		CommandSubmitter &__commandSubmitter;
 		Infra::TemporalDeleter &__resourceDeleter;
 	};
+
+	constexpr void ScreenManager::ScreenImpl::__initSubmitInfos() noexcept
+	{
+		__submitWaitInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		__submitWaitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		__submitCommandBufferInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+
+		__submitSignalInfos[0].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		__submitSignalInfos[0].stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		__submitSignalInfos[1].sType = VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		__submitSignalInfos[1].stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+	}
 
 	constexpr void ScreenManager::ScreenImpl::__initSecondaryCommandBufferBeginInfos() noexcept
 	{
