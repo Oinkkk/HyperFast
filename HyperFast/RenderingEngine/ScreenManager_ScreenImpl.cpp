@@ -18,6 +18,7 @@ namespace HyperFast
 		__registerListeners();
 		__createSurface();
 		__createPipelineFactory();
+		__initSecondaryCommandBufferBeginInfos();
 	}
 
 	ScreenManager::ScreenImpl::~ScreenImpl() noexcept
@@ -122,6 +123,7 @@ namespace HyperFast
 		__pRenderListener = nullptr;
 		__pPresentListener = nullptr;
 
+		__perImageCommandBufferResources.clear();
 		__resetSwapchainDependencies();
 		__resourceDeleter.reserve(__pSurface);
 
@@ -245,9 +247,22 @@ namespace HyperFast
 		taskflow.emplace([this](tf::Subflow &subflow)
 		{
 			const size_t numImages{ __swapChainImages.size() };
-			for (size_t imageIter = 0ULL; imageIter < numImages; imageIter++)
+			for (size_t imageIdx = 0ULL; imageIdx < numImages; imageIdx++)
 			{
-				__initSecondaryCommandBuffers(imageIter, subflow);
+				PerImageCommandBufferResource &commandBufferResource{ __getPerImageCommandBufferResource(imageIdx) };
+
+				tf::Task t1
+				{
+					subflow.emplace([this, &commandBufferResource](tf::Subflow &subflow)
+					{
+						__initSecondaryCommandBuffers(commandBufferResource, subflow);
+					})
+				};
+
+				subflow.emplace([this, imageIdx](tf::Subflow &subflow)
+				{
+					// record primary
+				}).succeed(t1);
 			}
 		}).succeed(t1);
 
@@ -522,28 +537,6 @@ namespace HyperFast
 		__pFramebuffer = new Vulkan::Framebuffer{ __device, createInfo };
 	}
 
-	void ScreenManager::ScreenImpl::__createPerImageCommandBufferResources() noexcept
-	{
-		const size_t numImages{ __swapChainImages.size() };
-		
-		for (
-			size_t imageIter = __perImageCommandBufferResources.size();
-			imageIter < numImages; imageIter++)
-		{
-			std::unique_ptr<PerImageCommandBufferResource> pNewResource
-			{
-				std::make_unique<PerImageCommandBufferResource>()
-			};
-
-			pNewResource->primaryManager =
-				std::make_unique<CommandBufferManager>(
-					__device, __queueFamilyIndex,
-					VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, __resourceDeleter);
-
-			__perImageCommandBufferResources.emplace_back(std::move(pNewResource));
-		}
-	}
-
 	void ScreenManager::ScreenImpl::__buildPipelines(tf::Subflow &subflow)
 	{
 		__pipelineBuildParam.renderPass = __pRenderPass->getHandle();
@@ -567,23 +560,30 @@ namespace HyperFast
 	}
 
 	void ScreenManager::ScreenImpl::__initSecondaryCommandBuffers(
-		const size_t imageIdx, tf::Subflow &subflow) noexcept
+		PerImageCommandBufferResource &commandBufferResource, tf::Subflow &subflow) noexcept
 	{
-		/*subflow.emplace([this, imageIdx](tf::Subflow &subflow)
+		if (!__pDrawcall)
+			return;
+
+		const size_t numSegments{ __pDrawcall->getNumSegments() };
+		for (size_t segmentIter = 0ULL; segmentIter < numSegments; segmentIter++)
 		{
-			Vulkan::CommandBuffer &commandBuffer{ __nextSecondaryCommandBuffer(imageIdx, drawcallSegmentIdx) };
-			commandBuffer.vkBeginCommandBuffer(&__secondaryCommandBufferBeginInfo);
-
-			if (pDrawcall)
+			Vulkan::CommandBuffer &commandBuffer
 			{
+				__nextSecondaryCommandBuffer(commandBufferResource, segmentIter)
+			};
+
+			subflow.emplace([this, segmentIter, &commandBuffer](tf::Subflow &subflow)
+			{
+				commandBuffer.vkBeginCommandBuffer(&__secondaryCommandBufferBeginInfo);
 				commandBuffer.vkCmdBindPipeline(
-					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
+					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pPipelineFactory->get());
 
-				pDrawcall->draw(drawcallSegmentIdx, commandBuffer);
-			}
+				__pDrawcall->draw(segmentIter, commandBuffer);
 
-			commandBuffer.vkEndCommandBuffer();
-		});*/
+				commandBuffer.vkEndCommandBuffer();
+			});
+		}
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowResize(
@@ -596,10 +596,10 @@ namespace HyperFast
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallMeshBufferChange(
-		Drawcall &drawcall, const size_t segmentIndex) noexcept
+		Drawcall &drawcall, const size_t segmentIdx) noexcept
 	{
 		__commandBufferDirty = true;
-		__drawcallSegmentDirties.emplace(segmentIndex);
+		__drawcallSegmentDirties.emplace(segmentIdx);
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferUpdate(Drawcall &, size_t) noexcept
@@ -608,10 +608,10 @@ namespace HyperFast
 	}
 
 	void ScreenManager::ScreenImpl::__onDrawcallIndirectBufferCreate(
-		Drawcall &drawcall, const size_t segmentIndex) noexcept
+		Drawcall &drawcall, const size_t segmentIdx) noexcept
 	{
 		__commandBufferDirty = true;
-		__drawcallSegmentDirties.emplace(segmentIndex);
+		__drawcallSegmentDirties.emplace(segmentIdx);
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowDraw(Win::Window &window) noexcept
@@ -646,5 +646,31 @@ namespace HyperFast
 			return;
 
 		__present();
+	}
+
+	ScreenManager::ScreenImpl::PerImageCommandBufferResource &
+		ScreenManager::ScreenImpl::__getPerImageCommandBufferResource(const size_t imageIdx) noexcept
+	{
+		auto &pPerImageCommandBufferResource{ __perImageCommandBufferResources[imageIdx] };
+		if (!pPerImageCommandBufferResource)
+			pPerImageCommandBufferResource = std::make_unique<PerImageCommandBufferResource>();
+
+		return *pPerImageCommandBufferResource;
+	}
+
+	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__nextSecondaryCommandBuffer(
+		PerImageCommandBufferResource &resource, const size_t segmentIdx)
+	{
+		auto &pSecondaryManager{ resource.secondaryManagerMap[segmentIdx] };
+		if (!pSecondaryManager)
+		{
+			pSecondaryManager = std::make_unique<CommandBufferManager>(
+				__device, __queueFamilyIndex,
+				VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY, __resourceDeleter);
+		}
+		else
+			pSecondaryManager->advance();
+
+		return pSecondaryManager->get();
 	}
 }

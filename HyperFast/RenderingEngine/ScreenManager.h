@@ -38,8 +38,6 @@ namespace HyperFast
 			{
 			public:
 				std::unique_ptr<CommandBufferManager> primaryManager;
-
-				// segment idx -> manager
 				std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>> secondaryManagerMap;
 			};
 
@@ -80,7 +78,7 @@ namespace HyperFast
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			std::unique_ptr<PipelineFactory> __pPipelineFactory;
 
-			std::vector<std::unique_ptr<PerImageCommandBufferResource>> __perImageCommandBufferResources;
+			std::unordered_map<size_t, std::unique_ptr<PerImageCommandBufferResource>> __perImageCommandBufferResources;
 			VkCommandBufferInheritanceInfo __secondaryCommandBufferInheritanceInfo{};
 			VkCommandBufferBeginInfo __secondaryCommandBufferBeginInfo{};
 
@@ -151,17 +149,17 @@ namespace HyperFast
 			void __createSwapchainImageViews();
 			void __createRenderPass();
 			void __createFramebuffer();
-			void __createPerImageCommandBufferResources() noexcept;
 
 			void __buildPipelines(tf::Subflow &subflow);
-			void __initSecondaryCommandBuffers(const size_t imageIdx, tf::Subflow &subflow) noexcept;
+			void __initSecondaryCommandBuffers(
+				PerImageCommandBufferResource &commandBufferResource, tf::Subflow &subflow) noexcept;
 
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
 
-			void __onDrawcallMeshBufferChange(Drawcall &drawcall, const size_t segmentIndex) noexcept;
-			void __onDrawcallIndirectBufferUpdate(Drawcall &drawcall, const size_t segmentIndex) noexcept;
-			void __onDrawcallIndirectBufferCreate(Drawcall &drawcall, const size_t segmentIndex) noexcept;
+			void __onDrawcallMeshBufferChange(Drawcall &drawcall, const size_t segmentIdx) noexcept;
+			void __onDrawcallIndirectBufferUpdate(Drawcall &drawcall, const size_t segmentIdx) noexcept;
+			void __onDrawcallIndirectBufferCreate(Drawcall &drawcall, const size_t segmentIdx) noexcept;
 
 			void __onWindowDraw(Win::Window &window) noexcept;
 			void __onWindowDestroy(Win::Window &window) noexcept;
@@ -169,6 +167,13 @@ namespace HyperFast
 			void __onScreenUpdate();
 			void __onRender() noexcept;
 			void __onPresent() noexcept;
+
+			[[nodiscard]]
+			PerImageCommandBufferResource &__getPerImageCommandBufferResource(const size_t imageIdx) noexcept;
+
+			[[nodiscard]]
+			Vulkan::CommandBuffer &__nextSecondaryCommandBuffer(
+				PerImageCommandBufferResource &resource, const size_t segmentIdx);
 		};
 
 		ScreenManager(
