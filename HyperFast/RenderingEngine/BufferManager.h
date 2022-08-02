@@ -11,14 +11,14 @@ namespace HyperFast
 	class BufferManager final : public Infra::Unique
 	{
 	public:
-		class BufferImpl final : public Infra::Deletable
+		class BufferImpl final : public Infra::Unique
 		{
 		public:
 			BufferImpl(
-				Vulkan::Device &device,
+				Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter,
 				const VkDeviceSize size, const VkBufferUsageFlags usage);
 
-			virtual ~BufferImpl() noexcept = default;
+			virtual ~BufferImpl() noexcept;
 
 			[[nodiscard]]
 			constexpr VkDeviceSize getSize() const noexcept;
@@ -41,10 +41,12 @@ namespace HyperFast
 
 		private:
 			Vulkan::Device &__device;
+			Infra::TemporalDeleter &__resourceDeleter;
+
 			const VkDeviceSize __size;
 			const VkBufferUsageFlags __usage;
 
-			std::unique_ptr<Vulkan::VulkanBuffer> __pBuffer;
+			Vulkan::VulkanBuffer *__pBuffer{};
 			VkMemoryRequirements __memRequirements{};
 
 			std::shared_ptr<Memory> __pMemory;
@@ -57,8 +59,7 @@ namespace HyperFast
 		BufferManager(Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter) noexcept;
 
 		[[nodiscard]]
-		BufferImpl *create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
-		void destroy(BufferImpl *const pImpl) noexcept;
+		std::unique_ptr<BufferImpl> create(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 
 	private:
 		Vulkan::Device &__device;

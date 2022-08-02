@@ -4,11 +4,18 @@
 namespace HyperFast
 {
 	BufferManager::BufferImpl::BufferImpl(
-		Vulkan::Device &device, const VkDeviceSize size, const VkBufferUsageFlags usage) :
-		__device{ device }, __size{ size }, __usage{ usage }
+		Vulkan::Device &device, Infra::TemporalDeleter &resourceDeleter,
+		const VkDeviceSize size, const VkBufferUsageFlags usage) :
+		__device{ device }, __resourceDeleter{ resourceDeleter },
+		__size{ size }, __usage{ usage }
 	{
 		__createBuffer(size, usage);
 		__queryMemoryRequirements();
+	}
+
+	BufferManager::BufferImpl::~BufferImpl() noexcept
+	{
+		__resourceDeleter.reserve(__pBuffer);
 	}
 
 	VkBuffer BufferManager::BufferImpl::getHandle() noexcept
@@ -39,7 +46,7 @@ namespace HyperFast
 			.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE
 		};
 
-		__pBuffer = std::make_unique<Vulkan::VulkanBuffer>(__device, createInfo);
+		__pBuffer = new Vulkan::VulkanBuffer{ __device, createInfo };
 	}
 
 	void BufferManager::BufferImpl::__queryMemoryRequirements() noexcept

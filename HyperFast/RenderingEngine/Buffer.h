@@ -8,7 +8,6 @@ namespace HyperFast
 	{
 	public:
 		Buffer(BufferManager &manager, const VkDeviceSize size, const VkBufferUsageFlags usage);
-		~Buffer() noexcept;
 
 		[[nodiscard]]
 		constexpr VkDeviceSize getSize() const noexcept;
@@ -30,8 +29,7 @@ namespace HyperFast
 		constexpr VkDeviceAddress getMemoryOffset() const noexcept;
 
 	private:
-		BufferManager &__manager;
-		BufferManager::BufferImpl *const __pImpl;
+		std::unique_ptr<BufferManager::BufferImpl> __pImpl;
 	};
 
 	constexpr VkDeviceSize Buffer::getSize() const noexcept
