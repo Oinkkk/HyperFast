@@ -8,13 +8,13 @@ namespace HyperFast
 	{
 		START = 0U,
 
-		// buffer, image 등 업데이트 command submit 요청
+		// buffer, image 등 업데이트 및 command submit 요청
 		DATA_UPDATE,
 
 		// swaphain, framebuffer, renderpass 등 screen과 관련된 리소스 업데이트
 		SCREEN_UPDATE,
 
-		// rendering command recording
+		// rendering command recording / submit 요청
 		RENDER,
 
 		// 모든 submit 요청 commit

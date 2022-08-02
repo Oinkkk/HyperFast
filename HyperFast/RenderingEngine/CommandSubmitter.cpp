@@ -16,7 +16,6 @@ namespace HyperFast
 	}
 
 	void CommandSubmitter::enqueue(
-		const SubmitLayerType layerType,
 		const uint32_t waitSemaphoreInfoCount,
 		const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
 		const uint32_t commandBufferInfoCount,
@@ -24,9 +23,7 @@ namespace HyperFast
 		const uint32_t signalSemaphoreInfoCount,
 		const VkSemaphoreSubmitInfo *pSignalSemaphoreInfos) noexcept
 	{
-		const uint32_t layerIdx{ uint32_t(layerType) - 1U };
-
-		VkSubmitInfo2 &infoPlaceholder{ __submitInfos[layerIdx].emplace_back() };
+		VkSubmitInfo2 &infoPlaceholder{ __submitInfos.emplace_back() };
 		infoPlaceholder.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
 		infoPlaceholder.waitSemaphoreInfoCount = waitSemaphoreInfoCount;
 		infoPlaceholder.pWaitSemaphoreInfos = pWaitSemaphoreInfos;
@@ -38,20 +35,13 @@ namespace HyperFast
 
 	bool CommandSubmitter::submit()
 	{
-		__infoStream.clear();
-
-		for (std::vector<VkSubmitInfo2> &infos : __submitInfos)
-		{
-			__infoStream.insert(__infoStream.end(), infos.begin(), infos.end());
-			infos.clear();
-		}
-
-		if (__infoStream.empty())
+		if (__submitInfos.empty())
 			return false;
 
 		Vulkan::Fence *const pFence{ __getIdleFence() };
-		__queue.vkQueueSubmit2(uint32_t(__infoStream.size()), __infoStream.data(), pFence->getHandle());
+		__queue.vkQueueSubmit2(uint32_t(__submitInfos.size()), __submitInfos.data(), pFence->getHandle());
 
+		__submitInfos.clear();
 		__pendingFences.emplace_back(pFence, __timestamp);
 		__timestamp++;
 

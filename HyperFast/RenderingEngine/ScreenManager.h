@@ -4,6 +4,7 @@
 #include "../Window/Window.h"
 #include "../Vulkan/Queue.h"
 #include "../Vulkan/Fence.h"
+#include "../Vulkan/Semaphore.h"
 #include "../Vulkan/Surface.h"
 #include "../Vulkan/Swapchain.h"
 #include "../Vulkan/ImageView.h"

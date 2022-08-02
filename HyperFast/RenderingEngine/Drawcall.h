@@ -49,8 +49,6 @@ namespace HyperFast
 			void update();
 			void draw(Vulkan::CommandBuffer &commandBuffer) noexcept;
 
-			void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
-
 			[[nodiscard]]
 			constexpr Infra::EventView<DrawcallSegment &> &getMeshBufferChangeEvent() noexcept;
 

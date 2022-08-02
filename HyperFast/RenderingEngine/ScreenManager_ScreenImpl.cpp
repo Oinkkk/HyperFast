@@ -133,7 +133,6 @@ namespace HyperFast
 		timelineSignalInfo.value = renderCompletionSemaphoreValue;
 
 		__commandSubmitter.enqueue(
-			SubmitLayerType::GRAPHICS,
 			1U, &__submitWaitInfo, 1U, &__submitCommandBufferInfo,
 			uint32_t(std::size(__submitSignalInfos)), __submitSignalInfos);
 

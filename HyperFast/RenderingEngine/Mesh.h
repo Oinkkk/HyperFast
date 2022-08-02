@@ -27,8 +27,6 @@ namespace HyperFast
 
 		void bind(Vulkan::CommandBuffer &commandBuffer) const noexcept;
 
-		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
-
 		[[nodiscard]]
 		constexpr Infra::EventView<Mesh &> &getBufferChangeEvent() noexcept;
 

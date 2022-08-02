@@ -67,12 +67,6 @@ namespace HyperFast
 		}
 	}
 
-	void Drawcall::DrawcallSegment::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
-	{
-		for (const auto &[pMesh, _] : __mesh2BuilderMap)
-			pMesh->addSemaphoreDependency(pDependency);
-	}
-
 	void Drawcall::DrawcallSegment::__initEventListeners() noexcept
 	{
 		__pMeshBufferChangeEventListener =

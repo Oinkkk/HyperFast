@@ -2,7 +2,6 @@
 
 #include "../Vulkan/Queue.h"
 #include "../Vulkan/Fence.h"
-#include "SubmitLayerType.h"
 #include <map>
 #include <vector>
 #include <queue>
@@ -17,7 +16,6 @@ namespace HyperFast
 		~CommandSubmitter() noexcept;
 
 		void enqueue(
-			const SubmitLayerType layerType,
 			const uint32_t waitSemaphoreInfoCount,
 			const VkSemaphoreSubmitInfo *const pWaitSemaphoreInfos,
 			const uint32_t commandBufferInfoCount,
@@ -35,8 +33,7 @@ namespace HyperFast
 		Vulkan::Device &__device;
 		Vulkan::Queue &__queue;
 
-		std::vector<VkSubmitInfo2> __submitInfos[NUM_SUBMIT_LAYER_TYPES];
-		std::vector<VkSubmitInfo2> __infoStream;
+		std::vector<VkSubmitInfo2> __submitInfos;
 
 		size_t __timestamp{};
 		std::deque<Vulkan::Fence *> __idleFences;

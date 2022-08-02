@@ -55,13 +55,6 @@ namespace HyperFast
 			__pIndexBuffer->getHandle(), 0ULL, __indexType);
 	}
 
-	void Mesh::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
-	{
-		__pPositionBuffer->addSemaphoreDependency(pDependency);
-		__pColorBuffer->addSemaphoreDependency(pDependency);
-		__pIndexBuffer->addSemaphoreDependency(pDependency);
-	}
-
 	void Mesh::__setBuffer(
 		const VertexAttributeFlagBit attribFlagBit, const uint32_t attribLocation,
 		std::unique_ptr<Buffer> &pOldBuffer, std::unique_ptr<Buffer> &&pNewBuffer) noexcept

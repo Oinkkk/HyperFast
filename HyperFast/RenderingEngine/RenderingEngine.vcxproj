@@ -12,13 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
-    <ClInclude Include="BufferCopyManager.h" />
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
     <ClInclude Include="CommandSubmitter.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="Drawcall.h" />
     <ClInclude Include="IndirectBufferBuilder.h" />
+    <ClInclude Include="InstantCommandExecutor.h" />
     <ClInclude Include="LifeCycle.h" />
     <ClInclude Include="LifeCycleType.h" />
     <ClInclude Include="Memory.h" />
@@ -29,22 +29,14 @@
     <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="ScreenManager.h" />
-    <ClInclude Include="SemaphoreDependency.h" />
-    <ClInclude Include="SemaphoreDependencyCluster.h" />
-    <ClInclude Include="SemaphoreDependencyManager.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="SizeUtil.h" />
     <ClInclude Include="Submesh.h" />
-    <ClInclude Include="SubmitLayerType.h" />
     <ClInclude Include="VertexAttribute.h" />
     <ClInclude Include="VertexAttributeUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
-    <ClCompile Include="BufferCopyManager.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="BufferManager_BufferImpl.cpp" />
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="CommandBufferManager.cpp" />
@@ -52,6 +44,7 @@
     <ClCompile Include="Drawcall.cpp" />
     <ClCompile Include="Drawcall_DrawcallSegment.cpp" />
     <ClCompile Include="IndirectBufferBuilder.cpp" />
+    <ClCompile Include="InstantCommandExecutor.cpp" />
     <ClCompile Include="LifeCycle.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="MemoryManager_MemoryBank.cpp" />
@@ -65,10 +58,7 @@
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="ScreenManager.cpp" />
     <ClCompile Include="ScreenManager_ScreenImpl.cpp" />
-    <ClCompile Include="SemaphoreDependency.cpp" />
-    <ClCompile Include="SemaphoreDependencyManager.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
-    <ClCompile Include="SemaphoreDependencyCluster.cpp" />
     <ClCompile Include="Submesh.cpp" />
   </ItemGroup>
   <ItemGroup>

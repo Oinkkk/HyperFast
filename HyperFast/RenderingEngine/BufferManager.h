@@ -4,7 +4,6 @@
 #include "Memory.h"
 #include <memory>
 #include "../Vulkan/VulkanBuffer.h"
-#include "SemaphoreDependencyCluster.h"
 #include "../Infrastructure/Event.h"
 
 namespace HyperFast
@@ -40,11 +39,6 @@ namespace HyperFast
 			[[nodiscard]]
 			constexpr VkDeviceAddress getMemoryOffset() const noexcept;
 
-			void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
-
-			[[nodiscard]]
-			bool isIdle() noexcept;
-
 		private:
 			Vulkan::Device &__device;
 			const VkDeviceSize __size;
@@ -55,8 +49,6 @@ namespace HyperFast
 
 			std::shared_ptr<Memory> __pMemory;
 			VkDeviceAddress __memoryOffset{};
-
-			SemaphoreDependencyCluster __semaphoreDependencyCluster;
 
 			void __createBuffer(const VkDeviceSize dataSize, const VkBufferUsageFlags usage);
 			void __queryMemoryRequirements() noexcept;
