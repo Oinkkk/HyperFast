@@ -39,6 +39,7 @@ namespace HyperFast
 			public:
 				std::unique_ptr<CommandBufferManager> primaryManager;
 				std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>> secondaryManagerMap;
+				std::vector<VkCommandBuffer> secondaryCommandBufferHandles;
 			};
 
 			// External params
@@ -144,6 +145,7 @@ namespace HyperFast
 			void __querySupportedSurfaceFormats() noexcept;
 			void __querySupportedSurfacePresentModes() noexcept;
 			void __populateSecondaryCommandBufferInheritanceInfo() noexcept;
+			void __dirtyAllDrawcallSegments() noexcept;
 
 			void __createSwapchain();
 			void __createSwapchainImageViews();
@@ -151,8 +153,11 @@ namespace HyperFast
 			void __createFramebuffer();
 
 			void __buildPipelines(tf::Subflow &subflow);
-			void __initSecondaryCommandBuffers(
+			void __updateSecondaryCommandBuffers(
 				PerImageCommandBufferResource &commandBufferResource, tf::Subflow &subflow) noexcept;
+
+			void __updatePrimaryCommandBuffer(
+				PerImageCommandBufferResource &commandBufferResource, const size_t imageIdx) noexcept;
 
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
@@ -174,6 +179,12 @@ namespace HyperFast
 			[[nodiscard]]
 			Vulkan::CommandBuffer &__nextSecondaryCommandBuffer(
 				PerImageCommandBufferResource &resource, const size_t segmentIdx);
+
+			void __updateSecondaryCommandBufferHandles(
+				PerImageCommandBufferResource &commandBufferResource) noexcept;
+
+			[[nodiscard]]
+			Vulkan::CommandBuffer &__nextPrimaryCommandBuffer(PerImageCommandBufferResource &resource);
 		};
 
 		ScreenManager(

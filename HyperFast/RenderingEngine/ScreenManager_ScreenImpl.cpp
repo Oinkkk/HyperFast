@@ -235,7 +235,6 @@ namespace HyperFast
 		__pPipelineFactory->reset();
 
 		tf::Taskflow taskflow;
-
 		tf::Task t1
 		{
 			taskflow.emplace([this](tf::Subflow &subflow)
@@ -244,40 +243,85 @@ namespace HyperFast
 			})
 		};
 
-		taskflow.emplace([this](tf::Subflow &subflow)
+		tf::Task t2
 		{
-			const size_t numImages{ __swapChainImages.size() };
-			for (size_t imageIdx = 0ULL; imageIdx < numImages; imageIdx++)
+			taskflow.emplace([this](tf::Subflow &subflow)
 			{
-				PerImageCommandBufferResource &commandBufferResource{ __getPerImageCommandBufferResource(imageIdx) };
+				__dirtyAllDrawcallSegments();
 
-				tf::Task t1
+				const size_t numImages{ __swapChainImages.size() };
+				for (size_t imageIdx = 0ULL; imageIdx < numImages; imageIdx++)
 				{
-					subflow.emplace([this, &commandBufferResource](tf::Subflow &subflow)
+					PerImageCommandBufferResource &commandBufferResource{ __getPerImageCommandBufferResource(imageIdx) };
+
+					tf::Task t1
 					{
-						__initSecondaryCommandBuffers(commandBufferResource, subflow);
-					})
-				};
+						subflow.emplace([this, &commandBufferResource](tf::Subflow &subflow)
+						{
+							__updateSecondaryCommandBuffers(commandBufferResource, subflow);
+						})
+					};
 
-				subflow.emplace([this, imageIdx](tf::Subflow &subflow)
-				{
-					// record primary
-				}).succeed(t1);
-			}
-		}).succeed(t1);
+					subflow.emplace([this, &commandBufferResource, imageIdx](tf::Subflow &subflow)
+					{
+						__updateSecondaryCommandBufferHandles(commandBufferResource);
+						__updatePrimaryCommandBuffer(commandBufferResource, imageIdx);
+					}).succeed(t1);
+				}
+			})
+		};
+		t2.succeed(t1);
+
+		taskflow.emplace([this]
+		{
+			__drawcallSegmentDirties.clear();
+		}).succeed(t2);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		executor.run(taskflow).wait();
 
 		__pipelineDependencyDirty = false;
+		__commandBufferDirty = false;
+		__needToRender = true;
 	}
 
 	void ScreenManager::ScreenImpl::__updateCommandBuffers()
 	{
-		if (!__pDrawcall)
-			return;
+		tf::Taskflow taskflow;
+		tf::Task t1
+		{
+			taskflow.emplace([this](tf::Subflow &subflow)
+			{
+				const size_t numImages{ __swapChainImages.size() };
+				for (size_t imageIdx = 0ULL; imageIdx < numImages; imageIdx++)
+				{
+					PerImageCommandBufferResource &commandBufferResource{ __getPerImageCommandBufferResource(imageIdx) };
 
-		// TODO: 커맨드 버퍼 업데이트
+					tf::Task t1
+					{
+						subflow.emplace([this, &commandBufferResource](tf::Subflow &subflow)
+						{
+							__updateSecondaryCommandBuffers(commandBufferResource, subflow);
+						})
+					};
+
+					subflow.emplace([this, &commandBufferResource, imageIdx](tf::Subflow &subflow)
+					{
+						__updateSecondaryCommandBufferHandles(commandBufferResource);
+						__updatePrimaryCommandBuffer(commandBufferResource, imageIdx);
+					}).succeed(t1);
+				}
+			})
+		};
+
+		taskflow.emplace([this]
+		{
+			__drawcallSegmentDirties.clear();
+		}).succeed(t1);
+
+		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
+		executor.run(taskflow).wait();
+
 		__commandBufferDirty = false;
 		__needToRender = true;
 	}
@@ -324,6 +368,16 @@ namespace HyperFast
 	{
 		__secondaryCommandBufferInheritanceInfo.renderPass = __pRenderPass->getHandle();
 		__secondaryCommandBufferInheritanceInfo.framebuffer = __pFramebuffer->getHandle();
+	}
+
+	void ScreenManager::ScreenImpl::__dirtyAllDrawcallSegments() noexcept
+	{
+		if (!__pDrawcall)
+			return;
+
+		const size_t numSegments{ __pDrawcall->getNumSegments() };
+		for (size_t segmentIter = 0ULL; segmentIter < numSegments; segmentIter++)
+			__drawcallSegmentDirties.emplace(segmentIter);
 	}
 
 	void ScreenManager::ScreenImpl::__createSwapchain()
@@ -559,31 +613,92 @@ namespace HyperFast
 		__pPipelineFactory->build(__pipelineBuildParam, subflow);
 	}
 
-	void ScreenManager::ScreenImpl::__initSecondaryCommandBuffers(
+	void ScreenManager::ScreenImpl::__updateSecondaryCommandBuffers(
 		PerImageCommandBufferResource &commandBufferResource, tf::Subflow &subflow) noexcept
 	{
 		if (!__pDrawcall)
 			return;
 
-		const size_t numSegments{ __pDrawcall->getNumSegments() };
-		for (size_t segmentIter = 0ULL; segmentIter < numSegments; segmentIter++)
+		for (const size_t segmentIdx : __drawcallSegmentDirties)
 		{
 			Vulkan::CommandBuffer &commandBuffer
 			{
-				__nextSecondaryCommandBuffer(commandBufferResource, segmentIter)
+				__nextSecondaryCommandBuffer(commandBufferResource, segmentIdx)
 			};
 
-			subflow.emplace([this, segmentIter, &commandBuffer](tf::Subflow &subflow)
+			subflow.emplace([this, segmentIdx, &commandBuffer](tf::Subflow &subflow)
 			{
 				commandBuffer.vkBeginCommandBuffer(&__secondaryCommandBufferBeginInfo);
 				commandBuffer.vkCmdBindPipeline(
 					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pPipelineFactory->get());
 
-				__pDrawcall->draw(segmentIter, commandBuffer);
+				__pDrawcall->draw(segmentIdx, commandBuffer);
 
 				commandBuffer.vkEndCommandBuffer();
 			});
 		}
+	}
+
+	void ScreenManager::ScreenImpl::__updatePrimaryCommandBuffer(
+		PerImageCommandBufferResource &commandBufferResource, const size_t imageIdx) noexcept
+	{
+		static constexpr VkCommandBufferBeginInfo commandBufferBeginInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
+		};
+
+		const VkRenderPassAttachmentBeginInfo renderPassAttachmentInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO,
+			.attachmentCount = 1U,
+			.pAttachments = &(__swapChainImageViews[imageIdx]->getHandle())
+		};
+
+		static constexpr VkClearValue clearColor
+		{
+			.color = {.float32 = { 0.004f, 0.004f, 0.004f, 1.0f } }
+		};
+
+		const VkRenderPassBeginInfo renderPassBeginInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+			.pNext = &renderPassAttachmentInfo,
+			.renderPass = __pRenderPass->getHandle(),
+			.framebuffer = __pFramebuffer->getHandle(),
+			.renderArea =
+			{
+				.offset = { 0, 0 },
+				.extent = __swapchainExtent
+			},
+			.clearValueCount = 1U,
+			.pClearValues = &clearColor
+		};
+
+		const std::vector<VkCommandBuffer> &secondaryCommandBufferHandles
+		{
+			commandBufferResource.secondaryCommandBufferHandles
+		};
+
+		Vulkan::CommandBuffer &commandBuffer{ __nextPrimaryCommandBuffer(commandBufferResource) };
+		commandBuffer.vkBeginCommandBuffer(&commandBufferBeginInfo);
+
+		if (__pDrawcall)
+		{
+			commandBuffer.vkCmdBeginRenderPass(
+				&renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+			commandBuffer.vkCmdExecuteCommands(
+				uint32_t(secondaryCommandBufferHandles.size()),
+				secondaryCommandBufferHandles.data());
+		}
+		else
+		{
+			commandBuffer.vkCmdBeginRenderPass(
+				&renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+		}
+
+		commandBuffer.vkCmdEndRenderPass();
+		commandBuffer.vkEndCommandBuffer();
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowResize(
@@ -672,5 +787,34 @@ namespace HyperFast
 			pSecondaryManager->advance();
 
 		return pSecondaryManager->get();
+	}
+
+	void ScreenManager::ScreenImpl::__updateSecondaryCommandBufferHandles(
+		PerImageCommandBufferResource &commandBufferResource) noexcept
+	{
+		std::vector<VkCommandBuffer> &handles{ commandBufferResource.secondaryCommandBufferHandles };
+		handles.clear();
+
+		for (const auto &[_, pManager] : commandBufferResource.secondaryManagerMap)
+		{
+			const VkCommandBuffer handle{ pManager->get().getHandle() };
+			handles.emplace_back(handle);
+		}
+	}
+
+	Vulkan::CommandBuffer &ScreenManager::ScreenImpl::__nextPrimaryCommandBuffer(
+		PerImageCommandBufferResource &resource)
+	{
+		auto &pPrimaryManager{ resource.primaryManager };
+		if (!pPrimaryManager)
+		{
+			pPrimaryManager = std::make_unique<CommandBufferManager>(
+				__device, __queueFamilyIndex,
+				VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, __resourceDeleter);
+		}
+		else
+			pPrimaryManager->advance();
+
+		return pPrimaryManager->get();
 	}
 }
