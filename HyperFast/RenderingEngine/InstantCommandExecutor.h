@@ -1,6 +1,5 @@
 #pragma once
 
-#include "LifeCycle.h"
 #include "CommandSubmitter.h"
 #include "CommandBufferManager.h"
 
@@ -10,32 +9,10 @@ namespace HyperFast
 	{
 	public:
 		InstantCommandExecutor(
-			Vulkan::Device &device, const uint32_t queueFamilyIndex, LifeCycle &lifeCycle,
+			Vulkan::Device &device, const uint32_t queueFamilyIndex,
 			CommandSubmitter &commandSubmitter, Infra::TemporalDeleter &resourceDeleter) noexcept;
 
 		void execute() noexcept;
-
-		void vkCmdBeginRenderPass(
-			const VkRenderPassBeginInfo *const pRenderPassBegin,
-			const VkSubpassContents contents) noexcept;
-
-		void vkCmdEndRenderPass() noexcept;
-
-		void vkCmdBindPipeline(
-			const VkPipelineBindPoint pipelineBindPoint,
-			const VkPipeline pipeline) noexcept;
-
-		void vkCmdBindVertexBuffers(
-			const uint32_t firstBinding, const uint32_t bindingCount,
-			const VkBuffer *const pBuffers, const VkDeviceSize *const pOffsets) noexcept;
-
-		void vkCmdBindIndexBuffer(
-			const VkBuffer buffer, const VkDeviceSize offset, const VkIndexType indexType) noexcept;
-
-		void vkCmdDrawIndexedIndirectCount(
-			const VkBuffer buffer, const VkDeviceSize offset,
-			const VkBuffer countBuffer, const VkDeviceSize countBufferOffset,
-			const uint32_t maxDrawCount, const uint32_t stride) noexcept;
 
 		void vkCmdPipelineBarrier2(const VkDependencyInfo *const pDependencyInfo) noexcept;
 
@@ -43,11 +20,10 @@ namespace HyperFast
 			const VkBuffer srcBuffer, const VkBuffer dstBuffer,
 			const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept;
 
-		void vkCmdExecuteCommands(
-			const uint32_t commandBufferCount, const VkCommandBuffer *const pCommandBuffers) noexcept;
-
 	private:
 		CommandSubmitter &__commandSubmitter;
+
+		Vulkan::CommandBuffer *__pCommandBuffer{};
 		std::unique_ptr<CommandBufferManager> __pCommandBufferManager;
 
 		void __createCommandBufferManager(
@@ -56,5 +32,6 @@ namespace HyperFast
 
 		void __begin() noexcept;
 		void __end() noexcept;
+		void __advance() noexcept;
 	};
 }

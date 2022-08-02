@@ -394,6 +394,12 @@ namespace HyperFast
 		__pCommandSubmitter = std::make_unique<CommandSubmitter>(*__pDevice, *__pQueue);
 	}
 
+	void RenderingEngine::__createInstantCommandExecutor() noexcept
+	{
+		__pInstantCommandExecutor = std::make_unique<InstantCommandExecutor>(
+			*__pDevice, __queueFamilyIndex, *__pCommandSubmitter, *__pResourceDeleter);
+	}
+
 	void RenderingEngine::__createScreenManager() noexcept
 	{
 		__pScreenManager = std::make_unique<ScreenManager>(

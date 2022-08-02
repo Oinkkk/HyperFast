@@ -3,7 +3,7 @@
 namespace HyperFast
 {
 	InstantCommandExecutor::InstantCommandExecutor(
-		Vulkan::Device &device, const uint32_t queueFamilyIndex, LifeCycle &lifeCycle,
+		Vulkan::Device &device, const uint32_t queueFamilyIndex,
 		CommandSubmitter &commandSubmitter, Infra::TemporalDeleter &resourceDeleter) noexcept :
 		__commandSubmitter{ commandSubmitter }
 	{
@@ -13,66 +13,28 @@ namespace HyperFast
 
 	void InstantCommandExecutor::execute() noexcept
 	{
+		const VkCommandBufferSubmitInfo commandBufferInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+			.commandBuffer = __pCommandBuffer->getHandle()
+		};
+
 		__end();
-		// __commandSubmitter.enqueue();
-	}
-
-	void InstantCommandExecutor::vkCmdBeginRenderPass(
-		const VkRenderPassBeginInfo *const pRenderPassBegin,
-		const VkSubpassContents contents) noexcept
-	{
-
-	}
-
-	void InstantCommandExecutor::vkCmdEndRenderPass() noexcept
-	{
-
-	}
-
-	void InstantCommandExecutor::vkCmdBindPipeline(
-		const VkPipelineBindPoint pipelineBindPoint,
-		const VkPipeline pipeline) noexcept
-	{
-
-	}
-
-	void InstantCommandExecutor::vkCmdBindVertexBuffers(
-		const uint32_t firstBinding, const uint32_t bindingCount,
-		const VkBuffer *const pBuffers, const VkDeviceSize *const pOffsets) noexcept
-	{
-
-	}
-
-	void InstantCommandExecutor::vkCmdBindIndexBuffer(
-		const VkBuffer buffer, const VkDeviceSize offset, const VkIndexType indexType) noexcept
-	{
-
-	}
-
-	void InstantCommandExecutor::vkCmdDrawIndexedIndirectCount(
-		const VkBuffer buffer, const VkDeviceSize offset,
-		const VkBuffer countBuffer, const VkDeviceSize countBufferOffset,
-		const uint32_t maxDrawCount, const uint32_t stride) noexcept
-	{
-
+		__commandSubmitter.enqueue(0U, nullptr, 1U, &commandBufferInfo, 0U, nullptr);
+		__advance();
+		__begin();
 	}
 
 	void InstantCommandExecutor::vkCmdPipelineBarrier2(const VkDependencyInfo *const pDependencyInfo) noexcept
 	{
-
+		__pCommandBuffer->vkCmdPipelineBarrier2(pDependencyInfo);
 	}
 
 	void InstantCommandExecutor::vkCmdCopyBuffer(
 		const VkBuffer srcBuffer, const VkBuffer dstBuffer,
 		const uint32_t regionCount, const VkBufferCopy *const pRegions) noexcept
 	{
-
-	}
-
-	void InstantCommandExecutor::vkCmdExecuteCommands(
-		const uint32_t commandBufferCount, const VkCommandBuffer *const pCommandBuffers) noexcept
-	{
-
+		__pCommandBuffer->vkCmdCopyBuffer(srcBuffer, dstBuffer, regionCount, pRegions);
 	}
 
 	void InstantCommandExecutor::__createCommandBufferManager(
@@ -86,11 +48,23 @@ namespace HyperFast
 
 	void InstantCommandExecutor::__begin() noexcept
 	{
+		static constexpr VkCommandBufferBeginInfo beginInfo
+		{
+			.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+			.flags = VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+		};
 
+		__pCommandBuffer = &(__pCommandBufferManager->get());
+		__pCommandBuffer->vkBeginCommandBuffer(&beginInfo);
 	}
 
 	void InstantCommandExecutor::__end() noexcept
 	{
+		__pCommandBuffer->vkEndCommandBuffer();
+	}
 
+	void InstantCommandExecutor::__advance() noexcept
+	{
+		__pCommandBufferManager->advance();
 	}
 }

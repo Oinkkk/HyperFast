@@ -7,7 +7,7 @@
 #include "../Infrastructure/Environment.h"
 #include "Screen.h"
 #include "../Vulkan/DebugUtilsMessenger.h"
-#include "CommandSubmitter.h"
+#include "InstantCommandExecutor.h"
 #include "LifeCycle.h"
 
 namespace HyperFast
@@ -63,11 +63,12 @@ namespace HyperFast
 		std::unique_ptr<Vulkan::Device> __pDevice;
 		std::unique_ptr<Vulkan::Queue> __pQueue;
 
+		std::unique_ptr<Infra::TemporalDeleter> __pResourceDeleter;
+		std::unique_ptr<CommandSubmitter> __pCommandSubmitter;
+		std::unique_ptr<InstantCommandExecutor> __pInstantCommandExecutor;
 		std::unique_ptr<ScreenManager> __pScreenManager;
 		std::unique_ptr<MemoryManager> __pMemoryManager;
 		std::unique_ptr<BufferManager> __pBufferManager;
-		std::unique_ptr<CommandSubmitter> __pCommandSubmitter;
-		std::unique_ptr<Infra::TemporalDeleter> __pResourceDeleter;
 
 		std::shared_ptr<Infra::EventListener<>> __pSubmitEventListener;
 		std::shared_ptr<Infra::EventListener<size_t>> __pSubmitFinishEventListener;
@@ -89,6 +90,7 @@ namespace HyperFast
 
 		void __createResourceDeleter() noexcept;
 		void __createCommandSubmitter() noexcept;
+		void __createInstantCommandExecutor() noexcept;
 		void __createScreenManager() noexcept;
 		void __createMemoryManager() noexcept;
 		void __createBufferManager() noexcept;
