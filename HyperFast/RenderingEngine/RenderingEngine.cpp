@@ -45,11 +45,26 @@ namespace HyperFast
 	{
 		// The only time you should wait for a device to idle is when you want to destroy the device.
 		__pDevice->vkDeviceWaitIdle();
-		__pResourceDeleter = nullptr;
+
+		// 이벤트 차단
+		__pSubmitFinishEventListener = nullptr;
+		__pSubmitEventListener = nullptr;
+
+		// 일반 리소스 모듈 delete
+		__pInstantCommandExecutor = nullptr;
+
+		// flush & delete
 		__pCommandSubmitter = nullptr;
+
+		// 잔여 리소스 delete commit
+		__pResourceDeleter = nullptr;
+
+		// 매니저 모듈 delete.
+		// resource deleter와 디펜던시가 없어야 함
 		__pBufferManager = nullptr;
 		__pMemoryManager = nullptr;
 		__pScreenManager = nullptr;
+
 		__pDevice = nullptr;
 		__pDebugMessenger = nullptr;
 		__pInstance = nullptr;

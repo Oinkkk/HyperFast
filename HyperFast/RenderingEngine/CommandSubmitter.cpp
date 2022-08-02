@@ -8,6 +8,8 @@ namespace HyperFast
 
 	CommandSubmitter::~CommandSubmitter() noexcept
 	{
+		flush();
+
 		for (const auto &[pFence, _] : __pendingFences)
 			delete pFence;
 
