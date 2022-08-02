@@ -33,6 +33,7 @@ namespace HyperFast
 
 		__createResourceDeleter();
 		__createCommandSubmitter();
+		__createInstantCommandExecutor();
 		__createScreenManager();
 		__createMemoryManager();
 		__createBufferManager();
