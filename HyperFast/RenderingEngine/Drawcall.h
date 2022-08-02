@@ -2,6 +2,7 @@
 
 #include "CommandBufferManager.h"
 #include "IndirectBufferBuilder.h"
+#include "LifeCycle.h"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -12,13 +13,10 @@ namespace HyperFast
 	public:
 		Drawcall(
 			Vulkan::Device &device, const uint32_t queueFamilyIndex,
-			BufferManager &bufferManager, MemoryManager &memoryManager) noexcept;
+			BufferManager &bufferManager, MemoryManager &memoryManager, LifeCycle &lifeCycle) noexcept;
 
 		void addSubmesh(Submesh &submesh) noexcept;
 		void removeSubmesh(Submesh &submesh) noexcept;
-
-		void update();
-		void addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept;
 
 		void draw(const size_t segmentIndex, Vulkan::CommandBuffer &commandBuffer) noexcept;
 
@@ -104,6 +102,7 @@ namespace HyperFast
 		std::shared_ptr<Infra::EventListener<DrawcallSegment &>> __pSegmentMeshBufferChangeEventListener;
 		std::shared_ptr<Infra::EventListener<DrawcallSegment &>> __pSegmentIndirectBufferUpdateEventListener;
 		std::shared_ptr<Infra::EventListener<DrawcallSegment &>> __pSegmentIndirectBufferCreateEventListener;
+		std::shared_ptr<Infra::EventListener<>> __pUpdateEventListener;
 
 		Infra::Event<Drawcall &, size_t> __segmentMeshBufferChangeEvent;
 		Infra::Event<Drawcall &, size_t> __segmentIndirectBufferUpdateEvent;
@@ -124,6 +123,7 @@ namespace HyperFast
 		void __onSegmentMeshBufferChange(DrawcallSegment &segment) noexcept;
 		void __onSegmentIndirectBufferUpdate(DrawcallSegment &segment) noexcept;
 		void __onSegmentIndirectBufferCreate(DrawcallSegment &segment) noexcept;
+		void __onUpdate();
 	};
 
 	constexpr size_t  Drawcall::getNumSegments() const noexcept

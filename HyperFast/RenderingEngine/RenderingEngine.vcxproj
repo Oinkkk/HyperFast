@@ -43,7 +43,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
-    <ClCompile Include="BufferCopyManager.cpp" />
+    <ClCompile Include="BufferCopyManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="BufferManager_BufferImpl.cpp" />
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="CommandBufferManager.cpp" />

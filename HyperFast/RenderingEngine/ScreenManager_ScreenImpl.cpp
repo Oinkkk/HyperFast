@@ -42,21 +42,10 @@ namespace HyperFast
 			pNewDrawcall->getMeshBufferChangeEvent() += __pDrawcallMeshBufferChangeEventListener;
 			pNewDrawcall->getIndirectBufferUpdateEvent() += __pDrawcallIndirectBufferUpdateEventListener;
 			pNewDrawcall->getIndirectBufferCreateEvent() += __pDrawcallIndirectBufferCreateEventListener;
-			__allDrawcallSegmentDirty = true;
 		}
 
 		pCurDrawcall = pNewDrawcall;
 		__pipelineDependencyDirty = true;
-	}
-
-	bool ScreenManager::ScreenImpl::__isUpdateInFlight() const noexcept
-	{
-		using namespace std;
-
-		if (__updateJob.valid())
-			return (__updateJob.wait_for(0s) != std::future_status::ready);
-
-		return false;
 	}
 
 	bool ScreenManager::ScreenImpl::__isUpdatable() const noexcept
@@ -66,9 +55,6 @@ namespace HyperFast
 
 		const bool validSize{ __window.getWidth() && __window.getHeight() };
 		if (!validSize)
-			return false;
-
-		if (__isUpdateInFlight())
 			return false;
 
 		return true;
@@ -236,6 +222,7 @@ namespace HyperFast
 		__createSwapchainImageViews();
 		__createRenderPass();
 		__createFramebuffer();
+		__populateSecondaryCommandBufferInheritanceInfo();
 
 		__updatePipelineDependencies();
 		__swapchainDependencDirty = false;
@@ -255,14 +242,17 @@ namespace HyperFast
 			})
 		};
 
-		taskflow.emplace([this, drawcallSegmentDirties = __drawcallSegmentDirties](tf::Subflow &subflow)
+		taskflow.emplace([this](tf::Subflow &subflow)
 		{
-			__populateSecondaryCommandBufferInheritanceInfo();
-
+			const size_t numImages{ __swapChainImages.size() };
+			for (size_t imageIter = 0ULL; imageIter < numImages; imageIter++)
+			{
+				__initSecondaryCommandBuffers(imageIter, subflow);
+			}
 		}).succeed(t1);
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
-		__updateJob = executor.run(std::move(taskflow));
+		executor.run(taskflow).wait();
 
 		__pipelineDependencyDirty = false;
 	}
@@ -271,8 +261,6 @@ namespace HyperFast
 	{
 		if (!__pDrawcall)
 			return;
-
-		__populateSecondaryCommandBufferInheritanceInfo();
 
 		// TODO: 커맨드 버퍼 업데이트
 		__commandBufferDirty = false;
@@ -534,6 +522,28 @@ namespace HyperFast
 		__pFramebuffer = new Vulkan::Framebuffer{ __device, createInfo };
 	}
 
+	void ScreenManager::ScreenImpl::__createPerImageCommandBufferResources() noexcept
+	{
+		const size_t numImages{ __swapChainImages.size() };
+		
+		for (
+			size_t imageIter = __perImageCommandBufferResources.size();
+			imageIter < numImages; imageIter++)
+		{
+			std::unique_ptr<PerImageCommandBufferResource> pNewResource
+			{
+				std::make_unique<PerImageCommandBufferResource>()
+			};
+
+			pNewResource->primaryManager =
+				std::make_unique<CommandBufferManager>(
+					__device, __queueFamilyIndex,
+					VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, __resourceDeleter);
+
+			__perImageCommandBufferResources.emplace_back(std::move(pNewResource));
+		}
+	}
+
 	void ScreenManager::ScreenImpl::__buildPipelines(tf::Subflow &subflow)
 	{
 		__pipelineBuildParam.renderPass = __pRenderPass->getHandle();
@@ -554,6 +564,26 @@ namespace HyperFast
 		};
 
 		__pPipelineFactory->build(__pipelineBuildParam, subflow);
+	}
+
+	void ScreenManager::ScreenImpl::__initSecondaryCommandBuffers(
+		const size_t imageIdx, tf::Subflow &subflow) noexcept
+	{
+		/*subflow.emplace([this, imageIdx](tf::Subflow &subflow)
+		{
+			Vulkan::CommandBuffer &commandBuffer{ __nextSecondaryCommandBuffer(imageIdx, drawcallSegmentIdx) };
+			commandBuffer.vkBeginCommandBuffer(&__secondaryCommandBufferBeginInfo);
+
+			if (pDrawcall)
+			{
+				commandBuffer.vkCmdBindPipeline(
+					VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pipelineFactory.get());
+
+				pDrawcall->draw(drawcallSegmentIdx, commandBuffer);
+			}
+
+			commandBuffer.vkEndCommandBuffer();
+		});*/
 	}
 
 	void ScreenManager::ScreenImpl::__onWindowResize(

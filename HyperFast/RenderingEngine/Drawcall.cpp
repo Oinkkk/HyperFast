@@ -5,10 +5,12 @@ namespace HyperFast
 {
 	Drawcall::Drawcall(
 		Vulkan::Device &device, const uint32_t queueFamilyIndex,
-		BufferManager &bufferManager, MemoryManager &memoryManager) noexcept
+		BufferManager &bufferManager, MemoryManager &memoryManager, LifeCycle &lifeCycle) noexcept
 	{
 		__initEventListeners();
 		__createSegments(device, queueFamilyIndex, bufferManager, memoryManager);
+
+		lifeCycle.getSignalEvent(LifeCycleType::DATA_UPDATE) += __pUpdateEventListener;
 	}
 
 	void Drawcall::addSubmesh(Submesh &submesh) noexcept
@@ -35,18 +37,6 @@ namespace HyperFast
 		pSegment->removeSubmesh(submesh);
 	}
 
-	void Drawcall::update()
-	{
-		for (const auto &pSegment : __segments)
-			pSegment->update();
-	}
-
-	void Drawcall::addSemaphoreDependency(const std::shared_ptr<SemaphoreDependency> &pDependency) noexcept
-	{
-		for (const auto &pSegment : __segments)
-			pSegment->addSemaphoreDependency(pDependency);
-	}
-
 	void Drawcall::draw(const size_t segmentIndex, Vulkan::CommandBuffer &commandBuffer) noexcept
 	{
 		__segments[segmentIndex]->draw(commandBuffer);
@@ -69,6 +59,8 @@ namespace HyperFast
 		__pSegmentIndirectBufferCreateEventListener =
 			Infra::EventListener<DrawcallSegment &>::bind(
 				&Drawcall::__onSegmentIndirectBufferCreate, this, std::placeholders::_1);
+
+		__pUpdateEventListener = Infra::EventListener<>::bind(&Drawcall::__onUpdate, this);
 	}
 
 	void Drawcall::__createSegments(
@@ -115,5 +107,11 @@ namespace HyperFast
 	void Drawcall::__onSegmentIndirectBufferCreate(DrawcallSegment &segment) noexcept
 	{
 		__segmentIndirectBufferCreateEvent.invoke(*this, segment.getSegmentIndex());
+	}
+
+	void Drawcall::__onUpdate()
+	{
+		for (const auto &pSegment : __segments)
+			pSegment->update();
 	}
 }

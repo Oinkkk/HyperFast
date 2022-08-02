@@ -34,7 +34,14 @@ namespace HyperFast
 			void setDrawcall(Drawcall *const pDrawcall) noexcept;
 
 		private:
-			using PerImageCommandBufferManagerMap = std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>>;
+			class PerImageCommandBufferResource
+			{
+			public:
+				std::unique_ptr<CommandBufferManager> primaryManager;
+
+				// segment idx -> manager
+				std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>> secondaryManagerMap;
+			};
 
 			// External params
 
@@ -73,30 +80,15 @@ namespace HyperFast
 			PipelineFactory::BuildParam __pipelineBuildParam;
 			std::unique_ptr<PipelineFactory> __pPipelineFactory;
 
-			/*
-				TODO:
-					1. CommandBufferManager reset 타이밍 문제
-						-> CommandPool을 여러 개 두고 최종 사용한 timestamp 값 저장,
-						이후 submitter의 finish event에서 timestamp 값 받아 command pool reset
-
-					2. Secondary command buffer를 per image, per drawcall segment로 공급해야하는 문제
-			*/
-
-			std::unordered_map<size_t, std::unique_ptr<CommandBufferManager>> __primaryCommandBufferManagers;
-			std::unordered_map<size_t, PerImageCommandBufferManagerMap> __secondaryCommandBufferManagers;
+			std::vector<std::unique_ptr<PerImageCommandBufferResource>> __perImageCommandBufferResources;
 			VkCommandBufferInheritanceInfo __secondaryCommandBufferInheritanceInfo{};
 			VkCommandBufferBeginInfo __secondaryCommandBufferBeginInfo{};
-
-			tf::Future<void> __updateJob;
-
 
 			// Flags
 
 			bool __swapchainDependencDirty{};
 			bool __pipelineDependencyDirty{};
 			bool __commandBufferDirty{};
-
-			bool __allDrawcallSegmentDirty{};
 			std::unordered_set<size_t> __drawcallSegmentDirties;
 
 			bool __needToRender{};
@@ -121,9 +113,6 @@ namespace HyperFast
 
 
 			// functions
-
-			[[nodiscard]]
-			bool __isUpdateInFlight() const noexcept;
 
 			[[nodiscard]]
 			bool __isUpdatable() const noexcept;
@@ -162,7 +151,10 @@ namespace HyperFast
 			void __createSwapchainImageViews();
 			void __createRenderPass();
 			void __createFramebuffer();
+			void __createPerImageCommandBufferResources() noexcept;
+
 			void __buildPipelines(tf::Subflow &subflow);
+			void __initSecondaryCommandBuffers(const size_t imageIdx, tf::Subflow &subflow) noexcept;
 
 			void __onWindowResize(
 				Win::Window &window, const Win::Window::ResizingType resizingType) noexcept;
@@ -177,14 +169,6 @@ namespace HyperFast
 			void __onScreenUpdate();
 			void __onRender() noexcept;
 			void __onPresent() noexcept;
-
-			//constexpr void __swapResourceBundle() noexcept;
-
-			/*[[nodiscard]]
-			constexpr ResourceBundle &__getFrontResourceBundle() noexcept;
-
-			[[nodiscard]]
-			constexpr ResourceBundle &__getBackResourceBundle() noexcept;*/
 		};
 
 		ScreenManager(

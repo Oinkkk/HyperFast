@@ -4,23 +4,30 @@ namespace HyperFast
 {
 	CommandBufferManager::CommandBufferManager(
 		Vulkan::Device &device, const uint32_t queueFamilyIndex,
-		const VkCommandBufferLevel level, const size_t numMaxBuffers) noexcept :
-		__device{ device }, __queueFamilyIndex { queueFamilyIndex },
-		__level{ level }, __numMaxBuffers{ numMaxBuffers }
+		const VkCommandBufferLevel level, Infra::TemporalDeleter &resourceDeleter) noexcept :
+		__device{ device }, __queueFamilyIndex{ queueFamilyIndex },
+		__level{ level }, __resourceDeleter{ resourceDeleter }
 	{
-		__createCommandPool();
+		__createCommandPools();
 		__allocateCommandBuffers();
+	}
+
+	CommandBufferManager::~CommandBufferManager() noexcept
+	{
+		for (Vulkan::CommandPool *const pCommandPool : __commandPools)
+			__resourceDeleter.reserve(pCommandPool);
 	}
 
 	void CommandBufferManager::advance() noexcept
 	{
-		if (__cursor >= __numMaxBuffers)
-		{
-			__pCommandPool->vkResetCommandPool(0U);
-			__cursor = 0ULL;
-		}
-		else
-			__cursor++;
+		const uint32_t prevCursor{ __cursor };
+		__cursor = ((__cursor + 1U) % __totalNumCommandBuffers);
+
+		const uint32_t prevCommandPoolIdx{ prevCursor / __numCommandBuffersPerPool };
+		const uint32_t curCommandPoolIdx{ __cursor / __numCommandBuffersPerPool };
+
+		if (prevCommandPoolIdx != curCommandPoolIdx)
+			__commandPools[curCommandPoolIdx]->vkResetCommandPool(0U);
 	}
 
 	Vulkan::CommandBuffer &CommandBufferManager::get() noexcept
@@ -28,7 +35,7 @@ namespace HyperFast
 		return *(__commandBuffers[__cursor]);
 	}
 
-	void CommandBufferManager::__createCommandPool()
+	void CommandBufferManager::__createCommandPools()
 	{
 		const VkCommandPoolCreateInfo createInfo
 		{
@@ -36,27 +43,33 @@ namespace HyperFast
 			.queueFamilyIndex = __queueFamilyIndex
 		};
 
-		__pCommandPool = std::make_unique<Vulkan::CommandPool>(__device, createInfo);
+		for (Vulkan::CommandPool *&pCommandPool : __commandPools)
+			pCommandPool = new Vulkan::CommandPool{ __device, createInfo };
 	}
 
 	void CommandBufferManager::__allocateCommandBuffers()
 	{
-		std::vector<VkCommandBuffer> handles;
-		handles.resize(__numMaxBuffers);
+		VkCommandBuffer handles[__numCommandBuffersPerPool];
 
-		const VkResult result
+		size_t commandBufferIter{};
+		for (auto &pCommandPool : __commandPools)
 		{
-			__pCommandPool->vkAllocateCommandBuffers(
-				nullptr, __level, uint32_t(__numMaxBuffers), handles.data())
-		};
+			const VkResult result
+			{
+				pCommandPool->vkAllocateCommandBuffers(
+					nullptr, __level, __numCommandBuffersPerPool, handles)
+			};
 
-		if (result != VK_SUCCESS)
-			throw std::exception{ "Cannot allocate command buffers." };
+			if (result != VK_SUCCESS)
+				throw std::exception{ "Cannot allocate command buffers." };
 
-		for (const VkCommandBuffer handle : handles)
-		{
-			__commandBuffers.emplace_back(
-				std::make_unique<Vulkan::CommandBuffer>(__device, handle));
+			for (const VkCommandBuffer handle : handles)
+			{
+				__commandBuffers[commandBufferIter] =
+					std::make_unique<Vulkan::CommandBuffer>(__device, handle);
+
+				commandBufferIter++;
+			}
 		}
 	}
 }

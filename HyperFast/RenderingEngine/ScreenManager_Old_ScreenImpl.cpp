@@ -340,8 +340,8 @@ namespace HyperFast
 		__pCurrentSubmitDependency = std::make_shared<SemaphoreDependency>(__submitDependencyManager);
 
 		nextResource.addSemaphoreDependency(__pCurrentSubmitDependency);
-		if (__pDrawcall)
-			__pDrawcall->addSemaphoreDependency(__pCurrentSubmitDependency);
+		/*if (__pDrawcall)
+			__pDrawcall->addSemaphoreDependency(__pCurrentSubmitDependency);*/
 
 		__resourceChainInit = true;
 		__pOldSwapchain = nullptr;

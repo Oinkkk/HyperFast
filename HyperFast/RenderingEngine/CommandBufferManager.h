@@ -1,10 +1,9 @@
 #pragma once
 
-#include "../Infrastructure/Unique.h"
+#include "../Infrastructure/TemporalDeleter.h"
 #include "../Vulkan/CommandPool.h"
-#include <memory>
-#include <vector>
 #include "../Vulkan/CommandBuffer.h"
+#include <memory>
 
 namespace HyperFast
 {
@@ -13,25 +12,30 @@ namespace HyperFast
 	public:
 		CommandBufferManager(
 			Vulkan::Device &device, const uint32_t queueFamilyIndex,
-			const VkCommandBufferLevel level, const size_t numMaxBuffers = 8ULL) noexcept;
+			const VkCommandBufferLevel level, Infra::TemporalDeleter &resourceDeleter) noexcept;
 		
+		virtual ~CommandBufferManager() noexcept;
+
 		void advance() noexcept;
 
 		[[nodiscard]]
 		Vulkan::CommandBuffer &get() noexcept;
 
 	private:
+		static constexpr inline uint32_t __numCommandPools{ 3U };
+		static constexpr inline uint32_t __numCommandBuffersPerPool{ 8U };
+		static constexpr inline uint32_t __totalNumCommandBuffers{ __numCommandPools * __numCommandBuffersPerPool };
+
 		Vulkan::Device &__device;
 		const uint32_t __queueFamilyIndex;
 		const VkCommandBufferLevel __level;
-		const size_t __numMaxBuffers;
+		Infra::TemporalDeleter &__resourceDeleter;
 
-		std::unique_ptr<Vulkan::CommandPool> __pCommandPool;
+		Vulkan::CommandPool *__commandPools[__numCommandPools];
+		std::unique_ptr<Vulkan::CommandBuffer> __commandBuffers[__totalNumCommandBuffers];
+		uint32_t __cursor{};
 
-		size_t __cursor{};
-		std::vector<std::unique_ptr<Vulkan::CommandBuffer>> __commandBuffers{};
-
-		void __createCommandPool();
+		void __createCommandPools();
 		void __allocateCommandBuffers();
 	};
 }
