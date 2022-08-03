@@ -4,7 +4,8 @@ namespace HyperFast
 {
 	enum class BarrierSectionType
 	{
-		INDIRECT_BUFFER,
-		VERTEX_BUFFER
+		UPDATE_INDIRECT_COMMAND,
+		UPDATE_UNIFORM_VS,
+		UPDATE_UNIFORM_FS
 	};
 }

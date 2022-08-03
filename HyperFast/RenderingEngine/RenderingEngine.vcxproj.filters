@@ -194,5 +194,8 @@
     <ClInclude Include="InstantCommandExecutor.h">
       <Filter>InstantCommandExecutor</Filter>
     </ClInclude>
+    <ClInclude Include="BarrierSectionType.h">
+      <Filter>InstantCommandExecutor</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -23,7 +23,7 @@ namespace HyperFast
 		// 빌드된 커맨드 enqueue
 		COMMAND_ENQUEUE,
 
-		// 모든 submit 요청 commit
+		// 커맨드 submit
 		COMMAND_SUBMIT,
 
 		// swapchain present

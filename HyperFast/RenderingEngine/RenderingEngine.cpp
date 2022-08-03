@@ -108,6 +108,9 @@ namespace HyperFast
 
 	void RenderingEngine::__initListeners() noexcept
 	{
+		__pCommandEnqueueEventListener = Infra::EventListener<>::bind(
+			&RenderingEngine::__onLifeCycleCommandEnqueue, this);
+
 		__pSubmitEventListener = Infra::EventListener<>::bind(
 			&RenderingEngine::__onLifeCycleCommandSubmit, this);
 
@@ -428,8 +431,14 @@ namespace HyperFast
 
 	void RenderingEngine::__registerListeners() noexcept
 	{
+		__lifeCycle.getSignalEvent(LifeCycleType::COMMAND_ENQUEUE) += __pCommandEnqueueEventListener;
 		__lifeCycle.getSignalEvent(LifeCycleType::COMMAND_SUBMIT) += __pSubmitEventListener;
 		__pCommandSubmitter->getFinishEvent() += __pSubmitFinishEventListener;
+	}
+
+	void RenderingEngine::__onLifeCycleCommandEnqueue() noexcept
+	{
+		__pInstantCommandExecutor->execute();
 	}
 
 	void RenderingEngine::__onLifeCycleCommandSubmit()

@@ -70,6 +70,7 @@ namespace HyperFast
 		std::unique_ptr<MemoryManager> __pMemoryManager;
 		std::unique_ptr<BufferManager> __pBufferManager;
 
+		std::shared_ptr<Infra::EventListener<>> __pCommandEnqueueEventListener;
 		std::shared_ptr<Infra::EventListener<>> __pSubmitEventListener;
 		std::shared_ptr<Infra::EventListener<size_t>> __pSubmitFinishEventListener;
 
@@ -97,6 +98,7 @@ namespace HyperFast
 
 		void __registerListeners() noexcept;
 
+		void __onLifeCycleCommandEnqueue() noexcept;
 		void __onLifeCycleCommandSubmit();
 		void __onSubmissionFinished(const size_t timestamp) noexcept;
 

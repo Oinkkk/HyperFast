@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BarrierSectionType.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommandBufferManager.h" />
