@@ -27,6 +27,9 @@ namespace HyperFast
 		void flush() noexcept;
 
 		[[nodiscard]]
+		constexpr size_t getTimestamp() const noexcept;
+
+		[[nodiscard]]
 		constexpr Infra::EventView<size_t> &getFinishEvent() noexcept;
 
 	private:
@@ -47,6 +50,11 @@ namespace HyperFast
 		[[nodiscard]]
 		Vulkan::Fence *__createFence();
 	};
+
+	constexpr size_t CommandSubmitter::getTimestamp() const noexcept
+	{
+		return __timestamp;
+	}
 
 	constexpr Infra::EventView<size_t> &CommandSubmitter::getFinishEvent() noexcept
 	{

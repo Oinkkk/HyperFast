@@ -92,9 +92,6 @@ namespace HyperFast
 
 		if (__pipelineDependencyDirty)
 			__updatePipelineDependencies();
-
-		if (__commandBufferDirty)
-			__updateCommandBuffers();
 	}
 
 	void ScreenManager::ScreenImpl::__render() noexcept
@@ -179,7 +176,7 @@ namespace HyperFast
 		__pDrawcallIndirectBufferUpdateEventListener = nullptr;
 		__pDrawcallIndirectBufferCreateEventListener = nullptr;
 		__pScreenUpdateListener = nullptr;
-		__pRenderListener = nullptr;
+		__pCommandEnqueueListener = nullptr;
 		__pPresentListener = nullptr;
 
 		__perImageCommandBufferResources.clear();
@@ -222,8 +219,11 @@ namespace HyperFast
 		__pScreenUpdateListener =
 			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onScreenUpdate, this);
 
-		__pRenderListener =
-			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onRender, this);
+		__pCommandBuildListener =
+			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onCommandBuild, this);
+
+		__pCommandEnqueueListener =
+			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onCommandEnqueue, this);
 
 		__pPresentListener =
 			Infra::EventListener<>::bind(&ScreenManager::ScreenImpl::__onPresent, this);
@@ -236,7 +236,8 @@ namespace HyperFast
 		__window.getDestroyEvent() += __pWindowDestroyEventListener;
 
 		__lifeCycle.getSignalEvent(LifeCycleType::SCREEN_UPDATE) += __pScreenUpdateListener;
-		__lifeCycle.getSignalEvent(LifeCycleType::RENDER) += __pRenderListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::COMMAND_BUILD) += __pCommandBuildListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::COMMAND_ENQUEUE) += __pCommandEnqueueListener;
 		__lifeCycle.getSignalEvent(LifeCycleType::PRESENT) += __pPresentListener;
 	}
 
@@ -295,54 +296,17 @@ namespace HyperFast
 		__pPipelineFactory->reset();
 
 		tf::Taskflow taskflow;
-		tf::Task t1
+		taskflow.emplace([this](tf::Subflow &subflow)
 		{
-			taskflow.emplace([this](tf::Subflow &subflow)
-			{
-				__buildPipelines(subflow);
-			})
-		};
-
-		tf::Task t2
-		{
-			taskflow.emplace([this](tf::Subflow &subflow)
-			{
-				__dirtyAllDrawcallSegments();
-
-				const size_t numImages{ __swapChainImages.size() };
-				for (size_t imageIdx = 0ULL; imageIdx < numImages; imageIdx++)
-				{
-					PerImageCommandBufferResource &commandBufferResource{ __getPerImageCommandBufferResource(imageIdx) };
-
-					tf::Task t1
-					{
-						subflow.emplace([this, &commandBufferResource](tf::Subflow &subflow)
-						{
-							__updateSecondaryCommandBuffers(commandBufferResource, subflow);
-						})
-					};
-
-					subflow.emplace([this, &commandBufferResource, imageIdx](tf::Subflow &subflow)
-					{
-						__updateSecondaryCommandBufferHandles(commandBufferResource);
-						__updatePrimaryCommandBuffer(commandBufferResource, imageIdx);
-					}).succeed(t1);
-				}
-			})
-		};
-		t2.succeed(t1);
-
-		taskflow.emplace([this]
-		{
-			__drawcallSegmentDirties.clear();
-		}).succeed(t2);
+			__buildPipelines(subflow);
+			__dirtyAllDrawcallSegments();
+		});
 
 		tf::Executor &executor{ Infra::Environment::getInstance().getTaskflowExecutor() };
 		executor.run(taskflow).wait();
 
 		__pipelineDependencyDirty = false;
-		__commandBufferDirty = false;
-		__needToRender = true;
+		__commandBufferDirty = true;
 	}
 
 	void ScreenManager::ScreenImpl::__updateCommandBuffers()
@@ -807,7 +771,15 @@ namespace HyperFast
 		__update();
 	}
 
-	void ScreenManager::ScreenImpl::__onRender() noexcept
+	void ScreenManager::ScreenImpl::__onCommandBuild()
+	{
+		if (!__commandBufferDirty)
+			return;
+
+		__updateCommandBuffers();
+	}
+
+	void ScreenManager::ScreenImpl::__onCommandEnqueue() noexcept
 	{
 		if (!(__isRenderable()))
 			return;

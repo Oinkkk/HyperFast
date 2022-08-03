@@ -97,6 +97,9 @@ namespace HyperFast
 
 		void __registerListeners() noexcept;
 
+		void __onLifeCycleCommandSubmit();
+		void __onSubmissionFinished(const size_t timestamp) noexcept;
+
 		static VkBool32 VKAPI_PTR vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			const VkDebugUtilsMessageTypeFlagsEXT messageTypes,

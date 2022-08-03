@@ -121,7 +121,8 @@ namespace HyperFast
 			std::shared_ptr<Infra::EventListener<Drawcall &, size_t>> __pDrawcallIndirectBufferCreateEventListener;
 
 			std::shared_ptr<Infra::EventListener<>> __pScreenUpdateListener;
-			std::shared_ptr<Infra::EventListener<>> __pRenderListener;
+			std::shared_ptr<Infra::EventListener<>> __pCommandBuildListener;
+			std::shared_ptr<Infra::EventListener<>> __pCommandEnqueueListener;
 			std::shared_ptr<Infra::EventListener<>> __pPresentListener;
 
 
@@ -186,7 +187,8 @@ namespace HyperFast
 			void __onWindowDestroy(Win::Window &window) noexcept;
 
 			void __onScreenUpdate();
-			void __onRender() noexcept;
+			void __onCommandBuild();
+			void __onCommandEnqueue() noexcept;
 			void __onPresent() noexcept;
 
 			[[nodiscard]]

@@ -108,19 +108,11 @@ namespace HyperFast
 
 	void RenderingEngine::__initListeners() noexcept
 	{
-		__pSubmitEventListener = Infra::EventListener<>::make([this]
-		{
-			const bool validSubmission{ __pCommandSubmitter->submit() };
-			if (validSubmission)
-				__pResourceDeleter->advance();
+		__pSubmitEventListener = Infra::EventListener<>::bind(
+			&RenderingEngine::__onLifeCycleCommandSubmit, this);
 
-			__pCommandSubmitter->flush();
-		});
-
-		__pSubmitFinishEventListener = Infra::EventListener<size_t>::make([this](const size_t timestamp)
-		{
-			__pResourceDeleter->commit(timestamp);
-		});
+		__pSubmitFinishEventListener = Infra::EventListener<size_t>::bind(
+			&RenderingEngine::__onSubmissionFinished, this, std::placeholders::_1);
 	}
 
 	void RenderingEngine::__getInstanceVersion() noexcept
@@ -436,8 +428,22 @@ namespace HyperFast
 
 	void RenderingEngine::__registerListeners() noexcept
 	{
-		__lifeCycle.getSignalEvent(LifeCycleType::SUBMIT) += __pSubmitEventListener;
+		__lifeCycle.getSignalEvent(LifeCycleType::COMMAND_SUBMIT) += __pSubmitEventListener;
 		__pCommandSubmitter->getFinishEvent() += __pSubmitFinishEventListener;
+	}
+
+	void RenderingEngine::__onLifeCycleCommandSubmit()
+	{
+		const bool validSubmission{ __pCommandSubmitter->submit() };
+		if (validSubmission)
+			__pResourceDeleter->advance();
+
+		__pCommandSubmitter->flush();
+	}
+
+	void RenderingEngine::__onSubmissionFinished(const size_t timestamp) noexcept
+	{
+		__pResourceDeleter->commit(timestamp);
 	}
 
 	VkBool32 VKAPI_PTR RenderingEngine::vkDebugUtilsMessengerCallbackEXT(
